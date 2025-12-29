@@ -752,13 +752,32 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## ⭐ Show Your Support
 
+<picture>
+  <source
+    media="(prefers-color-scheme: dark)"
+    srcset="
+      https://api.star-history.com/svg?repos=star-history/star-history&type=Date&theme=dark
+    "
+  />
+  <source
+    media="(prefers-color-scheme: light)"
+    srcset="
+      https://api.star-history.com/svg?repos=star-history/star-history&type=Date
+    "
+  />
+  <img
+    alt="Star History Chart"
+    src="https://api.star-history.com/svg?repos=star-history/star-history&type=Date"
+  />
+</picture>
+
 If you find RepoGenome useful, please consider giving it a star! It helps others discover the project.
 
 ---
 
 <div align="center">
 
-**Made with ❤️ by the RepoGenome Contributors**
+**Made with ❤️ by End3r27**
 
 [Report Bug](https://github.com/End3r27/RepoGenome/issues) • [Request Feature](https://github.com/End3r27/RepoGenome/issues) • [Documentation](#-documentation)
 

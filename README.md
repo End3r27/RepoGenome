@@ -6,7 +6,7 @@
 [![Stars](https://img.shields.io/github/stars/End3r27/RepoGenome?style=for-the-badge&logo=github&color=yellow)](https://github.com/End3r27/RepoGenome/stargazers)
 [![Forks](https://img.shields.io/github/forks/End3r27/RepoGenome?style=for-the-badge&logo=github&color=blue)](https://github.com/End3r27/RepoGenome/network/members)
 [![Issues](https://img.shields.io/github/issues/End3r27/RepoGenome?style=for-the-badge&logo=github&color=orange)](https://github.com/End3r27/RepoGenome/issues)
-[![Contributors](https://img.shields.io/github/contributors/End3r27/RepoGenome?style=for-the-badge&logo=github&color=purple)](https://github.com/End3r27/RepoGenome/graphs/contributors)
+
 
 </div>
 

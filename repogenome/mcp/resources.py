@@ -1,7 +1,7 @@
 """MCP resource handlers for RepoGenome."""
 
 import json
-from typing import Any, Dict, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 from repogenome.mcp.storage import GenomeStorage
 
@@ -18,13 +18,26 @@ class RepoGenomeResources:
         """
         self.storage = storage
 
-    def get_current(self) -> Tuple[Optional[Dict[str, Any]], Optional[Dict[str, Any]]]:
+    def get_current(
+        self,
+        fields: Optional[Union[str, List[str]]] = None,
+        summary_mode: Optional[str] = None,
+        variant: Optional[str] = None,
+    ) -> Tuple[Optional[Dict[str, Any]], Optional[Dict[str, Any]]]:
         """
         Get current genome resource (repogenome://current).
+
+        Args:
+            fields: Field selection (None = all fields)
+            summary_mode: Summary mode (brief, standard, detailed)
+            variant: Resource variant (brief, standard, detailed, lite)
 
         Returns:
             Tuple of (data_dict, error_dict). One will be None.
         """
+        from repogenome.utils.field_filter import filter_fields
+        from repogenome.core.schema import SummaryMode
+        
         genome, is_stale, error = self.storage.get_genome_status()
         if genome is None:
             error_info = {
@@ -37,7 +50,32 @@ class RepoGenomeResources:
                 error_info["action"] = "Check genome file validity or run repogenome.scan to regenerate"
             return None, error_info
 
-        data = genome.to_dict()
+        # Handle variants
+        if variant == "brief" or variant == "lite":
+            data = genome._to_lite_dict()
+        elif variant == "detailed":
+            data = genome.to_dict()
+            # Add additional metadata for detailed mode
+            data["_detailed_metrics"] = {
+                "file_count": sum(1 for n in genome.nodes.values() if n.type.value == "file"),
+                "function_count": sum(1 for n in genome.nodes.values() if n.type.value == "function"),
+                "class_count": sum(1 for n in genome.nodes.values() if n.type.value == "class"),
+            }
+        else:  # standard or None
+            data = genome.to_dict()
+        
+        # Handle summary mode
+        if summary_mode:
+            try:
+                mode = SummaryMode(summary_mode.lower())
+                data["summary"] = genome.get_summary_by_mode(mode)
+            except ValueError:
+                pass  # Invalid mode, use default
+        
+        # Apply field filtering
+        if fields:
+            data = filter_fields(data, fields)
+        
         if is_stale:
             if "_metadata" not in data:
                 data["_metadata"] = {}
@@ -46,15 +84,26 @@ class RepoGenomeResources:
 
         return data, None
 
-    def get_summary(self) -> Tuple[Optional[Dict[str, Any]], Optional[Dict[str, Any]]]:
+    def get_summary(
+        self,
+        fields: Optional[Union[str, List[str]]] = None,
+        summary_mode: Optional[str] = None,
+    ) -> Tuple[Optional[Dict[str, Any]], Optional[Dict[str, Any]]]:
         """
         Get summary resource (repogenome://summary).
+
+        Args:
+            fields: Field selection (None = all fields)
+            summary_mode: Summary mode (brief, standard, detailed)
 
         Returns:
             Tuple of (data_dict, error_dict). One will be None.
         """
-        summary = self.storage.get_summary()
-        if summary is None:
+        from repogenome.utils.field_filter import filter_fields
+        from repogenome.core.schema import SummaryMode
+        
+        genome = self.storage.load_genome()
+        if genome is None:
             error_info = {
                 "error": "Summary not available",
                 "reason": self.storage.get_load_error() or "Genome file not found",
@@ -64,6 +113,27 @@ class RepoGenomeResources:
                 error_info["reason"] = self.storage.get_load_error() or "Failed to load genome file"
                 error_info["action"] = "Check genome file validity or run repogenome.scan to regenerate"
             return None, error_info
+
+        # Get summary by mode
+        if summary_mode:
+            try:
+                mode = SummaryMode(summary_mode.lower())
+                summary = genome.get_summary_by_mode(mode)
+            except ValueError:
+                summary = genome.summary.model_dump()
+        else:
+            summary = genome.summary.model_dump()
+        
+        # Apply field filtering
+        if fields:
+            summary = filter_fields(summary, fields, context="summary")
+        
+        # Add staleness metadata if needed
+        if self.storage.is_stale():
+            summary["_metadata"] = {
+                "stale": True,
+                "warning": "Genome is stale (repo hash mismatch). Run repogenome.scan to regenerate.",
+            }
 
         return summary, None
 
@@ -96,70 +166,21 @@ class RepoGenomeResources:
 
         return diff, None
 
-    def read_resource(self, uri: str) -> Tuple[Optional[str], Optional[Dict[str, Any]]]:
-        """
-        Read resource by URI.
-
-        Args:
-            uri: Resource URI (repogenome://current, repogenome://summary, repogenome://diff)
-                Can be a string or AnyUrl object from Pydantic
-
-        Returns:
-            Tuple of (json_string, error_dict). One will be None.
-        """
-        # Convert URI to string if it's not already (handles AnyUrl objects from Pydantic)
-        uri_str = str(uri) if not isinstance(uri, str) else uri
-        
-        # Normalize URI: strip whitespace and convert to lowercase for comparison
-        normalized_uri = uri_str.strip()
-        normalized_lower = normalized_uri.lower()
-        
-        # Explicit URI matching (case-insensitive)
-        if normalized_lower == "repogenome://current":
-            data, error = self.get_current()
-        elif normalized_lower == "repogenome://summary":
-            data, error = self.get_summary()
-        elif normalized_lower == "repogenome://diff":
-            data, error = self.get_diff()
-        else:
-            # Provide detailed error information for debugging
-            error = {
-                "error": "Unknown resource URI",
-                "reason": f"URI not recognized: {uri_str!r}",
-                "uri_details": {
-                    "original": repr(uri),
-                    "original_str": repr(uri_str),
-                    "normalized": repr(normalized_uri),
-                    "length": len(uri_str),
-                    "normalized_length": len(normalized_uri),
-                    "bytes": list(uri_str.encode('utf-8'))[:50],  # First 50 bytes for debugging
-                },
-                "action": "Use one of: repogenome://current, repogenome://summary, repogenome://diff",
-                "available_uris": ["repogenome://current", "repogenome://summary", "repogenome://diff"],
-            }
-            return None, error
-
-        if error is not None:
-            return None, error
-
-        if data is None:
-            error = {
-                "error": "Resource data is None",
-                "reason": "Unexpected state: data is None but no error was set",
-                "action": "Report this as a bug",
-            }
-            return None, error
-
-        return json.dumps(data, indent=2, ensure_ascii=False), None
-
-    def get_stats(self) -> Tuple[Optional[Dict[str, Any]], Optional[Dict[str, Any]]]:
+    def get_stats(
+        self,
+        fields: Optional[Union[str, List[str]]] = None,
+    ) -> Tuple[Optional[Dict[str, Any]], Optional[Dict[str, Any]]]:
         """
         Get repository statistics resource (repogenome://stats).
+
+        Args:
+            fields: Field selection (None = all fields)
 
         Returns:
             Tuple of (data_dict, error_dict). One will be None.
         """
         from repogenome.mcp.tools import RepoGenomeTools
+        from repogenome.utils.field_filter import filter_fields
         from pathlib import Path
         
         tools = RepoGenomeTools(self.storage, str(self.storage.repo_path))
@@ -172,19 +193,29 @@ class RepoGenomeResources:
                 "action": "Run repogenome.scan to generate genome",
             }
         
+        # Apply field filtering if specified
+        if fields:
+            stats_result = filter_fields(stats_result, fields, context="stats")
+        
         return stats_result, None
 
-    def get_node_resource(self, node_id: str) -> Tuple[Optional[Dict[str, Any]], Optional[Dict[str, Any]]]:
+    def get_node_resource(
+        self,
+        node_id: str,
+        fields: Optional[Union[str, List[str]]] = None,
+    ) -> Tuple[Optional[Dict[str, Any]], Optional[Dict[str, Any]]]:
         """
         Get individual node resource (repogenome://nodes/{node_id}).
 
         Args:
             node_id: Node ID to retrieve
+            fields: Field selection (None = all fields)
 
         Returns:
             Tuple of (data_dict, error_dict). One will be None.
         """
         from repogenome.mcp.tools import RepoGenomeTools
+        from repogenome.utils.field_filter import filter_fields
         from pathlib import Path
         
         tools = RepoGenomeTools(self.storage, str(self.storage.repo_path))
@@ -197,9 +228,19 @@ class RepoGenomeResources:
                 "action": "Check node ID or run repogenome.scan to generate genome",
             }
         
+        # Apply field filtering if specified
+        if fields:
+            node_result = filter_fields(node_result, fields, context="node")
+        
         return node_result, None
 
-    def read_resource(self, uri: str) -> Tuple[Optional[str], Optional[Dict[str, Any]]]:
+    def read_resource(
+        self,
+        uri: str,
+        fields: Optional[Union[str, List[str]]] = None,
+        summary_mode: Optional[str] = None,
+        minify: bool = False,
+    ) -> Tuple[Optional[str], Optional[Dict[str, Any]]]:
         """
         Read resource by URI.
 
@@ -207,31 +248,62 @@ class RepoGenomeResources:
             uri: Resource URI (repogenome://current, repogenome://summary, repogenome://diff, 
                  repogenome://stats, repogenome://nodes/{node_id})
                 Can be a string or AnyUrl object from Pydantic
+                Supports query parameters: ?fields=id,type&mode=brief
+            fields: Field selection (overrides URI query params)
+            summary_mode: Summary mode (overrides URI query params)
+            minify: Minify JSON output (no indentation)
 
         Returns:
             Tuple of (json_string, error_dict). One will be None.
         """
+        from urllib.parse import urlparse, parse_qs
+        
         # Convert URI to string if it's not already (handles AnyUrl objects from Pydantic)
         uri_str = str(uri) if not isinstance(uri, str) else uri
         
-        # Normalize URI: strip whitespace and convert to lowercase for comparison
-        normalized_uri = uri_str.strip()
-        normalized_lower = normalized_uri.lower()
+        # Parse URI and query parameters
+        parsed = urlparse(uri_str)
+        query_params = parse_qs(parsed.query)
+        
+        # Extract parameters from query string
+        uri_fields = query_params.get("fields", [None])[0]
+        uri_mode = query_params.get("mode", [None])[0]
+        uri_minify = query_params.get("minify", [None])[0]
+        
+        # Use provided parameters or fall back to URI params
+        final_fields = fields or uri_fields
+        final_mode = summary_mode or uri_mode
+        final_minify = minify or (uri_minify and uri_minify.lower() in ("true", "1", "yes"))
+        
+        # Normalize URI path: strip whitespace and convert to lowercase for comparison
+        normalized_path = parsed.path.strip().lower()
+        
+        # Handle variants (brief, standard, detailed)
+        variant = None
+        if normalized_path.endswith("/brief") or normalized_path.endswith("/lite"):
+            variant = "brief"
+            normalized_path = normalized_path.rsplit("/", 1)[0]
+        elif normalized_path.endswith("/detailed"):
+            variant = "detailed"
+            normalized_path = normalized_path.rsplit("/", 1)[0]
+        elif normalized_path.endswith("/standard"):
+            variant = "standard"
+            normalized_path = normalized_path.rsplit("/", 1)[0]
         
         # Explicit URI matching (case-insensitive)
-        if normalized_lower == "repogenome://current":
-            data, error = self.get_current()
-        elif normalized_lower == "repogenome://summary":
-            data, error = self.get_summary()
-        elif normalized_lower == "repogenome://diff":
+        if normalized_path == "repogenome://current" or normalized_path == "/current":
+            data, error = self.get_current(fields=final_fields, summary_mode=final_mode, variant=variant)
+        elif normalized_path == "repogenome://summary" or normalized_path == "/summary":
+            data, error = self.get_summary(fields=final_fields, summary_mode=final_mode)
+        elif normalized_path == "repogenome://diff" or normalized_path == "/diff":
             data, error = self.get_diff()
-        elif normalized_lower == "repogenome://stats":
-            data, error = self.get_stats()
-        elif normalized_lower.startswith("repogenome://nodes/"):
+        elif normalized_path == "repogenome://stats" or normalized_path == "/stats":
+            data, error = self.get_stats(fields=final_fields)
+        elif normalized_path.startswith("repogenome://nodes/") or normalized_path.startswith("/nodes/"):
             # Extract node_id from URI
-            node_id = normalized_uri.replace("repogenome://nodes/", "").strip()
+            node_id = parsed.path.replace("repogenome://nodes/", "").replace("/nodes/", "").strip()
             if node_id:
-                data, error = self.get_node_resource(node_id)
+                data, error = self.get_node_resource(node_id, fields=final_fields)
             else:
                 error = {
                     "error": "Invalid node resource URI",

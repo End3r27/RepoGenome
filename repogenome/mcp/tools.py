@@ -2,7 +2,7 @@
 
 import time
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 from repogenome.core.generator import RepoGenomeGenerator
 from repogenome.core.query import GenomeQuery, parse_simple_query
@@ -80,7 +80,15 @@ class RepoGenomeTools:
                 "edges": len(genome.edges),
             }
         except Exception as e:
-            return {"success": False, "error": str(e)}
+            from repogenome.core.errors import format_error
+            return {
+                "success": False,
+                **format_error(
+                    f"Scan failed: {str(e)}",
+                    "Check repository path and permissions",
+                    exception=e,
+                )
+            }
 
     def query(
         self,
@@ -90,6 +98,9 @@ class RepoGenomeTools:
         page_size: int = 50,
         filters: Optional[Dict[str, Any]] = None,
         use_cache: bool = True,
+        fields: Optional[Union[str, List[str]]] = None,
+        ids_only: bool = False,
+        max_summary_length: Optional[int] = None,
     ) -> Dict[str, Any]:
         """
         Query RepoGenome graph with pagination and advanced filtering.
@@ -101,21 +112,42 @@ class RepoGenomeTools:
             page_size: Number of results per page
             filters: Additional filters (AND/OR logic supported)
             use_cache: Whether to use cached query results
+            fields: Field selection (None = all fields, "*" = all fields, list = specific fields)
+            ids_only: If True, return only node IDs (minimal context)
+            max_summary_length: Maximum length for summaries (None = use config default)
 
         Returns:
             Query results with pagination
         """
+        from repogenome.utils.field_filter import filter_fields
+        from repogenome.core.config import RepoGenomeConfig
+        from repogenome.core.errors import format_error
+        
         genome = self.storage.load_genome()
         if genome is None:
-            return {"error": "No genome found. Run repogenome.scan first."}
+            return format_error(
+                "No genome found",
+                "Run repogenome.scan first",
+            )
 
-        # Check cache
+        # Get max_summary_length from config if not provided
+        if max_summary_length is None:
+            config = RepoGenomeConfig.load()
+            max_summary_length = config.max_summary_length
+
+        # Check cache (include new parameters in cache key)
         if use_cache:
-            cache_key = f"{query}:{format}:{page}:{page_size}:{str(filters)}"
+            cache_key = f"{query}:{format}:{page}:{page_size}:{str(filters)}:{str(fields)}:{ids_only}:{max_summary_length}"
             if cache_key in self._query_cache:
-                cached_result, cached_time = self._query_cache[cache_key]
+                cached_data, cached_time, is_compressed = self._query_cache[cache_key]
                 if time.time() - cached_time < self._cache_ttl:
-                    return cached_result
+                    # Decompress if needed
+                    if is_compressed:
+                        import json
+                        import gzip
+                        decompressed = gzip.decompress(cached_data)
+                        return json.loads(decompressed.decode('utf-8'))
+                    return cached_data
                 else:
                     # Remove expired cache entry
                     del self._query_cache[cache_key]
@@ -145,25 +177,67 @@ class RepoGenomeTools:
                     end_idx = start_idx + page_size
                     paginated_results = results[start_idx:end_idx]
                     
-                    result = {
-                        "type": "nodes",
-                        "count": total_count,
-                        "page": page,
-                        "page_size": page_size,
-                        "total_pages": (total_count + page_size - 1) // page_size if page_size > 0 else 1,
-                        "results": [
-                            {
-                                "id": node_id,
-                                **(node_data.model_dump() if hasattr(node_data, 'model_dump') else (node_data if isinstance(node_data, dict) else {}))
-                            }
-                            for node_id, node_data in paginated_results
-                        ],
-                    }
+                    # Handle ids_only mode
+                    if ids_only:
+                        result = {
+                            "type": "nodes",
+                            "count": total_count,
+                            "page": page,
+                            "page_size": page_size,
+                            "total_pages": (total_count + page_size - 1) // page_size if page_size > 0 else 1,
+                            "ids": [node_id for node_id, _ in paginated_results],
+                        }
+                    else:
+                        # Process results with field selection and summary truncation
+                        processed_results = []
+                        for node_id, node_data in paginated_results:
+                            # Convert to dict
+                            if hasattr(node_data, 'model_dump'):
+                                node_dict = node_data.model_dump()
+                            elif hasattr(node_data, 'dict'):
+                                node_dict = node_data.dict()
+                            else:
+                                node_dict = node_data if isinstance(node_data, dict) else {}
+                            
+                            # Truncate summary if needed
+                            if max_summary_length and "summary" in node_dict and node_dict.get("summary"):
+                                summary = node_dict["summary"]
+                                if len(summary) > max_summary_length:
+                                    # Truncate at word boundary if possible
+                                    truncated = summary[:max_summary_length - 3]
+                                    last_space = truncated.rfind(" ")
+                                    if last_space > max_summary_length * 0.8:  # Only if we keep most of the text
+                                        truncated = truncated[:last_space]
+                                    node_dict["summary"] = truncated + "..."
+                            
+                            # Apply field filtering
+                            if fields:
+                                node_dict = filter_fields({"id": node_id, **node_dict}, fields, context="node")
+                            else:
+                                node_dict = {"id": node_id, **node_dict}
+                            
+                            processed_results.append(node_dict)
+                        
+                        result = {
+                            "type": "nodes",
+                            "count": total_count,
+                            "page": page,
+                            "page_size": page_size,
+                            "total_pages": (total_count + page_size - 1) // page_size if page_size > 0 else 1,
+                            "results": processed_results,
+                        }
                     
-                    # Cache result
+                    # Cache result with compression for large results
                     if use_cache:
-                        cache_key = f"{query}:{format}:{page}:{page_size}:{str(filters)}"
-                        self._query_cache[cache_key] = (result, time.time())
+                        cache_key = f"{query}:{format}:{page}:{page_size}:{str(filters)}:{str(fields)}:{ids_only}:{max_summary_length}"
+                        import json
+                        import gzip
+                        result_json = json.dumps(result).encode('utf-8')
+                        if len(result_json) > 10240:  # 10KB
+                            compressed = gzip.compress(result_json)
+                            self._query_cache[cache_key] = (compressed, time.time(), True)
+                        else:
+                            self._query_cache[cache_key] = (result, time.time(), False)
                         # Limit cache size
                         if len(self._query_cache) > 100:
                             # Remove oldest entries
@@ -201,6 +275,14 @@ class RepoGenomeTools:
                     file_path = node_dict.get('file', '') or ''
                     node_str = f"{node_id} {summary} {file_path}".lower()
                     if any(word in node_str for word in query_lower.split()):
+                        # Truncate summary if needed
+                        if max_summary_length and summary and len(summary) > max_summary_length:
+                            truncated = summary[:max_summary_length - 3]
+                            last_space = truncated.rfind(" ")
+                            if last_space > max_summary_length * 0.8:
+                                truncated = truncated[:last_space]
+                            node_dict["summary"] = truncated + "..."
+                        
                         results.append({"id": node_id, **node_dict})
 
                 # Search in concepts
@@ -220,20 +302,46 @@ class RepoGenomeTools:
                 end_idx = start_idx + page_size
                 paginated_results = results[start_idx:end_idx]
 
-                result = {
-                    "type": "search",
-                    "query": query,
-                    "count": total_count,
-                    "page": page,
-                    "page_size": page_size,
-                    "total_pages": (total_count + page_size - 1) // page_size if page_size > 0 else 1,
-                    "results": paginated_results,
-                }
+                # Handle ids_only mode
+                if ids_only:
+                    result = {
+                        "type": "search",
+                        "query": query,
+                        "count": total_count,
+                        "page": page,
+                        "page_size": page_size,
+                        "total_pages": (total_count + page_size - 1) // page_size if page_size > 0 else 1,
+                        "ids": [item["id"] for item in paginated_results],
+                    }
+                else:
+                    # Apply field filtering if specified
+                    if fields:
+                        paginated_results = [
+                            filter_fields(item, fields, context="node")
+                            for item in paginated_results
+                        ]
+                    
+                    result = {
+                        "type": "search",
+                        "query": query,
+                        "count": total_count,
+                        "page": page,
+                        "page_size": page_size,
+                        "total_pages": (total_count + page_size - 1) // page_size if page_size > 0 else 1,
+                        "results": paginated_results,
+                    }
                 
-                # Cache result
+                # Cache result with compression for large results
                 if use_cache:
-                    cache_key = f"{query}:{format}:{page}:{page_size}:{str(filters)}"
-                    self._query_cache[cache_key] = (result, time.time())
+                    cache_key = f"{query}:{format}:{page}:{page_size}:{str(filters)}:{str(fields)}:{ids_only}:{max_summary_length}"
+                    import json
+                    import gzip
+                    result_json = json.dumps(result).encode('utf-8')
+                    if len(result_json) > 10240:  # 10KB
+                        compressed = gzip.compress(result_json)
+                        self._query_cache[cache_key] = (compressed, time.time(), True)
+                    else:
+                        self._query_cache[cache_key] = (result, time.time(), False)
                     # Limit cache size
                     if len(self._query_cache) > 100:
                         # Remove oldest entries
@@ -243,7 +351,12 @@ class RepoGenomeTools:
                 
                 return result
         except Exception as e:
-            return {"error": f"Query failed: {str(e)}"}
+            from repogenome.core.errors import format_error
+            return format_error(
+                f"Query failed: {str(e)}",
+                "Check query syntax and try again",
+                exception=e,
+            )
 
     def impact(
         self, affected_nodes: List[str], operation: str = "modify"
@@ -258,9 +371,14 @@ class RepoGenomeTools:
         Returns:
             Impact analysis with risk score and affected components
         """
+        from repogenome.core.errors import format_error
+        
         genome = self.storage.load_genome()
         if genome is None:
-            return {"error": "No genome found. Run repogenome.scan first."}
+            return format_error(
+                "No genome found",
+                "Run repogenome.scan first",
+            )
 
         try:
             affected_flows = []
@@ -310,7 +428,12 @@ class RepoGenomeTools:
                 "operation": operation,
             }
         except Exception as e:
-            return {"error": f"Impact analysis failed: {str(e)}"}
+            from repogenome.core.errors import format_error
+            return format_error(
+                f"Impact analysis failed: {str(e)}",
+                "Verify node IDs and try again",
+                exception=e,
+            )
 
     def update(
         self,
@@ -359,7 +482,12 @@ class RepoGenomeTools:
 
             return update_info
         except Exception as e:
-            return {"error": f"Update failed: {str(e)}"}
+            from repogenome.core.errors import format_error
+            return format_error(
+                f"Update failed: {str(e)}",
+                "Check genome file and try again",
+                exception=e,
+            )
 
     def validate(self) -> Dict[str, Any]:
         """
@@ -370,19 +498,19 @@ class RepoGenomeTools:
         """
         genome = self.storage.load_genome()
         if genome is None:
-            return {
-                "valid": False,
-                "error": "No genome found",
-                "action": "Run repogenome.scan to generate genome",
-            }
+            from repogenome.core.errors import format_error
+            return format_error(
+                "No genome found",
+                "Run repogenome.scan to generate genome",
+            )
 
         # Check if stale
         if self.storage.is_stale():
-            return {
-                "valid": False,
-                "error": "Genome is stale (repo hash mismatch)",
-                "action": "Run repogenome.scan to regenerate",
-            }
+            from repogenome.core.errors import format_error
+            return format_error(
+                "Genome is stale (repo hash mismatch)",
+                "Run repogenome.scan to regenerate",
+            )
 
         # Basic validation checks
         issues = []
@@ -396,13 +524,14 @@ class RepoGenomeTools:
                 issues.append(f"Edge to missing node: {edge.to}")
 
         if issues:
-            return {
-                "valid": False,
-                "error": "Genome has consistency issues",
-                "issues": issues,
-                "action": "Run repogenome.scan to regenerate",
-            }
+            from repogenome.core.errors import format_error
+            return format_error(
+                "Genome has consistency issues",
+                "Run repogenome.scan to regenerate",
+                details={"issues": issues},
+            )
 
+        from repogenome.core.errors import format_error
         return {
             "valid": True,
             "message": "Genome is valid and up-to-date",
@@ -410,19 +539,37 @@ class RepoGenomeTools:
             "edges": len(genome.edges),
         }
 
-    def get_node(self, node_id: str) -> Dict[str, Any]:
+    def get_node(
+        self,
+        node_id: str,
+        max_depth: int = 1,
+        fields: Optional[Union[str, List[str]]] = None,
+        include_edges: bool = True,
+        edge_types: Optional[List[str]] = None,
+    ) -> Dict[str, Any]:
         """
         Get detailed information about a specific node.
 
         Args:
             node_id: Node ID to retrieve
+            max_depth: Maximum depth for relationships (0 = node only, 1 = direct only)
+            fields: Field selection (None = all fields)
+            include_edges: Whether to include edge information (default: True)
+            edge_types: Filter edges by type (None = all types)
 
         Returns:
             Node details with relationships
         """
+        from repogenome.utils.field_filter import filter_fields
+        
+        from repogenome.core.errors import format_error
+        
         genome = self.storage.load_genome()
         if genome is None:
-            return {"error": "No genome found. Run repogenome.scan first."}
+            return format_error(
+                "No genome found",
+                "Run repogenome.scan first",
+            )
 
         try:
             if node_id not in genome.nodes:
@@ -438,30 +585,40 @@ class RepoGenomeTools:
             else:
                 node_dict = node if isinstance(node, dict) else {}
 
-            # Get incoming edges
-            incoming_edges = [
-                {
-                    "from": edge.from_,
-                    "to": edge.to,
-                    "type": edge.type if hasattr(edge, 'type') else None,
-                }
-                for edge in genome.edges
-                if edge.to == node_id
-            ]
+            result: Dict[str, Any] = {"node": node_dict}
 
-            # Get outgoing edges
-            outgoing_edges = [
-                {
-                    "from": edge.from_,
-                    "to": edge.to,
-                    "type": edge.type if hasattr(edge, 'type') else None,
-                }
-                for edge in genome.edges
-                if edge.from_ == node_id
-            ]
+            # Get edges if requested and depth > 0
+            if include_edges and max_depth > 0:
+                # Get incoming edges
+                incoming_edges = []
+                for edge in genome.edges:
+                    if edge.to == node_id:
+                        edge_type = edge.type.value if hasattr(edge.type, 'value') else str(edge.type)
+                        if edge_types is None or edge_type in edge_types:
+                            incoming_edges.append({
+                                "from": edge.from_,
+                                "to": edge.to,
+                                "type": edge_type,
+                            })
+
+                # Get outgoing edges
+                outgoing_edges = []
+                for edge in genome.edges:
+                    if edge.from_ == node_id:
+                        edge_type = edge.type.value if hasattr(edge.type, 'value') else str(edge.type)
+                        if edge_types is None or edge_type in edge_types:
+                            outgoing_edges.append({
+                                "from": edge.from_,
+                                "to": edge.to,
+                                "type": edge_type,
+                            })
+
+                result["incoming_edges"] = incoming_edges
+                result["outgoing_edges"] = outgoing_edges
+                result["incoming_count"] = len(incoming_edges)
+                result["outgoing_count"] = len(outgoing_edges)
 
             # Get risk information
-            risk_data = None
             if node_id in genome.risk:
                 risk = genome.risk[node_id]
                 if hasattr(risk, 'model_dump'):
@@ -470,17 +627,20 @@ class RepoGenomeTools:
                     risk_data = risk.dict()
                 else:
                     risk_data = risk if isinstance(risk, dict) else None
+                result["risk"] = risk_data
 
-            return {
-                "node": node_dict,
-                "incoming_edges": incoming_edges,
-                "outgoing_edges": outgoing_edges,
-                "risk": risk_data,
-                "incoming_count": len(incoming_edges),
-                "outgoing_count": len(outgoing_edges),
-            }
+            # Apply field filtering if specified
+            if fields:
+                result = filter_fields(result, fields, context="node")
+
+            return result
         except Exception as e:
-            return {"error": f"Failed to get node: {str(e)}"}
+            from repogenome.core.errors import format_error
+            return format_error(
+                f"Failed to get node: {str(e)}",
+                "Verify node ID and try again",
+                exception=e,
+            )
 
     def search(
         self,
@@ -503,9 +663,14 @@ class RepoGenomeTools:
         Returns:
             Search results
         """
+        from repogenome.core.errors import format_error
+        
         genome = self.storage.load_genome()
         if genome is None:
-            return {"error": "No genome found. Run repogenome.scan first."}
+            return format_error(
+                "No genome found",
+                "Run repogenome.scan first",
+            )
 
         try:
             import fnmatch
@@ -560,7 +725,12 @@ class RepoGenomeTools:
                 },
             }
         except Exception as e:
-            return {"error": f"Search failed: {str(e)}"}
+            from repogenome.core.errors import format_error
+            return format_error(
+                f"Search failed: {str(e)}",
+                "Check search parameters and try again",
+                exception=e,
+            )
 
     def dependencies(self, node_id: str, direction: str = "both", depth: int = 1) -> Dict[str, Any]:
         """
@@ -574,9 +744,14 @@ class RepoGenomeTools:
         Returns:
             Dependency graph
         """
+        from repogenome.core.errors import format_error
+        
         genome = self.storage.load_genome()
         if genome is None:
-            return {"error": "No genome found. Run repogenome.scan first."}
+            return format_error(
+                "No genome found",
+                "Run repogenome.scan first",
+            )
 
         try:
             if node_id not in genome.nodes:
@@ -619,7 +794,12 @@ class RepoGenomeTools:
                 "graph": graph,
             }
         except Exception as e:
-            return {"error": f"Failed to get dependencies: {str(e)}"}
+            from repogenome.core.errors import format_error
+            return format_error(
+                f"Failed to get dependencies: {str(e)}",
+                "Verify node ID and try again",
+                exception=e,
+            )
 
     def stats(self) -> Dict[str, Any]:
         """
@@ -628,9 +808,14 @@ class RepoGenomeTools:
         Returns:
             Repository statistics
         """
+        from repogenome.core.errors import format_error
+        
         genome = self.storage.load_genome()
         if genome is None:
-            return {"error": "No genome found. Run repogenome.scan first."}
+            return format_error(
+                "No genome found",
+                "Run repogenome.scan first",
+            )
 
         try:
             # Count nodes by type
@@ -695,7 +880,12 @@ class RepoGenomeTools:
                 "entry_points": len(genome.summary.entry_points) if genome.summary else 0,
             }
         except Exception as e:
-            return {"error": f"Failed to get stats: {str(e)}"}
+            from repogenome.core.errors import format_error
+            return format_error(
+                f"Failed to get stats: {str(e)}",
+                "Check genome file and try again",
+                exception=e,
+            )
 
     def export(self, format: str = "json", output_path: Optional[str] = None) -> Dict[str, Any]:
         """
@@ -708,9 +898,14 @@ class RepoGenomeTools:
         Returns:
             Export result
         """
+        from repogenome.core.errors import format_error
+        
         genome = self.storage.load_genome()
         if genome is None:
-            return {"error": "No genome found. Run repogenome.scan first."}
+            return format_error(
+                "No genome found",
+                "Run repogenome.scan first",
+            )
 
         try:
             from pathlib import Path
@@ -750,7 +945,12 @@ class RepoGenomeTools:
                 "message": f"Genome exported to {format} format",
             }
         except Exception as e:
-            return {"error": f"Export failed: {str(e)}"}
+            from repogenome.core.errors import format_error
+            return format_error(
+                f"Export failed: {str(e)}",
+                "Check format and output path",
+                exception=e,
+            )
 
     def _export_csv(self, genome: "RepoGenome", output_path: Path) -> None:
         """Export genome to CSV format."""

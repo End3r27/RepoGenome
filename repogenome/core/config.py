@@ -30,6 +30,9 @@ class RepoGenomeConfig:
         max_summary_length: Optional[int] = 200,
         exclude_defaults: bool = False,
         enable_compression: bool = False,
+        default_summary_mode: str = "standard",
+        default_query_fields: Optional[List[str]] = None,
+        error_verbosity: str = "standard",
     ):
         """
         Initialize configuration.
@@ -48,6 +51,9 @@ class RepoGenomeConfig:
             max_summary_length: Maximum length for summaries (None = no limit)
             exclude_defaults: Exclude fields with default values
             enable_compression: Use gzip compression for output
+            default_summary_mode: Default summary mode (brief, standard, detailed)
+            default_query_fields: Default fields for queries (None = all fields)
+            error_verbosity: Error verbosity level (minimal, standard, verbose)
         """
         self.enabled_subsystems = enabled_subsystems
         self.disabled_subsystems = disabled_subsystems or []
@@ -71,6 +77,9 @@ class RepoGenomeConfig:
         self.max_summary_length = max_summary_length
         self.exclude_defaults = exclude_defaults
         self.enable_compression = enable_compression
+        self.default_summary_mode = default_summary_mode
+        self.default_query_fields = default_query_fields
+        self.error_verbosity = error_verbosity
 
     @classmethod
     def load(cls, config_path: Optional[Path] = None) -> "RepoGenomeConfig":
@@ -123,6 +132,9 @@ class RepoGenomeConfig:
             max_summary_length=config_data.get("max_summary_length", 200),
             exclude_defaults=config_data.get("exclude_defaults", False),
             enable_compression=config_data.get("enable_compression", False),
+            default_summary_mode=config_data.get("default_summary_mode", "standard"),
+            default_query_fields=config_data.get("default_query_fields"),
+            error_verbosity=config_data.get("error_verbosity", "standard"),
         )
 
     def should_analyze_file(self, file_path: Path) -> bool:
@@ -227,6 +239,11 @@ minify_json = false
 max_summary_length = 200
 exclude_defaults = false
 enable_compression = false
+
+# Context reduction options
+default_summary_mode = "standard"  # brief, standard, or detailed
+# default_query_fields = ["id", "type", "file"]  # None = all fields
+error_verbosity = "standard"  # minimal, standard, or verbose
 """
     with open(output_path, "w", encoding="utf-8") as f:
         f.write(config_content)

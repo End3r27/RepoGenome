@@ -23,6 +23,7 @@ except ImportError:
     Server = None
     stdio_server = None
 
+from repogenome.core.config import RepoGenomeConfig
 from repogenome.mcp.contract import AgentContract
 from repogenome.mcp.resources import RepoGenomeResources
 from repogenome.mcp.storage import GenomeStorage
@@ -32,12 +33,13 @@ from repogenome.mcp.tools import RepoGenomeTools
 class RepoGenomeMCPServer:
     """MCP server for RepoGenome."""
 
-    def __init__(self, repo_path: Path):
+    def __init__(self, repo_path: Path, config: Optional[RepoGenomeConfig] = None):
         """
         Initialize MCP server.
 
         Args:
             repo_path: Path to repository root
+            config: Optional configuration (None = load from file or use defaults)
         """
         if not MCP_AVAILABLE:
             raise ImportError(
@@ -45,6 +47,7 @@ class RepoGenomeMCPServer:
             )
 
         self.repo_path = Path(repo_path).resolve()
+        self.config = config or RepoGenomeConfig.load()
         self.storage = GenomeStorage(self.repo_path)
         self.resources = RepoGenomeResources(self.storage)
         self.tools = RepoGenomeTools(self.storage, str(self.repo_path))
@@ -82,28 +85,30 @@ class RepoGenomeMCPServer:
             # Normalize URI for contract marking
             normalized_uri = uri_str.strip().lower()
             # Mark genome as loaded if current is accessed
-            if normalized_uri == "repogenome://current":
+            if normalized_uri.startswith("repogenome://current"):
                 self.contract.mark_genome_loaded()
 
+            # Parse query parameters from URI if present
             content, error = self.resources.read_resource(uri_str)
             if error is not None:
-                # Format error as JSON with detailed information
-                error_message = (
-                    f"Resource not available: {uri}\n"
-                    f"Error: {error.get('error', 'Unknown error')}\n"
-                    f"Reason: {error.get('reason', 'Unknown reason')}\n"
-                    f"Action: {error.get('action', 'No action specified')}"
+                # Use concise error format
+                from repogenome.core.errors import format_error
+                error_formatted = format_error(
+                    error.get('error', 'Unknown error'),
+                    error.get('action', 'No action specified'),
+                    details=error.get('details'),
                 )
+                error_message = json.dumps(error_formatted, indent=2)
                 raise ValueError(error_message)
             
             if content is None:
                 # Fallback error (should not happen with new implementation)
-                raise ValueError(
-                    f"Resource not found: {uri}\n"
-                    "The resource could not be loaded. "
-                    "This may indicate the genome file is missing, corrupted, or invalid. "
-                    "Run repogenome.scan to generate or regenerate the genome."
+                from repogenome.core.errors import format_error
+                error_formatted = format_error(
+                    "Resource not found",
+                    "Run repogenome.scan to generate or regenerate the genome",
                 )
+                raise ValueError(json.dumps(error_formatted, indent=2))
             
             return content
 
@@ -135,7 +140,7 @@ class RepoGenomeMCPServer:
                 ),
                 Tool(
                     name="repogenome.query",
-                    description="Query RepoGenome graph without touching code",
+                    description="Query RepoGenome graph with pagination, field selection, and advanced filtering",
                     inputSchema={
                         "type": "object",
                         "properties": {
@@ -162,6 +167,20 @@ class RepoGenomeMCPServer:
                             "filters": {
                                 "type": "object",
                                 "description": "Additional filters (supports AND/OR logic)",
+                            },
+                            "fields": {
+                                "type": ["array", "string"],
+                                "items": {"type": "string"},
+                                "description": "Field selection (None = all fields, '*' = all fields, list = specific fields). Supports aliases: t=type, f=file, s=summary",
+                            },
+                            "ids_only": {
+                                "type": "boolean",
+                                "default": False,
+                                "description": "Return only node IDs (minimal context)",
+                            },
+                            "max_summary_length": {
+                                "type": "integer",
+                                "description": "Maximum length for summaries (None = use config default)",
                             },
                         },
                         "required": ["query"],
@@ -223,13 +242,33 @@ class RepoGenomeMCPServer:
                 ),
                 Tool(
                     name="repogenome.get_node",
-                    description="Get detailed information about a specific node",
+                    description="Get detailed information about a specific node with configurable depth and field selection",
                     inputSchema={
                         "type": "object",
                         "properties": {
                             "node_id": {
                                 "type": "string",
                                 "description": "Node ID to retrieve",
+                            },
+                            "max_depth": {
+                                "type": "integer",
+                                "default": 1,
+                                "description": "Maximum depth for relationships (0 = node only, 1 = direct only)",
+                            },
+                            "fields": {
+                                "type": ["array", "string"],
+                                "items": {"type": "string"},
+                                "description": "Field selection (None = all fields). Supports dot notation: node.id, incoming_edges.from",
+                            },
+                            "include_edges": {
+                                "type": "boolean",
+                                "default": True,
+                                "description": "Whether to include edge information",
+                            },
+                            "edge_types": {
+                                "type": "array",
+                                "items": {"type": "string"},
+                                "description": "Filter edges by type (None = all types)",
                             },
                         },
                         "required": ["node_id"],
@@ -346,6 +385,9 @@ class RepoGenomeMCPServer:
                         page=arguments.get("page", 1),
                         page_size=arguments.get("page_size", 50),
                         filters=arguments.get("filters"),
+                        fields=arguments.get("fields"),
+                        ids_only=arguments.get("ids_only", False),
+                        max_summary_length=arguments.get("max_summary_length"),
                     )
 
                 elif name == "repogenome.impact":
@@ -372,6 +414,10 @@ class RepoGenomeMCPServer:
                 elif name == "repogenome.get_node":
                     result = self.tools.get_node(
                         node_id=arguments.get("node_id", ""),
+                        max_depth=arguments.get("max_depth", 1),
+                        fields=arguments.get("fields"),
+                        include_edges=arguments.get("include_edges", True),
+                        edge_types=arguments.get("edge_types"),
                     )
 
                 elif name == "repogenome.search":

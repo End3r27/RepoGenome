@@ -141,6 +141,14 @@ def _expand_dict(data: Dict[str, Any], context: Optional[str] = None) -> Dict[st
     return result
 
 
+class SummaryMode(str, Enum):
+    """Summary detail levels for context reduction."""
+
+    BRIEF = "brief"
+    STANDARD = "standard"
+    DETAILED = "detailed"
+
+
 class NodeType(str, Enum):
     """Types of nodes in the repository graph."""
 
@@ -165,6 +173,7 @@ class EdgeType(str, Enum):
     DEPENDS_ON = "depends_on"
     MUTATES = "mutates"
     EMITS = "emits"
+    REFERENCES = "references"
 
 
 class Metadata(BaseModel):
@@ -470,6 +479,75 @@ class RepoGenome(BaseModel):
             data["edges"] = lite_edges
         
         return data
+
+    def get_summary_brief(self) -> Dict[str, Any]:
+        """
+        Get brief summary (minimal essential data).
+        
+        Returns:
+            Dictionary with entry_points and core_domains only
+        """
+        return {
+            "entry_points": self.summary.entry_points,
+            "core_domains": self.summary.core_domains,
+        }
+
+    def get_summary_standard(self) -> Dict[str, Any]:
+        """
+        Get standard summary (current implementation).
+        
+        Returns:
+            Dictionary with all standard summary fields
+        """
+        return self.summary.model_dump()
+
+    def get_summary_detailed(self) -> Dict[str, Any]:
+        """
+        Get detailed summary (enhanced with metrics).
+        
+        Returns:
+            Dictionary with standard summary plus additional metrics
+        """
+        summary = self.summary.model_dump()
+        
+        # Add metrics
+        summary["metrics"] = {
+            "total_nodes": len(self.nodes),
+            "total_edges": len(self.edges),
+            "total_flows": len(self.flows),
+            "total_concepts": len(self.concepts),
+            "nodes_by_type": self._count_nodes_by_type(),
+            "languages": list(set(
+                node.language for node in self.nodes.values() if node.language
+            )),
+        }
+        
+        return summary
+
+    def _count_nodes_by_type(self) -> Dict[str, int]:
+        """Count nodes by type."""
+        counts: Dict[str, int] = {}
+        for node in self.nodes.values():
+            node_type = node.type.value
+            counts[node_type] = counts.get(node_type, 0) + 1
+        return counts
+
+    def get_summary_by_mode(self, mode: SummaryMode) -> Dict[str, Any]:
+        """
+        Get summary by mode.
+        
+        Args:
+            mode: Summary mode (brief, standard, detailed)
+            
+        Returns:
+            Summary dictionary based on mode
+        """
+        if mode == SummaryMode.BRIEF:
+            return self.get_summary_brief()
+        elif mode == SummaryMode.DETAILED:
+            return self.get_summary_detailed()
+        else:  # STANDARD
+            return self.get_summary_standard()
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> "RepoGenome":

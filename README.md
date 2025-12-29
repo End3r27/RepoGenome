@@ -30,15 +30,17 @@
 
 RepoGenome generates a comprehensive JSON artifact (`repogenome.json`) that combines multiple analysis perspectives:
 
-### 🆕 Recent Enhancements (v0.8.0)
+### 🆕 Recent Enhancements (v0.8.0+)
 
+- **Context Reduction Features** - Field selection, summary modes, and IDs-only queries to minimize agent context usage
 - **Enhanced MCP Tools** - 5 new tools: `get_node`, `search`, `dependencies`, `stats`, and `export`
 - **New MCP Resources** - `repogenome://stats` and `repogenome://nodes/{node_id}` for detailed access
-- **Query Improvements** - Pagination, advanced filtering with AND/OR logic, and automatic result caching
+- **Query Improvements** - Pagination, advanced filtering with AND/OR logic, field selection, and automatic result caching
+- **Summary Modes** - Brief, standard, and detailed summary modes for different use cases
 - **Multiple Export Formats** - Export to CSV, Neo4j Cypher, and PlantUML in addition to GraphML and DOT
-- **Intelligent Caching** - Smart cache invalidation with statistics and size management
-- **Enhanced Error Handling** - Context-aware error messages with recovery suggestions
-- **Performance Optimizations** - Chunked parallel processing, query caching, and smart incremental updates
+- **Intelligent Caching** - Smart cache invalidation with statistics, size management, and compression for large results
+- **Enhanced Error Handling** - Context-aware error messages with recovery suggestions and verbosity levels
+- **Performance Optimizations** - Chunked parallel processing, query caching, result compression, and smart incremental updates
 
 - **🔍 RepoSpider** - Structural graph analysis (files, symbols, dependencies)
 - **🌊 FlowWeaver** - Runtime execution paths and side effects tracking
@@ -163,15 +165,26 @@ Always use RepoGenome for codebase analysis:
 
 **Available MCP Resources:**
 - `repogenome://current` - Full repository genome
+- `repogenome://current/brief` - Lite version (essential fields only)
+- `repogenome://current/detailed` - Enhanced version with metrics
 - `repogenome://summary` - Quick boot context (summary only)
+- `repogenome://summary?mode=brief` - Minimal summary (entry_points, core_domains only)
+- `repogenome://summary?mode=detailed` - Enhanced summary with metrics
 - `repogenome://diff` - Changes since last update
 - `repogenome://stats` - Repository statistics and metrics
 - `repogenome://nodes/{node_id}` - Individual node data with relationships
+- `repogenome://nodes/{node_id}?fields=id,type` - Node with field selection
 
 **Available MCP Tools:**
 - `repogenome.scan` - Generate/regenerate genome
-- `repogenome.query` - Query genome graph with pagination and advanced filtering
+- `repogenome.query` - Query genome graph with pagination, field selection, and advanced filtering
+  - New: `fields` parameter for field selection
+  - New: `ids_only` parameter for minimal context (IDs only)
+  - New: `max_summary_length` parameter for summary truncation
 - `repogenome.get_node` - Get detailed information about a specific node
+  - New: `fields` parameter for field selection
+  - New: `max_depth` parameter for relationship depth limits
+  - New: `include_edges` and `edge_types` parameters for edge filtering
 - `repogenome.search` - Advanced search with filters (type, language, file pattern)
 - `repogenome.dependencies` - Get dependency graph for a node
 - `repogenome.stats` - Get repository statistics and metrics
@@ -292,9 +305,58 @@ updated_genome.save("repogenome.json")
 
 ### Advanced Features (v0.8.0+)
 
-#### Context Optimization
+#### Context Reduction and Optimization
 
-RepoGenome now supports multiple compression modes to reduce file size for LLM context windows:
+RepoGenome now supports comprehensive context reduction features to minimize agent token usage:
+
+**Field Selection:**
+```python
+# Query with only specific fields (via MCP tools)
+# repogenome.query(query="functions", fields=["id", "type", "file"])
+# repogenome.get_node(node_id="auth.login", fields=["id", "type", "summary"])
+
+# Field aliases supported: t=type, f=file, s=summary, etc.
+# repogenome.query(query="functions", fields=["id", "t", "f"])
+```
+
+**Summary Modes:**
+```python
+# Brief mode (minimal context) - entry_points, core_domains only
+summary = genome.get_summary_brief()
+
+# Standard mode (current) - all summary fields
+summary = genome.get_summary_standard()
+
+# Detailed mode (enhanced) - standard + metrics
+summary = genome.get_summary_detailed()
+
+# Via resources: repogenome://summary?mode=brief
+```
+
+**IDs-Only Queries:**
+```python
+# Get only node IDs (minimal context)
+# repogenome.query(query="functions", ids_only=true)
+# Returns: {"ids": [...], "count": N, "page": ...}
+```
+
+**Resource Variants:**
+```python
+# Lightweight variants
+# repogenome://current/brief - lite version (essential fields only)
+# repogenome://current/detailed - enhanced version with metrics
+# repogenome://summary?mode=brief - minimal summary
+```
+
+**Relationship Depth Limits:**
+```python
+# Limit relationship depth
+# repogenome.get_node(node_id="auth.login", max_depth=0)  # node only
+# repogenome.get_node(node_id="auth.login", max_depth=1)  # direct relationships
+```
+
+**File Compression:**
+RepoGenome supports multiple compression modes to reduce file size for LLM context windows:
 
 ```python
 # Compact mode: Use short field names
@@ -356,7 +418,17 @@ results = query.query_nodes({
     ]
 })
 
+# Field selection (via MCP tools)
+# repogenome.query(query="functions", fields=["id", "type", "file"])
+
+# IDs-only mode for minimal context
+# repogenome.query(query="functions", ids_only=true)
+
+# Summary truncation
+# repogenome.query(query="functions", max_summary_length=100)
+
 # Query results are automatically cached for 5 minutes
+# Large results (>10KB) are compressed in cache
 # Cache statistics available via cache.get_stats()
 ```
 
@@ -722,26 +794,37 @@ The server runs on stdio and communicates via the MCP protocol. Configure it in 
 ### MCP Resources
 
 - **`repogenome://current`** - Full, up-to-date repository genome (JSON)
+- **`repogenome://current/brief`** - Lite version (essential fields only, minimal context)
+- **`repogenome://current/detailed`** - Enhanced version with additional metrics
 - **`repogenome://summary`** - Fast boot context (summary section only)
+- **`repogenome://summary?mode=brief`** - Minimal summary (entry_points, core_domains only)
+- **`repogenome://summary?mode=detailed`** - Enhanced summary with metrics
 - **`repogenome://diff`** - Changes since last update
 - **`repogenome://stats`** - Repository statistics and metrics
 - **`repogenome://nodes/{node_id}`** - Individual node data with relationships
+- **`repogenome://nodes/{node_id}?fields=id,type`** - Node with field selection
 
 ### MCP Tools
 
 - **`repogenome.scan`** - Generate or regenerate RepoGenome
   - Parameters: `scope` (full/structure/flows/history), `incremental` (boolean)
   
-- **`repogenome.query`** - Query RepoGenome graph with pagination and advanced filtering
-  - Parameters: `query` (string), `format` (json/graph), `page` (integer), `page_size` (integer), `filters` (object)
+- **`repogenome.query`** - Query RepoGenome graph with pagination, field selection, and advanced filtering
+  - Parameters: `query` (string), `format` (json/graph), `page` (integer), `page_size` (integer), `filters` (object), `fields` (array/string), `ids_only` (boolean), `max_summary_length` (integer)
   - Supports natural language queries: "find all nodes related to authentication"
   - Supports complex filters with AND/OR logic
+  - Field selection: Request only needed fields to reduce context
+  - IDs-only mode: Return only node IDs for minimal context (`ids_only=true`)
+  - Summary truncation: Limit summary text length with `max_summary_length`
   - Results are paginated for large result sets
-  - Query results are cached for improved performance
+  - Query results are cached (with compression for large results >10KB)
   
 - **`repogenome.get_node`** - Get detailed information about a specific node
-  - Parameters: `node_id` (string)
+  - Parameters: `node_id` (string), `max_depth` (integer), `fields` (array/string), `include_edges` (boolean), `edge_types` (array)
   - Returns: Node details with incoming/outgoing edges, risk information, and relationships
+  - Field selection: Request only needed fields
+  - Depth limits: Control relationship depth (0 = node only, 1 = direct relationships)
+  - Edge filtering: Include/exclude edges or filter by type
   
 - **`repogenome.search`** - Advanced search with multiple filters
   - Parameters: `query` (string, optional), `node_type` (string, optional), `language` (string, optional), `file_pattern` (string, optional), `limit` (integer, default: 50)

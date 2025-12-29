@@ -1,56 +1,256 @@
 # RepoGenome LLM Initialization Prompt
 
-## Core Instructions
+## 🎯 Core Principle
 
 **Always use RepoGenome for codebase analysis. Never manually scan files or search the repository directly.**
 
-### Session Startup
-1. **First action**: Load `repogenome://summary` resource to understand codebase structure
-2. **Alternative**: Load `repogenome://stats` for quick repository statistics
-3. **If genome missing**: Call `repogenome.scan` with `scope="full"` and `incremental=false` to generate initial genome
-4. **If genome stale**: Call `repogenome.validate` to check, then `repogenome.scan` with `incremental=true` if needed
+---
 
-### Codebase Scanning
-**When asked to scan, analyze, or understand the entire codebase:**
-- ✅ **DO**: Call `repogenome.scan(scope="full", incremental=true)` first
-- ✅ **DO**: Load `repogenome://current` resource for full genome data
-- ❌ **DON'T**: Manually read files or traverse directories
+## ⚡ Quick Start (Minimal Context)
 
-### File and Function Searching
-**When asked to find files, functions, classes, or code patterns:**
-- ✅ **DO**: Use `repogenome.query(query="your search terms", format="json", page=1, page_size=50)` with pagination
-- ✅ **DO**: Use `repogenome.search(query="terms", node_type="function", language="Python")` for advanced filtering
-- ✅ **DO**: Use `repogenome.get_node(node_id="node.id")` to get detailed information about a specific node
-- ✅ **DO**: Query supports natural language: "find authentication functions", "files related to database", etc.
-- ✅ **DO**: Use filters parameter for complex AND/OR logic queries
-- ❌ **DON'T**: Use file system search tools or grep
+**First action in every session:**
+```
+Load repogenome://summary?mode=brief
+```
+This provides minimal context (entry_points, core_domains) for fast startup.
 
-### Before Code Changes
-**Before modifying any code:**
-- ✅ **DO**: Call `repogenome.impact(affected_nodes=["node.id"], operation="modify")` to check impact
-- ✅ **DO**: Review risk scores and affected flows/contracts
+**If genome missing:** `repogenome.scan(scope="full", incremental=false)`
 
-### After Code Changes
-**After making code changes:**
-- ✅ **DO**: Call `repogenome.update(reason="description of changes")` to keep genome current
-- ✅ **DO**: This is mandatory - genome must stay synchronized
+**If genome stale:** `repogenome.validate()` then `repogenome.scan(incremental=true)`
 
-### Quick Reference
+---
 
-| Task | RepoGenome Action |
-|------|------------------|
-| Understand codebase | Load `repogenome://summary`, `repogenome://stats`, or `repogenome://current` |
-| Get repository stats | Load `repogenome://stats` or call `repogenome.stats()` |
-| Get specific node | Load `repogenome://nodes/{node_id}` or call `repogenome.get_node(node_id="...")` |
-| Full codebase scan | `repogenome.scan(scope="full")` |
-| Find files/functions | `repogenome.query(query="search terms", page=1, page_size=50)` or `repogenome.search(...)` |
-| Get dependencies | `repogenome.dependencies(node_id="...", direction="both", depth=1)` |
-| Check change impact | `repogenome.impact(affected_nodes=[...])` |
-| Update after changes | `repogenome.update(reason="...")` |
-| Export genome | `repogenome.export(format="csv|cypher|plantuml|graphml|dot")` |
-| Validate genome | `repogenome.validate()` |
+## 📋 Common Workflows
 
-### Fallback (If RepoGenome Unavailable)
+### Understanding Codebase Structure
+1. **Start minimal**: `repogenome://summary?mode=brief`
+2. **Get stats**: `repogenome://stats` or `repogenome.stats()`
+3. **Expand as needed**: `repogenome://summary?mode=detailed` or `repogenome://current/brief`
+
+### Finding Files/Functions
+1. **Discovery phase** (minimal context):
+   ```
+   repogenome.query(query="search terms", ids_only=true, page=1, page_size=50)
+   ```
+2. **Get details selectively**:
+   ```
+   repogenome.get_node(node_id="node.id", fields=["id", "type", "file", "summary"], max_depth=0)
+   ```
+
+### Analyzing Dependencies
+```
+repogenome.get_node(node_id="target", fields=["id", "incoming_edges", "outgoing_edges"], max_depth=1)
+# Or
+repogenome.dependencies(node_id="target", direction="both", depth=1)
+```
+
+### Before Making Changes
+```
+repogenome.impact(affected_nodes=["node.id"], operation="modify")
+```
+
+### After Making Changes
+```
+repogenome.update(reason="description of changes")
+```
+
+---
+
+## 🔍 Context Reduction Strategies
+
+**Minimize token usage by requesting only what you need:**
+
+### 1. Start Brief, Expand Gradually
+- **Initial load**: `repogenome://summary?mode=brief` (minimal)
+- **Standard analysis**: `repogenome://summary` (standard mode)
+- **Deep dive**: `repogenome://summary?mode=detailed` or `repogenome://current`
+
+### 2. Use Field Selection
+Request only needed fields:
+```
+fields=["id", "type", "file"]  # Only these fields
+fields="id,type,file"           # Comma-separated string
+```
+
+**Field Aliases** (for compact queries):
+- `t` → `type`
+- `f` → `file`
+- `s` → `summary`
+- `c` → `criticality`
+- `lang` → `language`
+- `v` → `visibility`
+
+### 3. Use IDs-Only for Discovery
+For large result sets, get IDs first:
+```
+repogenome.query(query="functions", ids_only=true, page=1, page_size=100)
+# Returns: {"ids": [...], "count": N}
+```
+Then fetch details selectively with `get_node()`.
+
+### 4. Limit Relationship Depth
+- `max_depth=0`: Node data only (no relationships)
+- `max_depth=1`: Direct relationships only (default)
+- `max_depth=2+`: Multiple levels (use sparingly)
+
+### 5. Filter Edges Selectively
+```
+include_edges=false          # No edges
+edge_types=["calls", "imports"]  # Only specific edge types
+```
+
+### 6. Truncate Summaries
+```
+max_summary_length=100  # Limit summary text length
+```
+
+### 7. Use Resource Variants
+- `repogenome://current/brief` - Lite version (essential fields)
+- `repogenome://current/detailed` - Enhanced with metrics
+- `repogenome://summary?mode=brief` - Minimal summary
+- `repogenome://summary?mode=detailed` - Enhanced summary
+
+---
+
+## 🛠️ Available Tools
+
+### Query & Search
+- **`repogenome.query`** - Query with pagination and field selection
+  - `query` (string) - Search terms
+  - `fields` (array/string) - Field selection
+  - `ids_only` (boolean) - Return only IDs
+  - `max_summary_length` (integer) - Truncate summaries
+  - `page`, `page_size` - Pagination
+  - `filters` (object) - AND/OR logic filters
+
+- **`repogenome.search`** - Advanced search with filters
+  - `query`, `node_type`, `language`, `file_pattern`, `limit`
+
+- **`repogenome.get_node`** - Get node details
+  - `node_id` (required)
+  - `fields` - Field selection
+  - `max_depth` - Relationship depth (0=node only, 1=direct)
+  - `include_edges` - Include edge data
+  - `edge_types` - Filter edges by type
+
+- **`repogenome.dependencies`** - Get dependency graph
+  - `node_id` (required)
+  - `direction` - "incoming", "outgoing", or "both"
+  - `depth` - Maximum depth (1=direct only)
+
+### Analysis & Management
+- **`repogenome.scan`** - Generate/regenerate genome
+  - `scope` - "full", "structure", "flows", "history"
+  - `incremental` - Use incremental update
+
+- **`repogenome.stats`** - Get repository statistics
+
+- **`repogenome.impact`** - Check change impact
+  - `affected_nodes` (array) - Node IDs
+  - `operation` - "modify", "delete", or "add"
+
+- **`repogenome.update`** - Update genome after changes
+  - `reason` (string) - Description of changes
+
+- **`repogenome.validate`** - Validate genome consistency
+
+- **`repogenome.export`** - Export to different formats
+  - `format` - "json", "csv", "cypher", "plantuml", "graphml", "dot"
+
+---
+
+## 📦 Available Resources
+
+### Summary Resources (Start Here)
+- `repogenome://summary?mode=brief` - **Minimal** (entry_points, core_domains)
+- `repogenome://summary` - **Standard** (all summary fields)
+- `repogenome://summary?mode=detailed` - **Enhanced** (standard + metrics)
+
+### Genome Resources
+- `repogenome://current` - Full genome
+- `repogenome://current/brief` - Lite version (essential fields)
+- `repogenome://current/detailed` - Enhanced with metrics
+
+### Other Resources
+- `repogenome://stats` - Repository statistics
+- `repogenome://diff` - Changes since last update
+- `repogenome://nodes/{node_id}` - Node data
+- `repogenome://nodes/{node_id}?fields=id,type` - Node with field selection
+
+---
+
+## 💡 Decision Tree
+
+**Need to understand codebase?**
+- Quick overview → `repogenome://summary?mode=brief`
+- Standard analysis → `repogenome://summary`
+- Deep analysis → `repogenome://summary?mode=detailed` or `repogenome://current`
+
+**Need to find something?**
+- Large result set → `repogenome.query(..., ids_only=true)` then `get_node()` for details
+- Small result set → `repogenome.query(..., fields=["id", "type", "file"])`
+- Specific search → `repogenome.search(...)`
+
+**Need node details?**
+- Node only → `get_node(..., max_depth=0, fields=["id", "type", "file"])`
+- With relationships → `get_node(..., max_depth=1)`
+- Specific edges → `get_node(..., edge_types=["calls"])`
+
+---
+
+## 📝 Examples
+
+### Example 1: Find Authentication Files (Minimal Context)
+```
+1. repogenome.query(query="authentication", filters={"type": "file"}, ids_only=true)
+2. For each ID, if needed: repogenome.get_node(node_id=id, fields=["id", "file"])
+```
+
+### Example 2: Understand Architecture
+```
+1. Load repogenome://summary?mode=brief
+2. Review entry_points and core_domains
+3. Expand: repogenome://summary?mode=detailed if needed
+```
+
+### Example 3: Find Functions Calling Specific Function
+```
+1. repogenome.get_node(node_id="target.function", fields=["id", "incoming_edges"], max_depth=1)
+2. Or: repogenome.dependencies(node_id="target.function", direction="incoming", depth=1)
+```
+
+### Example 4: Get Repository Statistics
+```
+repogenome.stats()
+# Or load: repogenome://stats
+```
+
+### Example 5: Query with Field Selection
+```
+repogenome.query(
+    query="database functions",
+    fields=["id", "type", "file"],  # Only these fields
+    page=1,
+    page_size=20,
+    max_summary_length=100  # Truncate summaries
+)
+```
+
+---
+
+## ⚠️ Key Principles
+
+1. **RepoGenome First** - Always use RepoGenome, never manual file operations
+2. **Minimize Context** - Request only needed fields and data
+3. **Start Brief** - Begin with minimal context, expand as needed
+4. **Use IDs-Only for Discovery** - Get IDs first, fetch details selectively
+5. **Leverage Caching** - Query results are cached automatically
+6. **Keep Updated** - Always call `repogenome.update()` after code changes
+7. **Validate When Needed** - Use `repogenome.validate()` if operations seem inconsistent
+
+---
+
+## 🔄 Fallback (If RepoGenome Unavailable)
 
 **Only if RepoGenome tools/resources are not available:**
 1. Check if `repogenome.json` exists in repository root
@@ -58,79 +258,6 @@
 3. If missing, inform user that RepoGenome should be set up first
 4. Never proceed with manual file scanning as primary method
 
-### Examples
-
-**Example 1: User asks "What files handle authentication?"**
-```
-1. Call repogenome.search(query="authentication", node_type="file")
-2. Or use repogenome.query(query="authentication files", filters={"type": "file"})
-3. Review results from genome nodes
-4. Cite specific node IDs in response
-```
-
-**Example 2: User asks "Scan the codebase and explain the architecture"**
-```
-1. Call repogenome.scan(scope="full", incremental=true)
-2. Load repogenome://current resource or repogenome://stats for quick overview
-3. Use summary.architectural_style and summary.core_domains
-4. Reference nodes and edges to explain structure
-```
-
-**Example 3: User asks "Find all functions that call database.get_user"**
-```
-1. Call repogenome.get_node(node_id="database.get_user") to see outgoing edges
-2. Or use repogenome.dependencies(node_id="database.get_user", direction="incoming")
-3. Or query with repogenome.query(query="functions calling database.get_user")
-4. Return function node IDs from results
-```
-
-**Example 4: User asks "Get statistics about the repository"**
-```
-1. Call repogenome.stats() or load repogenome://stats resource
-2. Review node counts by type, language distribution, edge counts
-3. Use statistics to understand codebase composition
-```
-
-**Example 5: User asks "What are the dependencies of auth.login_user?"**
-```
-1. Call repogenome.dependencies(node_id="auth.login_user", direction="both", depth=2)
-2. Review dependency graph with configurable depth
-3. Understand both incoming and outgoing dependencies
-```
-
-### Available Resources
-
-- `repogenome://current` - Full repository genome (use for comprehensive analysis)
-- `repogenome://summary` - Quick boot context (use for fast startup)
-- `repogenome://stats` - Repository statistics (use for metrics and overview)
-- `repogenome://diff` - Changes since last update (use to see what changed)
-- `repogenome://nodes/{node_id}` - Individual node data (use for detailed node information)
-
-### Available Tools
-
-- `repogenome.scan` - Generate/regenerate genome
-- `repogenome.query` - Query with pagination and advanced filters
-- `repogenome.get_node` - Get detailed node information with relationships
-- `repogenome.search` - Advanced search with multiple filter options
-- `repogenome.dependencies` - Get dependency graph for a node
-- `repogenome.stats` - Get repository statistics and metrics
-- `repogenome.export` - Export genome to different formats
-- `repogenome.impact` - Check change impact before modifying
-- `repogenome.update` - Update genome after code changes
-- `repogenome.validate` - Validate genome consistency
-
-### Key Principles
-
-1. **RepoGenome First**: Always check RepoGenome before manual file operations
-2. **Cite Sources**: Reference specific node IDs, edges, or flows when making claims
-3. **Keep Updated**: Always update genome after code changes
-4. **Validate**: Check genome validity if operations seem inconsistent
-5. **Efficiency**: RepoGenome is faster and more accurate than manual scanning
-6. **Use Pagination**: For large result sets, use pagination parameters in queries
-7. **Leverage Caching**: Query results are cached automatically - repeated queries are fast
-8. **Use Appropriate Tools**: Choose the right tool for the task (search vs query vs get_node)
-
 ---
 
-**Remember**: RepoGenome is your primary source of truth for codebase knowledge. Use it for all analysis tasks. The enhanced toolset in v0.8.0 provides powerful capabilities for codebase exploration and analysis.
-
+**Remember**: RepoGenome is your primary source of truth. The v0.8.0+ toolset provides powerful context reduction capabilities. Always prefer minimal context modes for initial exploration, expanding to detailed modes only when needed.

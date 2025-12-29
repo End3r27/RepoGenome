@@ -1,202 +1,154 @@
-"""Error handling utilities for RepoGenome."""
+"""Error formatting utilities for context reduction."""
 
-import logging
-from typing import Any, Dict, List, Optional
-
-logger = logging.getLogger(__name__)
+from typing import Any, Dict, Optional
 
 
-class RepoGenomeError(Exception):
-    """Base exception for RepoGenome errors."""
+class ErrorVerbosity:
+    """Error verbosity levels."""
 
-    def __init__(self, message: str, context: Optional[Dict[str, Any]] = None):
+    MINIMAL = "minimal"
+    STANDARD = "standard"
+    VERBOSE = "verbose"
+
+
+class ErrorFormatter:
+    """Formats errors based on verbosity level."""
+
+    def __init__(self, verbosity: str = ErrorVerbosity.STANDARD):
         """
-        Initialize RepoGenome error.
+        Initialize error formatter.
 
         Args:
-            message: Error message
-            context: Optional context dictionary with additional error information
+            verbosity: Error verbosity level (minimal, standard, verbose)
         """
-        super().__init__(message)
-        self.message = message
-        self.context = context or {}
+        self.verbosity = verbosity
 
-    def __str__(self) -> str:
-        """Return formatted error message with context."""
-        if self.context:
-            context_str = ", ".join(f"{k}={v}" for k, v in self.context.items())
-            return f"{self.message} ({context_str})"
-        return self.message
-
-
-class AnalysisError(RepoGenomeError):
-    """Error during code analysis."""
-
-    def __init__(
+    def format_error(
         self,
-        message: str,
-        file_path: Optional[str] = None,
-        cause: Optional[Exception] = None,
-        context: Optional[Dict[str, Any]] = None,
-    ):
+        error: str,
+        action: Optional[str] = None,
+        details: Optional[Dict[str, Any]] = None,
+        exception: Optional[Exception] = None,
+    ) -> Dict[str, Any]:
         """
-        Initialize analysis error.
+        Format an error based on verbosity level.
 
         Args:
-            message: Error message
-            file_path: Optional file path where error occurred
-            cause: Optional underlying exception
-            context: Optional context dictionary with additional error information
-        """
-        error_context = context or {}
-        if file_path:
-            error_context["file_path"] = file_path
-        if cause:
-            error_context["cause_type"] = type(cause).__name__
-            error_context["cause_message"] = str(cause)
-        
-        super().__init__(message, error_context)
-        self.file_path = file_path
-        self.cause = cause
-
-    def get_recovery_suggestion(self) -> str:
-        """
-        Get suggestion for recovering from this error.
+            error: Error message
+            action: Suggested action to resolve error
+            details: Additional error details
+            exception: Exception object (for verbose mode)
 
         Returns:
-            Recovery suggestion string
+            Formatted error dictionary
         """
-        if self.file_path:
-            return f"Check file: {self.file_path}. Verify file encoding and syntax."
-        if self.cause:
-            cause_type = type(self.cause).__name__
-            if "ImportError" in cause_type or "ModuleNotFoundError" in cause_type:
-                return "Install missing dependencies or check import paths."
-            if "SyntaxError" in cause_type or "ParseError" in cause_type:
-                return "Check file syntax and fix parsing errors."
-        return "Review error context and retry operation."
+        if self.verbosity == ErrorVerbosity.MINIMAL:
+            return {"error": error}
+
+        if self.verbosity == ErrorVerbosity.VERBOSE:
+            result: Dict[str, Any] = {
+                "error": error,
+            }
+            if action:
+                result["action"] = action
+            if details:
+                result["details"] = details
+            if exception:
+                import traceback
+
+                result["exception"] = {
+                    "type": type(exception).__name__,
+                    "message": str(exception),
+                    "traceback": traceback.format_exc(),
+                }
+            return result
+
+        # Standard (default)
+        result = {"error": error}
+        if action:
+            result["action"] = action
+        if details and self.verbosity == ErrorVerbosity.VERBOSE:
+            result["details"] = details
+
+        return result
+
+    @staticmethod
+    def format_error_simple(
+        error: str,
+        action: Optional[str] = None,
+        verbosity: str = ErrorVerbosity.STANDARD,
+    ) -> Dict[str, Any]:
+        """
+        Format a simple error (convenience method).
+
+        Args:
+            error: Error message
+            action: Suggested action
+            verbosity: Error verbosity level
+
+        Returns:
+            Formatted error dictionary
+        """
+        formatter = ErrorFormatter(verbosity)
+        return formatter.format_error(error, action)
 
 
-class ConfigError(RepoGenomeError):
-    """Error in configuration."""
-
-    pass
-
-
-def collect_errors(func):
+def format_error(
+    error: str,
+    action: Optional[str] = None,
+    details: Optional[Dict[str, Any]] = None,
+    exception: Optional[Exception] = None,
+    verbosity: str = ErrorVerbosity.STANDARD,
+) -> Dict[str, Any]:
     """
-    Decorator to collect errors instead of raising immediately.
+    Format an error (module-level convenience function).
 
-    Usage:
-        @collect_errors
-        def analyze_file(file_path):
-            # If errors occur, they're collected and returned
-            pass
+    Args:
+        error: Error message
+        action: Suggested action
+        details: Additional details
+        exception: Exception object
+        verbosity: Error verbosity level
+
+    Returns:
+        Formatted error dictionary
     """
-    errors: List[AnalysisError] = []
-
-    def wrapper(*args, **kwargs):
-        try:
-            return func(*args, **kwargs)
-        except Exception as e:
-            errors.append(AnalysisError(str(e), cause=e))
-            return None
-
-    wrapper.errors = errors
-    return wrapper
+    formatter = ErrorFormatter(verbosity)
+    return formatter.format_error(error, action, details, exception)
 
 
 def handle_analysis_error(
-    error: Exception,
+    exception: Exception,
     file_path: Optional[str] = None,
-    context: Optional[Dict[str, Any]] = None,
     log_error: bool = True,
 ) -> Dict[str, Any]:
     """
-    Handle an analysis error gracefully with context-aware messages.
+    Handle an analysis error by formatting it and optionally logging.
 
     Args:
-        error: Exception that occurred
-        file_path: Optional file path
-        context: Optional context dictionary
-        log_error: Whether to log the error
+        exception: The exception that occurred
+        file_path: Optional path to the file being analyzed (can be passed positionally or as keyword)
+        log_error: Whether to log the error (default: True)
 
     Returns:
-        Dictionary with error information and recovery suggestions
+        Error information dictionary
     """
-    error_info = {
-        "error": str(error),
-        "file": file_path,
-        "type": type(error).__name__,
-        "context": context or {},
+    import logging
+
+    error_message = str(exception)
+    error_info: Dict[str, Any] = {
+        "error": error_message,
+        "type": type(exception).__name__,
     }
 
-    # Add recovery suggestion based on error type
-    error_type = type(error).__name__
-    if "ImportError" in error_type or "ModuleNotFoundError" in error_type:
-        error_info["recovery"] = "Install missing dependencies or check import paths."
-    elif "SyntaxError" in error_type or "ParseError" in error_type:
-        error_info["recovery"] = "Check file syntax and fix parsing errors."
-    elif "PermissionError" in error_type:
-        error_info["recovery"] = "Check file permissions and access rights."
-    elif "FileNotFoundError" in error_type:
-        error_info["recovery"] = "Verify file path exists and is accessible."
-    else:
-        error_info["recovery"] = "Review error context and retry operation."
+    if file_path:
+        error_info["file_path"] = file_path
 
-    # Log error if requested
     if log_error:
-        logger.error(
-            f"Analysis error in {file_path or 'unknown file'}: {error}",
-            exc_info=True,
-            extra={"context": context},
-        )
+        logger = logging.getLogger(__name__)
+        log_msg = f"Analysis error: {error_message}"
+        if file_path:
+            log_msg += f" (file: {file_path})"
+        logger.warning(log_msg)
 
     return error_info
-
-
-def create_error_recovery_strategy(error: Exception) -> Dict[str, Any]:
-    """
-    Create a recovery strategy for an error.
-
-    Args:
-        error: Exception that occurred
-
-    Returns:
-        Dictionary with recovery strategy
-    """
-    error_type = type(error).__name__
-    strategy = {
-        "error_type": error_type,
-        "can_retry": False,
-        "suggested_actions": [],
-    }
-
-    if "Network" in error_type or "Connection" in error_type:
-        strategy["can_retry"] = True
-        strategy["suggested_actions"] = [
-            "Check network connectivity",
-            "Verify service availability",
-            "Retry after a delay",
-        ]
-    elif "Permission" in error_type:
-        strategy["suggested_actions"] = [
-            "Check file permissions",
-            "Verify user has required access",
-            "Run with appropriate privileges",
-        ]
-    elif "Syntax" in error_type or "Parse" in error_type:
-        strategy["suggested_actions"] = [
-            "Review file syntax",
-            "Check for missing dependencies",
-            "Validate file encoding",
-        ]
-    else:
-        strategy["suggested_actions"] = [
-            "Review error message",
-            "Check error context",
-            "Consult documentation",
-        ]
-
-    return strategy
-

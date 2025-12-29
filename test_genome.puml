@@ -1,0 +1,3663 @@
+@startuml
+!theme plain
+
+package "root" {
+  component README.md#3-Agent Contract (MCP)
+  component README.md#2-📚 Documentation
+  component README.md#1-Load from database
+  component README.md#3-Configuring MCP Server with Coding Agents
+  component README.md#2-🚀 Quick Start
+  component README.md#2-✨ Features
+  component README.md#1-Natural language queries
+  component repogenome.json.history
+  component README.md#3-CLI Usage
+  component README.md#3-Agent Contract
+  component README.md#1-Query results are automatically cached for 5 minut
+  component LLM_INIT_PROMPT.md#3-Key Principles
+  component README.md#3-Prerequisites
+  component README.md#1-Load existing genome
+  component README.md#2-🧪 Testing
+  component README.md#1-Generate with compression options (reduce file siz
+  component README.md#1-Compact mode: Use short field names
+  component README.md#2-🛣️ Roadmap
+  component README.md#4-3. Configure Agent Initialization Prompt
+  component LLM_INIT_PROMPT.md#3-After Code Changes
+  component README.md#1-Generate initial genome
+  component README.md#3-MCP Resources
+  component LLM_INIT_PROMPT.md#3-Available Tools
+  component README.md#2-🌐 Language Support
+  component repogenome.json.metadata
+  component README.md#1-Cache statistics available via cache.get_stats()
+  component README.md#4-Export Formats
+  component README.md#1-SQL-like queries
+  component LLM_INIT_PROMPT.md#3-Fallback (If RepoGenome Unavailable)
+  component LLM_INIT_PROMPT.md#3-Codebase Scanning
+  component README.md#4-Context Optimization
+  component README.md#1-Export to Neo4j Cypher (for graph database import)
+  component README.md#1-Load and query genome
+  component README.md#3-macOS Git Hang Issue
+  component README.md#3-Advanced Features (v0.7.0+)
+  component README.md#1-Watch repository and auto-regenerate
+  component README.md#1-Run all tests
+  component repogenome.json.risk
+  component LLM_INIT_PROMPT.md#3-Examples
+  component README.md#3-Incremental Updates
+  component README.md#3-Adding New Language Support
+  component README.md#2-⭐ Show Your Support
+  component README.md#3-Install from Source
+  component README.md#2-📄 License
+  component repogenome.json.flows
+  component README.md#1-Export to PlantUML (for architecture diagrams)
+  component README.md#4-Security Analysis
+  component README.md#1-Combine options for maximum compression
+  component README.md#3-🆕 Recent Enhancements (v0.8.0)
+  component README.md#1-Query nodes
+  component LLM_INIT_PROMPT.md#3-Before Code Changes
+  component README.md#4-Advanced Query Language
+  component README.md#3-MCP Tools
+  component README.md#3-RepoGenome Schema
+  component README.md#1-Save updated genome
+  component README.md#2-🔧 Troubleshooting
+  component README.md#3-Additional File Types
+  component README.md#3-Large Repositories
+  component README.md#1-Security findings are in the security section (if 
+  component repogenome.json.summary
+  component README.md#2-🤖 Using RepoGenome with AI Agents
+  component README.md#4-Graph Database Backend
+  component repogenome.json.concepts
+  component README.md#1-Access genome data
+  component README.md#3-How to Contribute
+  component repogenome.json.contracts
+  component OR logic
+  component README.md#1-Update an existing genome incrementally
+  component README.md#3-Optional Dependencies
+  component README.md#3-Programming Languages (Full Structural Analysis)
+  component repogenome.json.tests
+  component README.md#1-Watch repository and auto-regenerate on changes
+  component README.md#1-Query with pagination
+  component README.md#2-🤝 Contributing
+  component README.md#1-Lite mode: Only essential fields
+  component README.md#1-Generate ultra-compact lite version (essential dat
+  component README.md#1-Generate with debug logging
+  component README.md#3-Quick Setup for AI Agents
+  component README.md#3-Analyzer Architecture
+  component README.md#3-Starting the MCP Server
+  component LLM_INIT_PROMPT.md#1-RepoGenome LLM Initialization Prompt
+  component README.md#1-🧬 RepoGenome
+  component README.md#1-Start MCP server for AI agent integration
+  component README.md#1-Export to DOT (for Graphviz)
+  component README.md#1-Generate genome
+  component README.md#3-Library Usage
+  component README.md#1-Minified: Remove indentation
+  component README.md#3-Advanced Features (v0.8.0+)
+  component README.md#2-🔌 MCP Server
+  component README.md#3-Unified Repository Intelligence Artifact Generator
+  component README.md#2-🏗️ Architecture
+  component README.md#1-Query edges
+  component README.md#4-Query Improvements
+  component README.md#1-Update incrementally (only analyzes changed files)
+  component README.md#1-Results can be paginated via MCP tools
+  component README.md#1-Export to GraphML (for Cytoscape, yEd, etc.)
+  component README.md#1-Export to CSV (creates genome.nodes.csv and genome
+  component README.md#3-File Type Analyzers
+  component repogenome.json.edges
+  component README.md#4-Watch Mode
+  component README.md#2-📥 Installation
+  component LLM_INIT_PROMPT.md#3-File and Function Searching
+  component README.md#1-Save to database
+  component LLM_INIT_PROMPT.md#3-Session Startup
+  component LLM_INIT_PROMPT.md#2-Core Instructions
+  component README.md#1-Gzip compression
+  component repogenome.json.nodes
+  component LLM_INIT_PROMPT.md#3-Quick Reference
+  component README.md#1-Validate a genome file
+  component README.md#1-Or generate with compression for smaller file size
+  component README.md#1-GraphQL-style queries
+  component LLM_INIT_PROMPT.md#3-Available Resources
+  component README.md#4-1. Generate Your Genome
+  component README.md#4-Performance Optimizations
+  component README.md#4-2. Configure MCP Server
+  component README.md#1-Compare two genomes
+  component README.md#1-Install development dependencies
+  component README.md#1-Run with coverage
+}
+
+package "examples" {
+  component sample_genome.json.nodes
+  component sample_genome.json.tests
+  component sample_genome.json.edges
+  component sample_genome.json.risk
+  component sample_genome.json.flows
+  component sample_genome.json.metadata
+  component sample_genome.json.concepts
+  component sample_genome.json.summary
+  component sample_genome.json.history
+  component sample_genome.json.contracts
+}
+
+package "tests" {
+  function test_cli.test_generate_with_logging
+  function test_cli.py.test_generate_with_logging
+}
+
+package "tests.test_analyzers" {
+  function test_python_ast.py.test_analyze_invalid_syntax
+  function test_python_ast.py.test_analyze_file_with_main_block
+  function test_python_ast.py.test_analyze_simple_python_file
+  function test_python_ast.test_analyze_simple_python_file
+  function test_python_ast.test_analyze_invalid_syntax
+  function test_python_ast.test_analyze_file_with_main_block
+}
+
+package "tests.test_core" {
+  function test_advanced_query.test_graphql_query
+  function test_streaming.sample_genome
+  function test_schema.py.test_genome_save_load
+  function test_schema.test_repo_genome_creation
+  function test_advanced_query.py.test_graphql_query
+  function test_advanced_query.test_query_with_limit
+  function test_schema.test_risk_model
+  function test_advanced_query.py.test_simple_query
+  function test_streaming.test_streaming_save
+  function test_schema.py.test_node_creation
+  function test_streaming.py.test_streaming_save_compressed
+  function test_streaming.py.test_streaming_save_compact
+  function test_schema.test_repo_genome_serialization
+  function test_advanced_query.sample_genome
+  function test_schema.py.test_repo_genome_from_dict
+  function test_streaming.test_streaming_save_compressed
+  function test_advanced_query.py.test_sql_query_edges
+  function test_advanced_query.test_simple_query
+  function test_schema.py.test_repo_genome_serialization
+  function test_schema.test_node_creation
+  function test_schema.test_edge_creation
+  function test_advanced_query.test_sql_query_nodes
+  function test_advanced_query.py.test_query_with_order_by
+  function test_streaming.test_streaming_save_compact
+  function test_schema.test_repo_genome_from_dict
+  function test_advanced_query.py.test_sql_query_nodes
+  function test_advanced_query.test_sql_query_edges
+  function test_advanced_query.test_query_with_order_by
+  function test_schema.test_genome_save_load
+  function test_streaming.py.test_streaming_save
+  function test_schema.py.test_risk_model
+  function test_schema.py.test_repo_genome_creation
+  function test_advanced_query.py.test_query_with_limit
+  function test_schema.py.test_edge_creation
+}
+
+package "tests.test_subsystems" {
+  function test_repospider.py.test_repospider_analyze_empty_repo
+  function test_repospider.test_repospider_analyze_python_file
+  function test_security.temp_repo
+  function test_security.test_security_analyzer_detects_vulnerabilities
+  function test_security.test_security_analyzer_detects_secrets
+  function test_repospider.py.test_repospider_with_real_codebase
+  function test_security.py.test_security_analyzer_detects_secrets
+  function test_repospider.test_repospider_analyze_empty_repo
+  function test_repospider.test_repospider_with_real_codebase
+  function test_repospider.test_repospider_initialization
+  function test_repospider.py.test_repospider_initialization
+  function test_security.py.test_security_analyzer_detects_vulnerabilities
+  function test_repospider.py.test_repospider_analyze_python_file
+  function test_security.py.test_security_analyzer_detects_permissions
+  function test_security.test_security_analyzer_detects_permissions
+}
+
+package "repogenome.analyzers" {
+  class call_graph._CallVisitor
+  function call_graph.visit_Call
+  function call_graph.analyze_file
+  function call_graph.__init__
+  function dependency_resolver.resolve_python_import
+  function call_graph._get_call_name
+  class call_graph.CallGraphBuilder
+  function call_graph.visit_FunctionDef
+  class dependency_resolver.DependencyResolver
+  function dependency_resolver.resolve_typescript_import
+}
+
+package "repogenome.cli" {
+  function main.export
+  function main.generator_factory
+  function main.main
+  function main.validate
+  function main.mcp_server
+  function output.print_error
+  function main.watch
+  function main.ragnatela
+  function output.print_info
+  function main.query
+  function output.print_success
+  function main.diff
+  function output.create_progress_bar
+  function main.init
+  function main.update
+  function main.generate
+  function output.format_file_size
+  function output.print_warning
+}
+
+package "repogenome.core" {
+  function db_backend.__enter__
+  function config.load
+  function advanced_query._execute_simple
+  class schema.Metadata
+  function streaming._write_separator
+  function query.query_edges
+  class db_backend.SQLiteBackend
+  function streaming.start_array
+  function watch._schedule_callback
+  function cache.invalidate_file
+  function watch.watch_and_regenerate
+  function advanced_query._execute_graphql
+  function schema._is_compact_format
+  function errors.handle_analysis_error
+  class errors.ConfigError
+  function schema.load
+  function cache.get
+  function genome.get_edges_to
+  function schema._to_lite_dict
+  function schema.to_dict
+  function db_backend.load_genome
+  function streaming.write_summary
+  function advanced_query._query_nodes_sql
+  class watch.GenomeWatcher
+  function streaming.write_metadata
+  function config.__init__
+  function cache.get_file_hash
+  function advanced_query._query_edges_sql
+  class schema.Node
+  function generator._generate_incremental
+  function advanced_query._query_nodes_graphql
+  function generator._detect_architectural_style
+  function genome.load
+  class schema.GenomeDiff
+  function config.get_enabled_subsystems
+  class genome.Genome
+  class advanced_query.AdvancedQuery
+  function query.parse_simple_query
+  function generator.__init__
+  function streaming._write_indent
+  function watch.__init__
+  function advanced_query._match_edge_conditions
+  function streaming.save_streaming
+  function config.create_default_config
+  function streaming.start_object
+  function errors.collect_errors
+  class schema.Contract
+  function streaming.__init__
+  function merger._merge_data
+  function streaming.__exit__
+  function merger.__init__
+  function streaming.write_edges
+  function streaming.write_concepts
+  function watch.should_ignore
+  function db_backend.__exit__
+  function streaming.end_object
+  function advanced_query._match_conditions
+  class config.RepoGenomeConfig
+  class streaming.StreamingGenomeWriter
+  function db_backend.close
+  function schema._expand_dict
+  class errors.RepoGenomeError
+  class schema.Flow
+  function errors.__init__
+  class merger.GenomeMerger
+  function watch.on_any_event
+  function generator._generate_full
+  function streaming.write_nodes
+  function streaming.write_history
+  function genome.get_edges_from
+  function schema._expand_field_name
+  function config.to_dict
+  class schema.RepoGenome
+  class db_backend.GraphBackend
+  function streaming._write
+  function merger._determine_subsystems_to_update
+  function genome.__init__
+  function streaming.__enter__
+  function genome.save
+  function schema.save
+  function generator.generate
+  class query.GenomeQuery
+  function watch.on_changes
+  function db_backend.query_edges
+  function query._match_filters
+  function cache.get_cache_key
+  class schema.Config
+  function cache.clear
+  function db_backend.__init__
+  function errors.__str__
+  function streaming._write_object_fields
+  class schema.Tests
+  class errors.AnalysisError
+  function query.query_nodes
+  class schema.History
+  function metadata.detect_frameworks
+  function advanced_query.__init__
+  function generator._calculate_risk
+  class schema.Risk
+  function streaming.write_contracts
+  function watch.trigger
+  function db_backend.get_neighbors
+  function errors.create_error_recovery_strategy
+  function genome.get_node
+  function cache.get_stats
+  function advanced_query._parse_graphql_args
+  class schema.NodeType
+  function cache._evict_oldest
+  function cache.set
+  function genome._build_indexes
+  function genome.get_nodes_by_type
+  function generator._identify_hotspots
+  function advanced_query._execute_sql
+  function db_backend._create_schema
+  function metadata.detect_languages
+  function streaming._write_key
+  class schema.Concept
+  function config.should_analyze_file
+  function cache.__init__
+  function streaming.write_risk
+  function db_backend.save_genome
+  class schema.Edge
+  function errors.wrapper
+  class cache.AnalysisCache
+  function schema.from_dict
+  function advanced_query._parse_where_clause
+  function schema._compress_field_name
+  function db_backend.query_nodes
+  function generator._build_summary
+  function streaming.end_array
+  function schema._compress_dict
+  class generator.RepoGenomeGenerator
+  function metadata.extract_metadata
+  function cache.invalidate_pattern
+  function query.get_neighbors
+  function query.__init__
+  function generator._identify_do_not_touch
+  class schema.EdgeType
+  function db_backend.create_backend
+  function streaming.write_flows
+  function advanced_query._query_edges_graphql
+  class schema.Summary
+  function streaming.write_tests
+  function advanced_query.execute
+  function errors.get_recovery_suggestion
+  function merger.update_incremental
+}
+
+package "repogenome.export" {
+  function dot._escape_dot_id
+  function dot._escape_dot_label
+  function cypher.export_cypher
+  function dot.export_dot
+  function graphml.export_graphml
+  function graphml._escape_xml
+  function plantuml.export_plantuml
+}
+
+package "repogenome.mcp" {
+  function resources.get_stats
+  function storage.get_diff
+  function tools.query
+  function tools.search
+  function tools.__init__
+  function tools.export
+  function contract.check_genome_loaded
+  function tools._export_csv
+  function contract.enforce_contract_middleware
+  function storage.load_genome
+  function resources.get_node_resource
+  class contract.AgentContract
+  function contract.check_impact_before_edit
+  function tools.update
+  function storage.save_genome
+  function tools.validate
+  function resources.get_current
+  class server.RepoGenomeMCPServer
+  function server._register_tools
+  function storage.get_genome_status
+  function tools.stats
+  function server._register_resources
+  function tools.impact
+  class resources.RepoGenomeResources
+  function resources.get_summary
+  function contract.get_contract_status
+  function server.__init__
+  function server.run_sync
+  function storage.is_genome_file_present
+  function contract.update_validation_result
+  function resources.get_diff
+  function resources.list_resources
+  function storage.get_summary
+  function contract.reset_edit_state
+  function contract.add_citation
+  function contract.__init__
+  function storage.get_load_error
+  class storage.GenomeStorage
+  function contract.get_citations
+  function resources.__init__
+  function contract.mark_edit
+  function tools.get_node
+  function contract.mark_impact_checked
+  function storage.__init__
+  class tools.RepoGenomeTools
+  function tools.scan
+  function storage.is_stale
+  function contract.validate_before_action
+  function contract.mark_genome_loaded
+  function resources.read_resource
+  function server.create_server
+  function tools.dependencies
+  function tools.get_dependencies
+}
+
+package "repogenome.subsystems" {
+  function repospider.analyze
+  class base.Subsystem
+  function intentatlas.analyze
+  class flowweaver.FlowWeaver
+  function base.analyze
+  function flowweaver.__init__
+  function repospider.__init__
+  function repospider._extract_docstring
+  function testgalaxy._extract_test_functions
+  class security.SecurityAnalyzer
+  function base.get_dependencies
+  function flowweaver.dfs
+  function repospider._is_text_file
+  class contractlens.ContractLens
+  function flowweaver._detect_side_effects
+  function intentatlas._extract_from_docs
+  function chronomap.__init__
+  function testgalaxy.__init__
+  function flowweaver._trace_from_entry
+  class testgalaxy.TestGalaxy
+  function flowweaver.analyze
+  function security.analyze
+  function intentatlas._extract_from_naming
+  function repospider._detect_visibility
+  function intentatlas.__init__
+  function testgalaxy._detect_language
+  function repospider._make_node_id
+  function flowweaver._build_call_graph
+  function security._calculate_severity
+  function testgalaxy._find_tested_code
+  function base.update_incremental
+  function contractlens.__init__
+  function contractlens._identify_public_apis
+  function security.__init__
+  function security._detect_vulnerabilities
+  function chronomap.analyze
+  class intentatlas.IntentAtlas
+  function testgalaxy.analyze
+  function testgalaxy._load_coverage_data
+  function base.is_required
+  class chronomap.ChronoMap
+  function contractlens._calculate_fan_in
+  function intentatlas._extract_from_directories
+  function repospider._detect_language
+  class repospider.RepoSpider
+  function contractlens._find_dependencies
+  function security._detect_secrets
+  function security._detect_permission_issues
+  function contractlens.analyze
+  function base.__init__
+  function repospider._resolve_import
+}
+
+package "repogenome.utils" {
+  function parallel.process_files_parallel
+  function json_diff.get_affected_nodes
+  function parallel.batch_process
+  function parallel.get_optimal_workers
+  function git_utils.gitpython_operation
+  function json_diff._edge_to_tuple
+  function git_utils._get_repo_hash_subprocess
+  function git_utils.calculate_churn_score
+  function json_diff.compute_genome_diff
+  function git_utils.get_changed_files
+  function json_diff._normalize_edges
+  function git_utils.get_file_history
+  function git_utils._get_repo_hash_gitpython_with_timeout
+  function git_utils.get_repo_hash
+  function git_utils.get_last_major_change
+}
+
+package "repogenome.visualization" {
+  function ragnatela._toggle_minimap
+  function ragnatela._toggle_clustering
+  function ragnatela._update_node_sizes_for_distance
+  function ragnatela.fade_in
+  function ragnatela._build_spatial_index
+  function ragnatela._update_multi_selection_indicators
+  function ragnatela._update_minimap
+  function ragnatela.visualize_ragnatela
+  function ragnatela.on_mouse_move
+  function ragnatela.on_mouse_wheel
+  function ragnatela.compute_node_sizes
+  function ragnatela.compute_node_clusters
+  function ragnatela.on_mouse_press
+  function ragnatela.on_camera_update_labels
+  function ragnatela._setup_interaction
+  function ragnatela.compute_3d_layout
+  function ragnatela._highlight_paths
+  function ragnatela._create_node_labels
+  function ragnatela._find_clicked_node
+  function ragnatela._update_hover_highlighting
+  function ragnatela._apply_filters
+  function ragnatela._create_help_overlay
+  function ragnatela._create_visuals
+  function ragnatela._animate_camera
+  class ragnatela.RagnatelaCanvas
+  function ragnatela._focus_on_node
+  function ragnatela._create_search_ui
+  function ragnatela._update_selection_indicator
+  function ragnatela._toggle_labels
+  function ragnatela._rebuild_visuals_from_data
+  function ragnatela._remove_help_overlay
+  function ragnatela.on_key_press
+  function ragnatela.get_node_color
+  function ragnatela.compute_degree_centrality
+  function ragnatela._remove_search_ui
+  function ragnatela._hide_tooltip
+  function ragnatela.run
+  function ragnatela._clear_path_highlighting
+  function ragnatela._remove_minimap
+  function ragnatela._show_tooltip
+  function ragnatela.find_latest_repogenome
+  function ragnatela._add_next_batch
+  function ragnatela._update_edge_lod
+  function ragnatela.__init__
+  function ragnatela._toggle_search
+  function ragnatela._toggle_help_overlay
+  function ragnatela.on_camera_update
+  function ragnatela._create_minimap
+  function ragnatela._update_search_display
+}
+
+package "repogenome.analyzers.cpp" {
+  function cpp_analyzer._extract_includes
+  function cpp_analyzer.analyze_file
+  function cpp_analyzer._extract_classes
+  function cpp_analyzer.analyze_cpp_file
+  class cpp_analyzer.CPPAnalyzer
+  function cpp_analyzer._extract_functions
+  function cpp_analyzer._remove_comments
+  function cpp_analyzer._extract_entry_points
+}
+
+package "repogenome.analyzers.csharp" {
+  function csharp_analyzer._remove_comments
+  function csharp_analyzer._extract_namespace
+  function csharp_analyzer._extract_entry_points
+  function csharp_analyzer._extract_classes
+  function csharp_analyzer._extract_methods
+  function csharp_analyzer.analyze_csharp_file
+  class csharp_analyzer.CSharpAnalyzer
+  function csharp_analyzer.analyze_file
+  function csharp_analyzer._extract_using_statements
+}
+
+package "repogenome.analyzers.css" {
+  function css_analyzer._extract_keyframes
+  function css_analyzer._classify_selector
+  function css_analyzer._extract_urls
+  function css_analyzer._extract_selectors
+  function css_analyzer.analyze_css_file
+  function css_analyzer._extract_imports
+  function css_analyzer.analyze_file
+  class css_analyzer.CSSAnalyzer
+  function css_analyzer._extract_media_queries
+  function css_analyzer._extract_rules
+}
+
+package "repogenome.analyzers.go" {
+  function go_analyzer._extract_types
+  function go_analyzer._extract_functions
+  function go_analyzer._extract_package
+  function go_analyzer._extract_imports
+  function go_analyzer._extract_entry_points
+  function go_analyzer.analyze_go_file
+  function go_analyzer.analyze_file
+  class go_analyzer.GoAnalyzer
+}
+
+package "repogenome.analyzers.html" {
+  class html_analyzer.HTMLAnalyzer
+  function html_analyzer.__init__
+  class html_analyzer.HTMLStructureParser
+  function html_analyzer.handle_starttag
+  function html_analyzer.analyze_html_file
+  function html_analyzer.analyze_file
+  function html_analyzer.handle_data
+}
+
+package "repogenome.analyzers.java" {
+  function java_analyzer._extract_methods
+  function java_analyzer._extract_package
+  function java_analyzer._remove_comments
+  function java_analyzer.analyze_java_file
+  function java_analyzer.analyze_file
+  function java_analyzer._extract_classes
+  function java_analyzer._extract_imports
+  function java_analyzer._extract_entry_points
+  class java_analyzer.JavaAnalyzer
+}
+
+package "repogenome.analyzers.json" {
+  function json_analyzer._extract_keys
+  function json_analyzer._extract_structure
+  class json_analyzer.JSONAnalyzer
+  function json_analyzer.analyze_file
+  function json_analyzer.analyze_json_file
+}
+
+package "repogenome.analyzers.markdown" {
+  function md_analyzer._extract_code_blocks
+  function md_analyzer._extract_headings
+  function md_analyzer._extract_links
+  function md_analyzer._extract_blockquotes
+  function md_analyzer._extract_lists
+  class md_analyzer.MarkdownAnalyzer
+  function md_analyzer._extract_images
+  function md_analyzer.analyze_markdown_file
+  function md_analyzer.analyze_file
+}
+
+package "repogenome.analyzers.php" {
+  class php_analyzer.PHPAnalyzer
+  function php_analyzer._extract_use_statements
+  function php_analyzer._remove_comments
+  function php_analyzer._extract_functions
+  function php_analyzer.analyze_file
+  function php_analyzer._extract_classes
+  function php_analyzer._extract_namespace
+  function php_analyzer.analyze_php_file
+}
+
+package "repogenome.analyzers.python" {
+  class ast_analyzer._PythonASTVisitor
+  function ast_analyzer.visit_FunctionDef
+  function ast_analyzer.visit_Import
+  function ast_analyzer.analyze_file
+  function ast_analyzer.visit_ImportFrom
+  function ast_analyzer.visit_ClassDef
+  function ast_analyzer._extract_route
+  function ast_analyzer.analyze_python_file
+  class ast_analyzer.PythonASTAnalyzer
+  function ast_analyzer._get_decorator_name
+  function ast_analyzer.visit_If
+  function ast_analyzer.__init__
+  function ast_analyzer._get_name
+}
+
+package "repogenome.analyzers.ruby" {
+  function ruby_analyzer._extract_methods
+  function ruby_analyzer._extract_requires
+  function ruby_analyzer._extract_classes
+  function ruby_analyzer.analyze_ruby_file
+  function ruby_analyzer._extract_modules
+  class ruby_analyzer.RubyAnalyzer
+  function ruby_analyzer.analyze_file
+}
+
+package "repogenome.analyzers.rust" {
+  class rust_analyzer.RustAnalyzer
+  function rust_analyzer.analyze_file
+  function rust_analyzer._extract_module
+  function rust_analyzer.analyze_rust_file
+  function rust_analyzer._extract_functions
+  function rust_analyzer._extract_use_statements
+  function rust_analyzer._extract_entry_points
+  function rust_analyzer._extract_types
+}
+
+package "repogenome.analyzers.shell" {
+  function shell_analyzer._extract_conditionals
+  class shell_analyzer.ShellAnalyzer
+  function shell_analyzer.analyze_file
+  function shell_analyzer._extract_commands
+  function shell_analyzer._extract_variables
+  function shell_analyzer._extract_functions
+  function shell_analyzer.analyze_shell_file
+  function shell_analyzer._extract_shebang
+  function shell_analyzer._extract_loops
+}
+
+package "repogenome.analyzers.sql" {
+  function sql_analyzer.analyze_sql_file
+  function sql_analyzer._extract_tables
+  function sql_analyzer.analyze_file
+  function sql_analyzer._extract_columns
+  class sql_analyzer.SQLAnalyzer
+  function sql_analyzer._extract_views
+  function sql_analyzer._extract_procedures
+  function sql_analyzer._extract_queries
+  function sql_analyzer._extract_joins
+}
+
+package "repogenome.analyzers.typescript" {
+  function ts_analyzer._analyze_with_tree_sitter
+  function ts_analyzer._extract_classes_regex
+  function ts_analyzer.__init__
+  function ts_analyzer._extract_api_routes_regex
+  function ts_analyzer.analyze_file
+  function ts_analyzer._extract_imports_regex
+  class ts_analyzer.TypeScriptAnalyzer
+  function ts_analyzer._extract_functions_regex
+  function ts_analyzer._extract_from_tree_sitter
+  function ts_analyzer._analyze_with_regex
+  function ts_analyzer.analyze_typescript_file
+}
+
+package "repogenome.analyzers.yaml" {
+  function yaml_analyzer._extract_keys
+  function yaml_analyzer.analyze_yaml_file
+  function yaml_analyzer._extract_structure
+  class yaml_analyzer.YAMLAnalyzer
+  function yaml_analyzer._extract_anchors
+  function yaml_analyzer.analyze_file
+}
+
+' Relationships
+LLM_INIT_PROMPT.md --> LLM_INIT_PROMPT.md#1-RepoGenome LLM Initialization Prompt
+LLM_INIT_PROMPT.md --> LLM_INIT_PROMPT.md#2-Core Instructions
+LLM_INIT_PROMPT.md --> LLM_INIT_PROMPT.md#3-Session Startup
+LLM_INIT_PROMPT.md --> LLM_INIT_PROMPT.md#3-Codebase Scanning
+LLM_INIT_PROMPT.md --> LLM_INIT_PROMPT.md#3-File and Function Searching
+LLM_INIT_PROMPT.md --> LLM_INIT_PROMPT.md#3-Before Code Changes
+LLM_INIT_PROMPT.md --> LLM_INIT_PROMPT.md#3-After Code Changes
+LLM_INIT_PROMPT.md --> LLM_INIT_PROMPT.md#3-Quick Reference
+LLM_INIT_PROMPT.md --> LLM_INIT_PROMPT.md#3-Fallback (If RepoGenome Unavailable)
+LLM_INIT_PROMPT.md --> LLM_INIT_PROMPT.md#3-Examples
+LLM_INIT_PROMPT.md --> LLM_INIT_PROMPT.md#3-Key Principles
+README.md --> README.md#1-🧬 RepoGenome
+README.md --> README.md#3-Unified Repository Intelligence Artifact Generator
+README.md --> README.md#2-✨ Features
+README.md --> README.md#2-🤖 Using RepoGenome with AI Agents
+README.md --> README.md#3-Quick Setup for AI Agents
+README.md --> README.md#4-1. Generate Your Genome
+README.md --> README.md#1-Generate initial genome
+README.md --> README.md#1-Or generate with compression for smaller file size
+README.md --> README.md#4-2. Configure MCP Server
+README.md --> README.md#4-3. Configure Agent Initialization Prompt
+README.md --> README.md#2-📥 Installation
+README.md --> README.md#3-Prerequisites
+README.md --> README.md#3-Install from Source
+README.md --> README.md#3-Optional Dependencies
+README.md --> README.md#2-🚀 Quick Start
+README.md --> README.md#3-CLI Usage
+README.md --> README.md#1-Generate with debug logging
+README.md --> README.md#1-Generate with compression options (reduce file siz
+README.md --> README.md#1-Generate ultra-compact lite version (essential dat
+README.md --> README.md#1-Update an existing genome incrementally
+README.md --> README.md#1-Validate a genome file
+README.md --> README.md#1-Compare two genomes
+README.md --> README.md#1-Watch repository and auto-regenerate on changes
+README.md --> README.md#1-Start MCP server for AI agent integration
+README.md --> README.md#3-Library Usage
+README.md --> README.md#1-Generate genome
+README.md --> README.md#1-Load and query genome
+README.md --> README.md#1-Query nodes
+README.md --> README.md#1-Access genome data
+README.md --> README.md#3-Incremental Updates
+README.md --> README.md#1-Load existing genome
+README.md --> README.md#1-Update incrementally (only analyzes changed files)
+README.md --> README.md#1-Save updated genome
+README.md --> README.md#3-Advanced Features (v0.7.0+)
+README.md --> README.md#4-Context Optimization
+README.md --> README.md#1-Compact mode: Use short field names
+README.md --> README.md#1-Minified: Remove indentation
+README.md --> README.md#1-Lite mode: Only essential fields
+README.md --> README.md#1-Gzip compression
+README.md --> README.md#1-Combine options for maximum compression
+README.md --> README.md#4-Advanced Query Language
+README.md --> README.md#1-SQL-like queries
+README.md --> README.md#1-GraphQL-style queries
+README.md --> README.md#1-Natural language queries
+README.md --> README.md#4-Graph Database Backend
+README.md --> README.md#1-Save to database
+README.md --> README.md#1-Load from database
+README.md --> README.md#1-Query nodes
+README.md --> README.md#1-Query edges
+README.md --> README.md#4-Security Analysis
+README.md --> README.md#1-Security findings are in the security section (if 
+README.md --> README.md#4-Watch Mode
+README.md --> README.md#1-Watch repository and auto-regenerate
+README.md --> README.md#2-📚 Documentation
+README.md --> README.md#3-RepoGenome Schema
+README.md --> README.md#2-🏗️ Architecture
+README.md --> README.md#3-Analyzer Architecture
+README.md --> README.md#2-🌐 Language Support
+README.md --> README.md#3-Programming Languages (Full Structural Analysis)
+README.md --> README.md#3-File Type Analyzers
+README.md --> README.md#3-Additional File Types
+README.md --> README.md#2-🔌 MCP Server
+README.md --> README.md#3-Starting the MCP Server
+README.md --> README.md#3-MCP Resources
+README.md --> README.md#3-MCP Tools
+README.md --> README.md#3-Agent Contract (MCP)
+README.md --> README.md#3-Configuring MCP Server with Coding Agents
+README.md --> README.md#3-Agent Contract
+README.md --> README.md#2-🧪 Testing
+README.md --> README.md#1-Install development dependencies
+README.md --> README.md#1-Run all tests
+README.md --> README.md#1-Run with coverage
+README.md --> README.md#2-🔧 Troubleshooting
+README.md --> README.md#3-macOS Git Hang Issue
+README.md --> README.md#3-Large Repositories
+README.md --> README.md#2-🤝 Contributing
+README.md --> README.md#3-How to Contribute
+README.md --> README.md#3-Adding New Language Support
+README.md --> README.md#2-🛣️ Roadmap
+README.md --> README.md#2-📄 License
+README.md --> README.md#2-⭐ Show Your Support
+repogenome.json --> repogenome.json.metadata
+repogenome.json --> repogenome.json.summary
+repogenome.json --> repogenome.json.nodes
+repogenome.json --> repogenome.json.edges
+repogenome.json --> repogenome.json.flows
+repogenome.json --> repogenome.json.concepts
+repogenome.json --> repogenome.json.history
+repogenome.json --> repogenome.json.risk
+repogenome.json --> repogenome.json.contracts
+repogenome.json --> repogenome.json.tests
+sample_genome.json --> sample_genome.json.metadata
+sample_genome.json --> sample_genome.json.summary
+sample_genome.json --> sample_genome.json.nodes
+sample_genome.json --> sample_genome.json.edges
+sample_genome.json --> sample_genome.json.flows
+sample_genome.json --> sample_genome.json.concepts
+sample_genome.json --> sample_genome.json.history
+sample_genome.json --> sample_genome.json.risk
+sample_genome.json --> sample_genome.json.contracts
+sample_genome.json --> sample_genome.json.tests
+__init__.py --> generator.py
+__init__.py --> genome.py
+__init__.py --> schema.py
+__init__.py --> server.py
+test_cli.py --> test_cli.test_generate_with_logging
+test_cli.py --> main.py
+test_python_ast.py --> test_python_ast.test_analyze_simple_python_file
+test_python_ast.py --> test_python_ast.test_analyze_file_with_main_block
+test_python_ast.py --> test_python_ast.test_analyze_invalid_syntax
+test_python_ast.py --> ast_analyzer.py
+test_advanced_query.py --> test_advanced_query.sample_genome
+test_advanced_query.py --> test_advanced_query.test_sql_query_nodes
+test_advanced_query.py --> test_advanced_query.test_sql_query_edges
+test_advanced_query.py --> test_advanced_query.test_graphql_query
+test_advanced_query.py --> test_advanced_query.test_simple_query
+test_advanced_query.py --> test_advanced_query.test_query_with_order_by
+test_advanced_query.py --> test_advanced_query.test_query_with_limit
+test_advanced_query.py --> advanced_query.py
+test_advanced_query.py --> schema.py
+test_advanced_query.py --> schema.py
+test_advanced_query.py --> schema.py
+test_advanced_query.py --> schema.py
+test_advanced_query.py --> schema.py
+test_schema.py --> test_schema.test_node_creation
+test_schema.py --> test_schema.test_edge_creation
+test_schema.py --> test_schema.test_repo_genome_creation
+test_schema.py --> test_schema.test_repo_genome_serialization
+test_schema.py --> test_schema.test_repo_genome_from_dict
+test_schema.py --> test_schema.test_risk_model
+test_schema.py --> test_schema.test_genome_save_load
+test_schema.py --> schema.py
+test_schema.py --> schema.py
+test_schema.py --> schema.py
+test_schema.py --> schema.py
+test_schema.py --> schema.py
+test_schema.py --> schema.py
+test_streaming.py --> test_streaming.sample_genome
+test_streaming.py --> test_streaming.test_streaming_save
+test_streaming.py --> test_streaming.test_streaming_save_compact
+test_streaming.py --> test_streaming.test_streaming_save_compressed
+test_streaming.py --> schema.py
+test_streaming.py --> schema.py
+test_streaming.py --> schema.py
+test_streaming.py --> schema.py
+test_streaming.py --> schema.py
+test_streaming.py --> streaming.py
+test_repospider.py --> test_repospider.test_repospider_initialization
+test_repospider.py --> test_repospider.test_repospider_analyze_empty_repo
+test_repospider.py --> test_repospider.test_repospider_analyze_python_file
+test_repospider.py --> test_repospider.test_repospider_with_real_codebase
+test_repospider.py --> repospider.py
+test_security.py --> test_security.temp_repo
+test_security.py --> test_security.test_security_analyzer_detects_secrets
+test_security.py --> test_security.test_security_analyzer_detects_vulnerabilities
+test_security.py --> test_security.test_security_analyzer_detects_permissions
+test_security.py --> security.py
+call_graph.py --> call_graph.analyze_file
+call_graph.py --> call_graph.__init__
+call_graph.py --> call_graph.visit_FunctionDef
+call_graph.py --> call_graph.visit_Call
+call_graph.py --> call_graph._get_call_name
+call_graph.py --> call_graph.CallGraphBuilder
+call_graph.py --> call_graph._CallVisitor
+dependency_resolver.py --> dependency_resolver.resolve_python_import
+dependency_resolver.py --> dependency_resolver.resolve_typescript_import
+dependency_resolver.py --> dependency_resolver.DependencyResolver
+main.py --> main.main
+main.py --> main.generate
+main.py --> main.update
+main.py --> main.validate
+main.py --> main.diff
+main.py --> main.init
+main.py --> main.export
+main.py --> main.query
+main.py --> main.ragnatela
+main.py --> main.mcp_server
+main.py --> main.watch
+main.py --> main.generator_factory
+main.py --> output.py
+main.py --> output.py
+main.py --> output.py
+main.py --> output.py
+main.py --> output.py
+main.py --> config.py
+main.py --> config.py
+main.py --> generator.py
+main.py --> schema.py
+main.py --> output.py
+main.py --> json_diff.py
+main.py --> graphml.py
+main.py --> dot.py
+main.py --> query.py
+main.py --> query.py
+main.py --> ragnatela.py
+main.py --> server.py
+main.py --> watch.py
+main.py --> generator.py
+main.watch --> main.generator_factory
+output.py --> output.create_progress_bar
+output.py --> output.print_success
+output.py --> output.print_error
+output.py --> output.print_warning
+output.py --> output.print_info
+output.py --> output.format_file_size
+advanced_query.py --> advanced_query.__init__
+advanced_query.py --> advanced_query.execute
+advanced_query.py --> advanced_query._execute_sql
+advanced_query.py --> advanced_query._execute_graphql
+advanced_query.py --> advanced_query._execute_simple
+advanced_query.py --> advanced_query._parse_where_clause
+advanced_query.py --> advanced_query._parse_graphql_args
+advanced_query.py --> advanced_query._query_nodes_sql
+advanced_query.py --> advanced_query._query_edges_sql
+advanced_query.py --> advanced_query._query_nodes_graphql
+advanced_query.py --> advanced_query._query_edges_graphql
+advanced_query.py --> advanced_query._match_conditions
+advanced_query.py --> advanced_query._match_edge_conditions
+advanced_query.py --> advanced_query.AdvancedQuery
+advanced_query.py --> schema.py
+advanced_query.py --> schema.py
+advanced_query.py --> schema.py
+advanced_query.py --> schema.py
+advanced_query.py --> schema.py
+cache.py --> cache.__init__
+cache.py --> cache.get_file_hash
+cache.py --> cache.get_cache_key
+cache.py --> cache.get
+cache.py --> cache.set
+cache.py --> cache.clear
+cache.py --> cache.invalidate_file
+cache.py --> cache.AnalysisCache
+config.py --> config.__init__
+config.py --> config.load
+config.py --> config.should_analyze_file
+config.py --> config.get_enabled_subsystems
+config.py --> config.to_dict
+config.py --> config.create_default_config
+config.py --> config.RepoGenomeConfig
+db_backend.py --> db_backend.save_genome
+db_backend.py --> db_backend.load_genome
+db_backend.py --> db_backend.query_nodes
+db_backend.py --> db_backend.query_edges
+db_backend.py --> db_backend.get_neighbors
+db_backend.py --> db_backend.close
+db_backend.py --> db_backend.__init__
+db_backend.py --> db_backend._create_schema
+db_backend.py --> db_backend.save_genome
+db_backend.py --> db_backend.load_genome
+db_backend.py --> db_backend.query_nodes
+db_backend.py --> db_backend.query_edges
+db_backend.py --> db_backend.get_neighbors
+db_backend.py --> db_backend.close
+db_backend.py --> db_backend.__enter__
+db_backend.py --> db_backend.__exit__
+db_backend.py --> db_backend.create_backend
+db_backend.py --> db_backend.GraphBackend
+db_backend.py --> db_backend.SQLiteBackend
+db_backend.py --> schema.py
+db_backend.py --> schema.py
+db_backend.py --> schema.py
+db_backend.py --> schema.py
+db_backend.py --> schema.py
+db_backend.py --> schema.py
+db_backend.py --> schema.py
+db_backend.py --> schema.py
+db_backend.py --> schema.py
+db_backend.py --> schema.py
+db_backend.py --> schema.py
+db_backend.py --> schema.py
+db_backend.py --> schema.py
+db_backend.py --> schema.py
+db_backend.py --> schema.py
+db_backend.py --> schema.py
+errors.py --> errors.__init__
+errors.py --> errors.collect_errors
+errors.py --> errors.wrapper
+errors.py --> errors.handle_analysis_error
+errors.py --> errors.RepoGenomeError
+errors.py --> errors.AnalysisError
+errors.py --> errors.ConfigError
+generator.py --> generator.__init__
+generator.py --> generator.generate
+generator.py --> generator._generate_full
+generator.py --> generator._generate_incremental
+generator.py --> generator._build_summary
+generator.py --> generator._detect_architectural_style
+generator.py --> generator._identify_hotspots
+generator.py --> generator._identify_do_not_touch
+generator.py --> generator._calculate_risk
+generator.py --> generator.RepoGenomeGenerator
+generator.py --> merger.py
+generator.py --> metadata.py
+generator.py --> schema.py
+generator.py --> schema.py
+generator.py --> base.py
+generator.py --> chronomap.py
+generator.py --> contractlens.py
+generator.py --> flowweaver.py
+generator.py --> intentatlas.py
+generator.py --> repospider.py
+generator.py --> testgalaxy.py
+generator.py --> security.py
+generator.py --> schema.py
+genome.py --> genome.__init__
+genome.py --> genome._build_indexes
+genome.py --> genome.get_nodes_by_type
+genome.py --> genome.get_edges_from
+genome.py --> genome.get_edges_to
+genome.py --> genome.get_node
+genome.py --> genome.save
+genome.py --> genome.load
+genome.py --> genome.Genome
+genome.py --> schema.py
+genome.py --> schema.py
+genome.py --> schema.py
+merger.py --> merger.__init__
+merger.py --> merger.update_incremental
+merger.py --> merger._determine_subsystems_to_update
+merger.py --> merger._merge_data
+merger.py --> merger.GenomeMerger
+merger.py --> schema.py
+merger.py --> schema.py
+merger.py --> git_utils.py
+merger.py --> json_diff.py
+merger.py --> json_diff.py
+merger.py --> schema.py
+metadata.py --> metadata.detect_languages
+metadata.py --> metadata.detect_frameworks
+metadata.py --> metadata.extract_metadata
+metadata.py --> schema.py
+metadata.py --> git_utils.py
+metadata.extract_metadata --> metadata.detect_languages
+metadata.extract_metadata --> metadata.detect_frameworks
+query.py --> query.__init__
+query.py --> query.query_nodes
+query.py --> query.query_edges
+query.py --> query.get_neighbors
+query.py --> query._match_filters
+query.py --> query.parse_simple_query
+query.py --> query.GenomeQuery
+query.py --> schema.py
+query.py --> schema.py
+schema.py --> schema._compress_field_name
+schema.py --> schema._expand_field_name
+schema.py --> schema._compress_dict
+schema.py --> schema._expand_dict
+schema.py --> schema.to_dict
+schema.py --> schema.to_dict
+schema.py --> schema._to_lite_dict
+schema.py --> schema.from_dict
+schema.py --> schema.save
+schema.py --> schema.load
+schema.py --> schema._is_compact_format
+schema.py --> schema.NodeType
+schema.py --> schema.EdgeType
+schema.py --> schema.Metadata
+schema.py --> schema.Summary
+schema.py --> schema.Node
+schema.py --> schema.Edge
+schema.py --> schema.Config
+schema.py --> schema.Flow
+schema.py --> schema.Concept
+schema.py --> schema.History
+schema.py --> schema.Risk
+schema.py --> schema.Contract
+schema.py --> schema.Tests
+schema.py --> schema.GenomeDiff
+schema.py --> schema.RepoGenome
+schema.py --> schema.Config
+schema.py --> streaming.py
+schema._compress_dict --> schema._compress_field_name
+schema._compress_dict --> schema._compress_dict
+schema._expand_dict --> schema._expand_field_name
+schema._expand_dict --> schema._expand_dict
+schema.to_dict --> schema._compress_dict
+schema._to_lite_dict --> schema._compress_dict
+schema.from_dict --> schema._is_compact_format
+schema.from_dict --> schema._expand_dict
+streaming.py --> streaming.__init__
+streaming.py --> streaming.__enter__
+streaming.py --> streaming.__exit__
+streaming.py --> streaming._write
+streaming.py --> streaming._write_indent
+streaming.py --> streaming._write_key
+streaming.py --> streaming._write_separator
+streaming.py --> streaming.start_object
+streaming.py --> streaming.end_object
+streaming.py --> streaming.start_array
+streaming.py --> streaming.end_array
+streaming.py --> streaming.write_metadata
+streaming.py --> streaming.write_summary
+streaming.py --> streaming.write_nodes
+streaming.py --> streaming.write_edges
+streaming.py --> streaming.write_flows
+streaming.py --> streaming.write_concepts
+streaming.py --> streaming.write_history
+streaming.py --> streaming.write_risk
+streaming.py --> streaming.write_contracts
+streaming.py --> streaming.write_tests
+streaming.py --> streaming._write_object_fields
+streaming.py --> streaming.save_streaming
+streaming.py --> streaming.StreamingGenomeWriter
+streaming.py --> schema.py
+streaming.py --> schema.py
+streaming.py --> schema.py
+streaming.py --> schema.py
+streaming.py --> schema.py
+streaming.py --> schema.py
+streaming.py --> schema.py
+streaming.py --> schema.py
+streaming.py --> schema.py
+streaming.py --> schema.py
+streaming.py --> schema.py
+streaming.py --> schema.py
+streaming.py --> schema.py
+watch.py --> watch.__init__
+watch.py --> watch.should_ignore
+watch.py --> watch.on_any_event
+watch.py --> watch._schedule_callback
+watch.py --> watch.trigger
+watch.py --> watch.watch_and_regenerate
+watch.py --> watch.on_changes
+watch.py --> watch.GenomeWatcher
+dot.py --> dot.export_dot
+dot.py --> dot._escape_dot_id
+dot.py --> dot._escape_dot_label
+dot.py --> schema.py
+dot.export_dot --> dot._escape_dot_id
+dot.export_dot --> dot._escape_dot_label
+graphml.py --> graphml.export_graphml
+graphml.py --> graphml._escape_xml
+graphml.py --> schema.py
+graphml.export_graphml --> graphml._escape_xml
+contract.py --> contract.__init__
+contract.py --> contract.check_genome_loaded
+contract.py --> contract.mark_genome_loaded
+contract.py --> contract.add_citation
+contract.py --> contract.get_citations
+contract.py --> contract.mark_edit
+contract.py --> contract.check_impact_before_edit
+contract.py --> contract.mark_impact_checked
+contract.py --> contract.validate_before_action
+contract.py --> contract.update_validation_result
+contract.py --> contract.reset_edit_state
+contract.py --> contract.get_contract_status
+contract.py --> contract.enforce_contract_middleware
+contract.py --> contract.AgentContract
+resources.py --> resources.__init__
+resources.py --> resources.get_current
+resources.py --> resources.get_summary
+resources.py --> resources.get_diff
+resources.py --> resources.read_resource
+resources.py --> resources.list_resources
+resources.py --> resources.RepoGenomeResources
+resources.py --> storage.py
+server.py --> server.__init__
+server.py --> server._register_resources
+server.py --> server._register_tools
+server.py --> server.run_sync
+server.py --> server.create_server
+server.py --> server.RepoGenomeMCPServer
+server.py --> contract.py
+server.py --> resources.py
+server.py --> storage.py
+server.py --> tools.py
+storage.py --> storage.__init__
+storage.py --> storage.load_genome
+storage.py --> storage.save_genome
+storage.py --> storage.is_stale
+storage.py --> storage.is_genome_file_present
+storage.py --> storage.get_load_error
+storage.py --> storage.get_genome_status
+storage.py --> storage.get_summary
+storage.py --> storage.get_diff
+storage.py --> storage.GenomeStorage
+storage.py --> schema.py
+storage.py --> git_utils.py
+storage.py --> json_diff.py
+tools.py --> tools.__init__
+tools.py --> tools.scan
+tools.py --> tools.query
+tools.py --> tools.impact
+tools.py --> tools.update
+tools.py --> tools.validate
+tools.py --> tools.RepoGenomeTools
+tools.py --> generator.py
+tools.py --> query.py
+tools.py --> query.py
+tools.py --> storage.py
+__init__.py --> server.py
+base.py --> base.__init__
+base.py --> base.analyze
+base.py --> base.update_incremental
+base.py --> base.get_dependencies
+base.py --> base.is_required
+base.py --> base.Subsystem
+chronomap.py --> chronomap.__init__
+chronomap.py --> chronomap.analyze
+chronomap.py --> chronomap.ChronoMap
+chronomap.py --> schema.py
+chronomap.py --> base.py
+chronomap.py --> git_utils.py
+chronomap.py --> git_utils.py
+chronomap.py --> git_utils.py
+contractlens.py --> contractlens.__init__
+contractlens.py --> contractlens.analyze
+contractlens.py --> contractlens._identify_public_apis
+contractlens.py --> contractlens._find_dependencies
+contractlens.py --> contractlens._calculate_fan_in
+contractlens.py --> contractlens.ContractLens
+contractlens.py --> schema.py
+contractlens.py --> base.py
+flowweaver.py --> flowweaver.__init__
+flowweaver.py --> flowweaver.analyze
+flowweaver.py --> flowweaver._build_call_graph
+flowweaver.py --> flowweaver._trace_from_entry
+flowweaver.py --> flowweaver.dfs
+flowweaver.py --> flowweaver._detect_side_effects
+flowweaver.py --> flowweaver.FlowWeaver
+flowweaver.py --> ast_analyzer.py
+flowweaver.py --> schema.py
+flowweaver.py --> base.py
+flowweaver._trace_from_entry --> flowweaver.dfs
+flowweaver.dfs --> flowweaver.dfs
+intentatlas.py --> intentatlas.__init__
+intentatlas.py --> intentatlas.analyze
+intentatlas.py --> intentatlas._extract_from_directories
+intentatlas.py --> intentatlas._extract_from_naming
+intentatlas.py --> intentatlas._extract_from_docs
+intentatlas.py --> intentatlas.IntentAtlas
+intentatlas.py --> schema.py
+intentatlas.py --> base.py
+repospider.py --> repospider.__init__
+repospider.py --> repospider.analyze
+repospider.py --> repospider._detect_language
+repospider.py --> repospider._is_text_file
+repospider.py --> repospider._make_node_id
+repospider.py --> repospider._detect_visibility
+repospider.py --> repospider._extract_docstring
+repospider.py --> repospider._resolve_import
+repospider.py --> repospider.RepoSpider
+repospider.py --> call_graph.py
+repospider.py --> dependency_resolver.py
+repospider.py --> ast_analyzer.py
+repospider.py --> ts_analyzer.py
+repospider.py --> java_analyzer.py
+repospider.py --> go_analyzer.py
+repospider.py --> cpp_analyzer.py
+repospider.py --> rust_analyzer.py
+repospider.py --> csharp_analyzer.py
+repospider.py --> ruby_analyzer.py
+repospider.py --> php_analyzer.py
+repospider.py --> md_analyzer.py
+repospider.py --> json_analyzer.py
+repospider.py --> yaml_analyzer.py
+repospider.py --> html_analyzer.py
+repospider.py --> css_analyzer.py
+repospider.py --> shell_analyzer.py
+repospider.py --> sql_analyzer.py
+repospider.py --> schema.py
+repospider.py --> schema.py
+repospider.py --> schema.py
+repospider.py --> schema.py
+repospider.py --> base.py
+repospider.py --> errors.py
+security.py --> security.__init__
+security.py --> security.analyze
+security.py --> security._detect_secrets
+security.py --> security._detect_vulnerabilities
+security.py --> security._detect_permission_issues
+security.py --> security._calculate_severity
+security.py --> security.SecurityAnalyzer
+security.py --> schema.py
+security.py --> schema.py
+security.py --> base.py
+testgalaxy.py --> testgalaxy.__init__
+testgalaxy.py --> testgalaxy.analyze
+testgalaxy.py --> testgalaxy._detect_language
+testgalaxy.py --> testgalaxy._extract_test_functions
+testgalaxy.py --> testgalaxy._find_tested_code
+testgalaxy.py --> testgalaxy._load_coverage_data
+testgalaxy.py --> testgalaxy.TestGalaxy
+testgalaxy.py --> schema.py
+testgalaxy.py --> schema.py
+testgalaxy.py --> schema.py
+testgalaxy.py --> schema.py
+testgalaxy.py --> schema.py
+testgalaxy.py --> base.py
+git_utils.py --> git_utils.get_repo_hash
+git_utils.py --> git_utils._get_repo_hash_gitpython_with_timeout
+git_utils.py --> git_utils.gitpython_operation
+git_utils.py --> git_utils._get_repo_hash_subprocess
+git_utils.py --> git_utils.get_changed_files
+git_utils.py --> git_utils.get_file_history
+git_utils.py --> git_utils.calculate_churn_score
+git_utils.py --> git_utils.get_last_major_change
+git_utils.get_repo_hash --> git_utils._get_repo_hash_subprocess
+git_utils.get_repo_hash --> git_utils._get_repo_hash_gitpython_with_timeout
+git_utils.calculate_churn_score --> git_utils.get_file_history
+git_utils.get_last_major_change --> git_utils.get_file_history
+json_diff.py --> json_diff.compute_genome_diff
+json_diff.py --> json_diff._normalize_edges
+json_diff.py --> json_diff._edge_to_tuple
+json_diff.py --> json_diff.get_affected_nodes
+json_diff.py --> schema.py
+json_diff.py --> schema.py
+json_diff.compute_genome_diff --> json_diff._normalize_edges
+json_diff.compute_genome_diff --> json_diff._edge_to_tuple
+json_diff._normalize_edges --> json_diff._edge_to_tuple
+parallel.py --> parallel.get_optimal_workers
+parallel.py --> parallel.process_files_parallel
+parallel.py --> parallel.batch_process
+parallel.process_files_parallel --> parallel.get_optimal_workers
+parallel.batch_process --> parallel.get_optimal_workers
+ragnatela.py --> ragnatela.find_latest_repogenome
+ragnatela.py --> ragnatela.compute_node_clusters
+ragnatela.py --> ragnatela.compute_degree_centrality
+ragnatela.py --> ragnatela.compute_3d_layout
+ragnatela.py --> ragnatela.compute_node_sizes
+ragnatela.py --> ragnatela.get_node_color
+ragnatela.py --> ragnatela.__init__
+ragnatela.py --> ragnatela._create_visuals
+ragnatela.py --> ragnatela._setup_interaction
+ragnatela.py --> ragnatela.on_mouse_wheel
+ragnatela.py --> ragnatela.on_camera_update
+ragnatela.py --> ragnatela.on_mouse_press
+ragnatela.py --> ragnatela.on_mouse_move
+ragnatela.py --> ragnatela.on_key_press
+ragnatela.py --> ragnatela._update_node_sizes_for_distance
+ragnatela.py --> ragnatela._update_edge_lod
+ragnatela.py --> ragnatela._build_spatial_index
+ragnatela.py --> ragnatela._find_clicked_node
+ragnatela.py --> ragnatela._show_tooltip
+ragnatela.py --> ragnatela._hide_tooltip
+ragnatela.py --> ragnatela._create_node_labels
+ragnatela.py --> ragnatela.on_camera_update_labels
+ragnatela.py --> ragnatela._toggle_labels
+ragnatela.py --> ragnatela._toggle_search
+ragnatela.py --> ragnatela._create_search_ui
+ragnatela.py --> ragnatela._update_search_display
+ragnatela.py --> ragnatela._remove_search_ui
+ragnatela.py --> ragnatela._apply_filters
+ragnatela.py --> ragnatela._rebuild_visuals_from_data
+ragnatela.py --> ragnatela.fade_in
+ragnatela.py --> ragnatela._highlight_paths
+ragnatela.py --> ragnatela._update_hover_highlighting
+ragnatela.py --> ragnatela._update_selection_indicator
+ragnatela.py --> ragnatela._update_multi_selection_indicators
+ragnatela.py --> ragnatela._clear_path_highlighting
+ragnatela.py --> ragnatela._focus_on_node
+ragnatela.py --> ragnatela._animate_camera
+ragnatela.py --> ragnatela._toggle_minimap
+ragnatela.py --> ragnatela._create_minimap
+ragnatela.py --> ragnatela._update_minimap
+ragnatela.py --> ragnatela._remove_minimap
+ragnatela.py --> ragnatela._toggle_clustering
+ragnatela.py --> ragnatela._toggle_help_overlay
+ragnatela.py --> ragnatela._create_help_overlay
+ragnatela.py --> ragnatela._remove_help_overlay
+ragnatela.py --> ragnatela._add_next_batch
+ragnatela.py --> ragnatela.run
+ragnatela.py --> ragnatela.visualize_ragnatela
+ragnatela.py --> ragnatela.RagnatelaCanvas
+ragnatela.py --> schema.py
+ragnatela.__init__ --> ragnatela.compute_degree_centrality
+ragnatela.__init__ --> ragnatela.compute_node_clusters
+ragnatela.__init__ --> ragnatela.compute_3d_layout
+ragnatela.__init__ --> ragnatela.compute_node_sizes
+ragnatela._create_visuals --> ragnatela.get_node_color
+ragnatela._apply_filters --> ragnatela.get_node_color
+ragnatela.visualize_ragnatela --> ragnatela.find_latest_repogenome
+__init__.py --> ragnatela.py
+cpp_analyzer.py --> cpp_analyzer.analyze_file
+cpp_analyzer.py --> cpp_analyzer._remove_comments
+cpp_analyzer.py --> cpp_analyzer._extract_includes
+cpp_analyzer.py --> cpp_analyzer._extract_classes
+cpp_analyzer.py --> cpp_analyzer._extract_functions
+cpp_analyzer.py --> cpp_analyzer._extract_entry_points
+cpp_analyzer.py --> cpp_analyzer.analyze_cpp_file
+cpp_analyzer.py --> cpp_analyzer.CPPAnalyzer
+csharp_analyzer.py --> csharp_analyzer.analyze_file
+csharp_analyzer.py --> csharp_analyzer._remove_comments
+csharp_analyzer.py --> csharp_analyzer._extract_namespace
+csharp_analyzer.py --> csharp_analyzer._extract_using_statements
+csharp_analyzer.py --> csharp_analyzer._extract_classes
+csharp_analyzer.py --> csharp_analyzer._extract_methods
+csharp_analyzer.py --> csharp_analyzer._extract_entry_points
+csharp_analyzer.py --> csharp_analyzer.analyze_csharp_file
+csharp_analyzer.py --> csharp_analyzer.CSharpAnalyzer
+css_analyzer.py --> css_analyzer.analyze_file
+css_analyzer.py --> css_analyzer._extract_selectors
+css_analyzer.py --> css_analyzer._classify_selector
+css_analyzer.py --> css_analyzer._extract_rules
+css_analyzer.py --> css_analyzer._extract_media_queries
+css_analyzer.py --> css_analyzer._extract_keyframes
+css_analyzer.py --> css_analyzer._extract_imports
+css_analyzer.py --> css_analyzer._extract_urls
+css_analyzer.py --> css_analyzer.analyze_css_file
+css_analyzer.py --> css_analyzer.CSSAnalyzer
+go_analyzer.py --> go_analyzer.analyze_file
+go_analyzer.py --> go_analyzer._extract_package
+go_analyzer.py --> go_analyzer._extract_imports
+go_analyzer.py --> go_analyzer._extract_types
+go_analyzer.py --> go_analyzer._extract_functions
+go_analyzer.py --> go_analyzer._extract_entry_points
+go_analyzer.py --> go_analyzer.analyze_go_file
+go_analyzer.py --> go_analyzer.GoAnalyzer
+html_analyzer.py --> html_analyzer.__init__
+html_analyzer.py --> html_analyzer.handle_starttag
+html_analyzer.py --> html_analyzer.handle_data
+html_analyzer.py --> html_analyzer.analyze_file
+html_analyzer.py --> html_analyzer.analyze_html_file
+html_analyzer.py --> html_analyzer.HTMLStructureParser
+html_analyzer.py --> html_analyzer.HTMLAnalyzer
+java_analyzer.py --> java_analyzer.analyze_file
+java_analyzer.py --> java_analyzer._remove_comments
+java_analyzer.py --> java_analyzer._extract_package
+java_analyzer.py --> java_analyzer._extract_imports
+java_analyzer.py --> java_analyzer._extract_classes
+java_analyzer.py --> java_analyzer._extract_methods
+java_analyzer.py --> java_analyzer._extract_entry_points
+java_analyzer.py --> java_analyzer.analyze_java_file
+java_analyzer.py --> java_analyzer.JavaAnalyzer
+json_analyzer.py --> json_analyzer.analyze_file
+json_analyzer.py --> json_analyzer._extract_keys
+json_analyzer.py --> json_analyzer._extract_structure
+json_analyzer.py --> json_analyzer.analyze_json_file
+json_analyzer.py --> json_analyzer.JSONAnalyzer
+md_analyzer.py --> md_analyzer.analyze_file
+md_analyzer.py --> md_analyzer._extract_headings
+md_analyzer.py --> md_analyzer._extract_links
+md_analyzer.py --> md_analyzer._extract_code_blocks
+md_analyzer.py --> md_analyzer._extract_images
+md_analyzer.py --> md_analyzer._extract_lists
+md_analyzer.py --> md_analyzer._extract_blockquotes
+md_analyzer.py --> md_analyzer.analyze_markdown_file
+md_analyzer.py --> md_analyzer.MarkdownAnalyzer
+php_analyzer.py --> php_analyzer.analyze_file
+php_analyzer.py --> php_analyzer._remove_comments
+php_analyzer.py --> php_analyzer._extract_namespace
+php_analyzer.py --> php_analyzer._extract_use_statements
+php_analyzer.py --> php_analyzer._extract_classes
+php_analyzer.py --> php_analyzer._extract_functions
+php_analyzer.py --> php_analyzer.analyze_php_file
+php_analyzer.py --> php_analyzer.PHPAnalyzer
+ast_analyzer.py --> ast_analyzer.__init__
+ast_analyzer.py --> ast_analyzer.analyze_file
+ast_analyzer.py --> ast_analyzer.__init__
+ast_analyzer.py --> ast_analyzer.visit_Import
+ast_analyzer.py --> ast_analyzer.visit_ImportFrom
+ast_analyzer.py --> ast_analyzer.visit_FunctionDef
+ast_analyzer.py --> ast_analyzer.visit_ClassDef
+ast_analyzer.py --> ast_analyzer.visit_If
+ast_analyzer.py --> ast_analyzer._get_decorator_name
+ast_analyzer.py --> ast_analyzer._get_name
+ast_analyzer.py --> ast_analyzer._extract_route
+ast_analyzer.py --> ast_analyzer.analyze_python_file
+ast_analyzer.py --> ast_analyzer.PythonASTAnalyzer
+ast_analyzer.py --> ast_analyzer._PythonASTVisitor
+ruby_analyzer.py --> ruby_analyzer.analyze_file
+ruby_analyzer.py --> ruby_analyzer._extract_requires
+ruby_analyzer.py --> ruby_analyzer._extract_modules
+ruby_analyzer.py --> ruby_analyzer._extract_classes
+ruby_analyzer.py --> ruby_analyzer._extract_methods
+ruby_analyzer.py --> ruby_analyzer.analyze_ruby_file
+ruby_analyzer.py --> ruby_analyzer.RubyAnalyzer
+rust_analyzer.py --> rust_analyzer.analyze_file
+rust_analyzer.py --> rust_analyzer._extract_module
+rust_analyzer.py --> rust_analyzer._extract_use_statements
+rust_analyzer.py --> rust_analyzer._extract_types
+rust_analyzer.py --> rust_analyzer._extract_functions
+rust_analyzer.py --> rust_analyzer._extract_entry_points
+rust_analyzer.py --> rust_analyzer.analyze_rust_file
+rust_analyzer.py --> rust_analyzer.RustAnalyzer
+shell_analyzer.py --> shell_analyzer.analyze_file
+shell_analyzer.py --> shell_analyzer._extract_shebang
+shell_analyzer.py --> shell_analyzer._extract_functions
+shell_analyzer.py --> shell_analyzer._extract_variables
+shell_analyzer.py --> shell_analyzer._extract_commands
+shell_analyzer.py --> shell_analyzer._extract_conditionals
+shell_analyzer.py --> shell_analyzer._extract_loops
+shell_analyzer.py --> shell_analyzer.analyze_shell_file
+shell_analyzer.py --> shell_analyzer.ShellAnalyzer
+sql_analyzer.py --> sql_analyzer.analyze_file
+sql_analyzer.py --> sql_analyzer._extract_queries
+sql_analyzer.py --> sql_analyzer._extract_tables
+sql_analyzer.py --> sql_analyzer._extract_columns
+sql_analyzer.py --> sql_analyzer._extract_joins
+sql_analyzer.py --> sql_analyzer._extract_views
+sql_analyzer.py --> sql_analyzer._extract_procedures
+sql_analyzer.py --> sql_analyzer.analyze_sql_file
+sql_analyzer.py --> sql_analyzer.SQLAnalyzer
+ts_analyzer.py --> ts_analyzer.__init__
+ts_analyzer.py --> ts_analyzer.analyze_file
+ts_analyzer.py --> ts_analyzer._analyze_with_tree_sitter
+ts_analyzer.py --> ts_analyzer._analyze_with_regex
+ts_analyzer.py --> ts_analyzer._extract_imports_regex
+ts_analyzer.py --> ts_analyzer._extract_functions_regex
+ts_analyzer.py --> ts_analyzer._extract_classes_regex
+ts_analyzer.py --> ts_analyzer._extract_api_routes_regex
+ts_analyzer.py --> ts_analyzer._extract_from_tree_sitter
+ts_analyzer.py --> ts_analyzer.analyze_typescript_file
+ts_analyzer.py --> ts_analyzer.TypeScriptAnalyzer
+yaml_analyzer.py --> yaml_analyzer.analyze_file
+yaml_analyzer.py --> yaml_analyzer._extract_keys
+yaml_analyzer.py --> yaml_analyzer._extract_structure
+yaml_analyzer.py --> yaml_analyzer._extract_anchors
+yaml_analyzer.py --> yaml_analyzer.analyze_yaml_file
+yaml_analyzer.py --> yaml_analyzer.YAMLAnalyzer
+test_cli.py.test_generate_with_logging --> test_cli.py
+test_cli.py.test_generate_with_logging --> test_cli.test_generate_with_logging
+test_cli.py.test_generate_with_logging --> main.py
+test_cli.py.test_generate_with_logging --> main.main
+test_cli.py.test_generate_with_logging --> main.generate
+test_cli.py.test_generate_with_logging --> main.update
+test_cli.py.test_generate_with_logging --> main.validate
+test_cli.py.test_generate_with_logging --> main.diff
+test_cli.py.test_generate_with_logging --> main.init
+test_cli.py.test_generate_with_logging --> main.export
+test_cli.py.test_generate_with_logging --> main.query
+test_cli.py.test_generate_with_logging --> main.ragnatela
+test_cli.py.test_generate_with_logging --> main.mcp_server
+test_cli.py.test_generate_with_logging --> main.watch
+test_cli.py.test_generate_with_logging --> main.generator_factory
+test_cli.py.test_generate_with_logging --> output.py
+test_cli.py.test_generate_with_logging --> output.create_progress_bar
+test_cli.py.test_generate_with_logging --> output.print_success
+test_cli.py.test_generate_with_logging --> output.print_error
+test_cli.py.test_generate_with_logging --> output.print_warning
+test_cli.py.test_generate_with_logging --> output.print_info
+test_cli.py.test_generate_with_logging --> output.format_file_size
+test_cli.py.test_generate_with_logging --> __init__.py
+test_python_ast.py.test_analyze_simple_python_file --> test_python_ast.py
+test_python_ast.py.test_analyze_simple_python_file --> test_python_ast.test_analyze_simple_python_file
+test_python_ast.py.test_analyze_simple_python_file --> test_python_ast.test_analyze_file_with_main_block
+test_python_ast.py.test_analyze_simple_python_file --> test_python_ast.test_analyze_invalid_syntax
+test_python_ast.py.test_analyze_file_with_main_block --> test_python_ast.py
+test_python_ast.py.test_analyze_file_with_main_block --> test_python_ast.test_analyze_simple_python_file
+test_python_ast.py.test_analyze_file_with_main_block --> test_python_ast.test_analyze_file_with_main_block
+test_python_ast.py.test_analyze_file_with_main_block --> test_python_ast.test_analyze_invalid_syntax
+test_python_ast.py.test_analyze_invalid_syntax --> test_python_ast.py
+test_python_ast.py.test_analyze_invalid_syntax --> test_python_ast.test_analyze_simple_python_file
+test_python_ast.py.test_analyze_invalid_syntax --> test_python_ast.test_analyze_file_with_main_block
+test_python_ast.py.test_analyze_invalid_syntax --> test_python_ast.test_analyze_invalid_syntax
+test_advanced_query.py.test_sql_query_nodes --> test_advanced_query.py
+test_advanced_query.py.test_sql_query_nodes --> test_advanced_query.sample_genome
+test_advanced_query.py.test_sql_query_nodes --> test_advanced_query.test_sql_query_nodes
+test_advanced_query.py.test_sql_query_nodes --> test_advanced_query.test_sql_query_edges
+test_advanced_query.py.test_sql_query_nodes --> test_advanced_query.test_graphql_query
+test_advanced_query.py.test_sql_query_nodes --> test_advanced_query.test_simple_query
+test_advanced_query.py.test_sql_query_nodes --> test_advanced_query.test_query_with_order_by
+test_advanced_query.py.test_sql_query_nodes --> test_advanced_query.test_query_with_limit
+test_advanced_query.py.test_sql_query_nodes --> advanced_query.py
+test_advanced_query.py.test_sql_query_nodes --> advanced_query.__init__
+test_advanced_query.py.test_sql_query_nodes --> advanced_query.execute
+test_advanced_query.py.test_sql_query_nodes --> advanced_query._execute_sql
+test_advanced_query.py.test_sql_query_nodes --> advanced_query._execute_graphql
+test_advanced_query.py.test_sql_query_nodes --> advanced_query._execute_simple
+test_advanced_query.py.test_sql_query_nodes --> advanced_query._parse_where_clause
+test_advanced_query.py.test_sql_query_nodes --> advanced_query._parse_graphql_args
+test_advanced_query.py.test_sql_query_nodes --> advanced_query._query_nodes_sql
+test_advanced_query.py.test_sql_query_nodes --> advanced_query._query_edges_sql
+test_advanced_query.py.test_sql_query_nodes --> advanced_query._query_nodes_graphql
+test_advanced_query.py.test_sql_query_nodes --> advanced_query._query_edges_graphql
+test_advanced_query.py.test_sql_query_nodes --> advanced_query._match_conditions
+test_advanced_query.py.test_sql_query_nodes --> advanced_query._match_edge_conditions
+test_advanced_query.py.test_sql_query_nodes --> advanced_query.AdvancedQuery
+test_advanced_query.py.test_sql_query_edges --> test_advanced_query.py
+test_advanced_query.py.test_sql_query_edges --> test_advanced_query.sample_genome
+test_advanced_query.py.test_sql_query_edges --> test_advanced_query.test_sql_query_nodes
+test_advanced_query.py.test_sql_query_edges --> test_advanced_query.test_sql_query_edges
+test_advanced_query.py.test_sql_query_edges --> test_advanced_query.test_graphql_query
+test_advanced_query.py.test_sql_query_edges --> test_advanced_query.test_simple_query
+test_advanced_query.py.test_sql_query_edges --> test_advanced_query.test_query_with_order_by
+test_advanced_query.py.test_sql_query_edges --> test_advanced_query.test_query_with_limit
+test_advanced_query.py.test_sql_query_edges --> advanced_query.py
+test_advanced_query.py.test_sql_query_edges --> advanced_query.__init__
+test_advanced_query.py.test_sql_query_edges --> advanced_query.execute
+test_advanced_query.py.test_sql_query_edges --> advanced_query._execute_sql
+test_advanced_query.py.test_sql_query_edges --> advanced_query._execute_graphql
+test_advanced_query.py.test_sql_query_edges --> advanced_query._execute_simple
+test_advanced_query.py.test_sql_query_edges --> advanced_query._parse_where_clause
+test_advanced_query.py.test_sql_query_edges --> advanced_query._parse_graphql_args
+test_advanced_query.py.test_sql_query_edges --> advanced_query._query_nodes_sql
+test_advanced_query.py.test_sql_query_edges --> advanced_query._query_edges_sql
+test_advanced_query.py.test_sql_query_edges --> advanced_query._query_nodes_graphql
+test_advanced_query.py.test_sql_query_edges --> advanced_query._query_edges_graphql
+test_advanced_query.py.test_sql_query_edges --> advanced_query._match_conditions
+test_advanced_query.py.test_sql_query_edges --> advanced_query._match_edge_conditions
+test_advanced_query.py.test_sql_query_edges --> advanced_query.AdvancedQuery
+test_advanced_query.py.test_graphql_query --> test_advanced_query.py
+test_advanced_query.py.test_graphql_query --> test_advanced_query.sample_genome
+test_advanced_query.py.test_graphql_query --> test_advanced_query.test_sql_query_nodes
+test_advanced_query.py.test_graphql_query --> test_advanced_query.test_sql_query_edges
+test_advanced_query.py.test_graphql_query --> test_advanced_query.test_graphql_query
+test_advanced_query.py.test_graphql_query --> test_advanced_query.test_simple_query
+test_advanced_query.py.test_graphql_query --> test_advanced_query.test_query_with_order_by
+test_advanced_query.py.test_graphql_query --> test_advanced_query.test_query_with_limit
+test_advanced_query.py.test_graphql_query --> advanced_query.py
+test_advanced_query.py.test_graphql_query --> advanced_query.__init__
+test_advanced_query.py.test_graphql_query --> advanced_query.execute
+test_advanced_query.py.test_graphql_query --> advanced_query._execute_sql
+test_advanced_query.py.test_graphql_query --> advanced_query._execute_graphql
+test_advanced_query.py.test_graphql_query --> advanced_query._execute_simple
+test_advanced_query.py.test_graphql_query --> advanced_query._parse_where_clause
+test_advanced_query.py.test_graphql_query --> advanced_query._parse_graphql_args
+test_advanced_query.py.test_graphql_query --> advanced_query._query_nodes_sql
+test_advanced_query.py.test_graphql_query --> advanced_query._query_edges_sql
+test_advanced_query.py.test_graphql_query --> advanced_query._query_nodes_graphql
+test_advanced_query.py.test_graphql_query --> advanced_query._query_edges_graphql
+test_advanced_query.py.test_graphql_query --> advanced_query._match_conditions
+test_advanced_query.py.test_graphql_query --> advanced_query._match_edge_conditions
+test_advanced_query.py.test_graphql_query --> advanced_query.AdvancedQuery
+test_advanced_query.py.test_simple_query --> test_advanced_query.py
+test_advanced_query.py.test_simple_query --> test_advanced_query.sample_genome
+test_advanced_query.py.test_simple_query --> test_advanced_query.test_sql_query_nodes
+test_advanced_query.py.test_simple_query --> test_advanced_query.test_sql_query_edges
+test_advanced_query.py.test_simple_query --> test_advanced_query.test_graphql_query
+test_advanced_query.py.test_simple_query --> test_advanced_query.test_simple_query
+test_advanced_query.py.test_simple_query --> test_advanced_query.test_query_with_order_by
+test_advanced_query.py.test_simple_query --> test_advanced_query.test_query_with_limit
+test_advanced_query.py.test_simple_query --> advanced_query.py
+test_advanced_query.py.test_simple_query --> advanced_query.__init__
+test_advanced_query.py.test_simple_query --> advanced_query.execute
+test_advanced_query.py.test_simple_query --> advanced_query._execute_sql
+test_advanced_query.py.test_simple_query --> advanced_query._execute_graphql
+test_advanced_query.py.test_simple_query --> advanced_query._execute_simple
+test_advanced_query.py.test_simple_query --> advanced_query._parse_where_clause
+test_advanced_query.py.test_simple_query --> advanced_query._parse_graphql_args
+test_advanced_query.py.test_simple_query --> advanced_query._query_nodes_sql
+test_advanced_query.py.test_simple_query --> advanced_query._query_edges_sql
+test_advanced_query.py.test_simple_query --> advanced_query._query_nodes_graphql
+test_advanced_query.py.test_simple_query --> advanced_query._query_edges_graphql
+test_advanced_query.py.test_simple_query --> advanced_query._match_conditions
+test_advanced_query.py.test_simple_query --> advanced_query._match_edge_conditions
+test_advanced_query.py.test_simple_query --> advanced_query.AdvancedQuery
+test_advanced_query.py.test_query_with_order_by --> test_advanced_query.py
+test_advanced_query.py.test_query_with_order_by --> test_advanced_query.sample_genome
+test_advanced_query.py.test_query_with_order_by --> test_advanced_query.test_sql_query_nodes
+test_advanced_query.py.test_query_with_order_by --> test_advanced_query.test_sql_query_edges
+test_advanced_query.py.test_query_with_order_by --> test_advanced_query.test_graphql_query
+test_advanced_query.py.test_query_with_order_by --> test_advanced_query.test_simple_query
+test_advanced_query.py.test_query_with_order_by --> test_advanced_query.test_query_with_order_by
+test_advanced_query.py.test_query_with_order_by --> test_advanced_query.test_query_with_limit
+test_advanced_query.py.test_query_with_order_by --> advanced_query.py
+test_advanced_query.py.test_query_with_order_by --> advanced_query.__init__
+test_advanced_query.py.test_query_with_order_by --> advanced_query.execute
+test_advanced_query.py.test_query_with_order_by --> advanced_query._execute_sql
+test_advanced_query.py.test_query_with_order_by --> advanced_query._execute_graphql
+test_advanced_query.py.test_query_with_order_by --> advanced_query._execute_simple
+test_advanced_query.py.test_query_with_order_by --> advanced_query._parse_where_clause
+test_advanced_query.py.test_query_with_order_by --> advanced_query._parse_graphql_args
+test_advanced_query.py.test_query_with_order_by --> advanced_query._query_nodes_sql
+test_advanced_query.py.test_query_with_order_by --> advanced_query._query_edges_sql
+test_advanced_query.py.test_query_with_order_by --> advanced_query._query_nodes_graphql
+test_advanced_query.py.test_query_with_order_by --> advanced_query._query_edges_graphql
+test_advanced_query.py.test_query_with_order_by --> advanced_query._match_conditions
+test_advanced_query.py.test_query_with_order_by --> advanced_query._match_edge_conditions
+test_advanced_query.py.test_query_with_order_by --> advanced_query.AdvancedQuery
+test_advanced_query.py.test_query_with_limit --> test_advanced_query.py
+test_advanced_query.py.test_query_with_limit --> test_advanced_query.sample_genome
+test_advanced_query.py.test_query_with_limit --> test_advanced_query.test_sql_query_nodes
+test_advanced_query.py.test_query_with_limit --> test_advanced_query.test_sql_query_edges
+test_advanced_query.py.test_query_with_limit --> test_advanced_query.test_graphql_query
+test_advanced_query.py.test_query_with_limit --> test_advanced_query.test_simple_query
+test_advanced_query.py.test_query_with_limit --> test_advanced_query.test_query_with_order_by
+test_advanced_query.py.test_query_with_limit --> test_advanced_query.test_query_with_limit
+test_advanced_query.py.test_query_with_limit --> advanced_query.py
+test_advanced_query.py.test_query_with_limit --> advanced_query.__init__
+test_advanced_query.py.test_query_with_limit --> advanced_query.execute
+test_advanced_query.py.test_query_with_limit --> advanced_query._execute_sql
+test_advanced_query.py.test_query_with_limit --> advanced_query._execute_graphql
+test_advanced_query.py.test_query_with_limit --> advanced_query._execute_simple
+test_advanced_query.py.test_query_with_limit --> advanced_query._parse_where_clause
+test_advanced_query.py.test_query_with_limit --> advanced_query._parse_graphql_args
+test_advanced_query.py.test_query_with_limit --> advanced_query._query_nodes_sql
+test_advanced_query.py.test_query_with_limit --> advanced_query._query_edges_sql
+test_advanced_query.py.test_query_with_limit --> advanced_query._query_nodes_graphql
+test_advanced_query.py.test_query_with_limit --> advanced_query._query_edges_graphql
+test_advanced_query.py.test_query_with_limit --> advanced_query._match_conditions
+test_advanced_query.py.test_query_with_limit --> advanced_query._match_edge_conditions
+test_advanced_query.py.test_query_with_limit --> advanced_query.AdvancedQuery
+test_schema.py.test_node_creation --> test_schema.py
+test_schema.py.test_node_creation --> test_schema.test_node_creation
+test_schema.py.test_node_creation --> test_schema.test_edge_creation
+test_schema.py.test_node_creation --> test_schema.test_repo_genome_creation
+test_schema.py.test_node_creation --> test_schema.test_repo_genome_serialization
+test_schema.py.test_node_creation --> test_schema.test_repo_genome_from_dict
+test_schema.py.test_node_creation --> test_schema.test_risk_model
+test_schema.py.test_node_creation --> test_schema.test_genome_save_load
+test_schema.py.test_node_creation --> schema.py
+test_schema.py.test_node_creation --> schema._compress_field_name
+test_schema.py.test_node_creation --> schema._expand_field_name
+test_schema.py.test_node_creation --> schema._compress_dict
+test_schema.py.test_node_creation --> schema._expand_dict
+test_schema.py.test_node_creation --> schema.to_dict
+test_schema.py.test_node_creation --> schema._to_lite_dict
+test_schema.py.test_node_creation --> schema.from_dict
+test_schema.py.test_node_creation --> schema.save
+test_schema.py.test_node_creation --> schema.load
+test_schema.py.test_node_creation --> schema._is_compact_format
+test_schema.py.test_node_creation --> schema.NodeType
+test_schema.py.test_node_creation --> schema.EdgeType
+test_schema.py.test_node_creation --> schema.Metadata
+test_schema.py.test_node_creation --> schema.Summary
+test_schema.py.test_node_creation --> schema.Node
+test_schema.py.test_node_creation --> schema.Edge
+test_schema.py.test_node_creation --> schema.Config
+test_schema.py.test_node_creation --> schema.Flow
+test_schema.py.test_node_creation --> schema.Concept
+test_schema.py.test_node_creation --> schema.History
+test_schema.py.test_node_creation --> schema.Risk
+test_schema.py.test_node_creation --> schema.Contract
+test_schema.py.test_node_creation --> schema.Tests
+test_schema.py.test_node_creation --> schema.GenomeDiff
+test_schema.py.test_node_creation --> schema.RepoGenome
+test_schema.py.test_edge_creation --> test_schema.py
+test_schema.py.test_edge_creation --> test_schema.test_node_creation
+test_schema.py.test_edge_creation --> test_schema.test_edge_creation
+test_schema.py.test_edge_creation --> test_schema.test_repo_genome_creation
+test_schema.py.test_edge_creation --> test_schema.test_repo_genome_serialization
+test_schema.py.test_edge_creation --> test_schema.test_repo_genome_from_dict
+test_schema.py.test_edge_creation --> test_schema.test_risk_model
+test_schema.py.test_edge_creation --> test_schema.test_genome_save_load
+test_schema.py.test_edge_creation --> schema.py
+test_schema.py.test_edge_creation --> schema._compress_field_name
+test_schema.py.test_edge_creation --> schema._expand_field_name
+test_schema.py.test_edge_creation --> schema._compress_dict
+test_schema.py.test_edge_creation --> schema._expand_dict
+test_schema.py.test_edge_creation --> schema.to_dict
+test_schema.py.test_edge_creation --> schema._to_lite_dict
+test_schema.py.test_edge_creation --> schema.from_dict
+test_schema.py.test_edge_creation --> schema.save
+test_schema.py.test_edge_creation --> schema.load
+test_schema.py.test_edge_creation --> schema._is_compact_format
+test_schema.py.test_edge_creation --> schema.NodeType
+test_schema.py.test_edge_creation --> schema.EdgeType
+test_schema.py.test_edge_creation --> schema.Metadata
+test_schema.py.test_edge_creation --> schema.Summary
+test_schema.py.test_edge_creation --> schema.Node
+test_schema.py.test_edge_creation --> schema.Edge
+test_schema.py.test_edge_creation --> schema.Config
+test_schema.py.test_edge_creation --> schema.Flow
+test_schema.py.test_edge_creation --> schema.Concept
+test_schema.py.test_edge_creation --> schema.History
+test_schema.py.test_edge_creation --> schema.Risk
+test_schema.py.test_edge_creation --> schema.Contract
+test_schema.py.test_edge_creation --> schema.Tests
+test_schema.py.test_edge_creation --> schema.GenomeDiff
+test_schema.py.test_edge_creation --> schema.RepoGenome
+test_schema.py.test_repo_genome_creation --> test_schema.py
+test_schema.py.test_repo_genome_creation --> test_schema.test_node_creation
+test_schema.py.test_repo_genome_creation --> test_schema.test_edge_creation
+test_schema.py.test_repo_genome_creation --> test_schema.test_repo_genome_creation
+test_schema.py.test_repo_genome_creation --> test_schema.test_repo_genome_serialization
+test_schema.py.test_repo_genome_creation --> test_schema.test_repo_genome_from_dict
+test_schema.py.test_repo_genome_creation --> test_schema.test_risk_model
+test_schema.py.test_repo_genome_creation --> test_schema.test_genome_save_load
+test_schema.py.test_repo_genome_creation --> schema.py
+test_schema.py.test_repo_genome_creation --> schema._compress_field_name
+test_schema.py.test_repo_genome_creation --> schema._expand_field_name
+test_schema.py.test_repo_genome_creation --> schema._compress_dict
+test_schema.py.test_repo_genome_creation --> schema._expand_dict
+test_schema.py.test_repo_genome_creation --> schema.to_dict
+test_schema.py.test_repo_genome_creation --> schema._to_lite_dict
+test_schema.py.test_repo_genome_creation --> schema.from_dict
+test_schema.py.test_repo_genome_creation --> schema.save
+test_schema.py.test_repo_genome_creation --> schema.load
+test_schema.py.test_repo_genome_creation --> schema._is_compact_format
+test_schema.py.test_repo_genome_creation --> schema.NodeType
+test_schema.py.test_repo_genome_creation --> schema.EdgeType
+test_schema.py.test_repo_genome_creation --> schema.Metadata
+test_schema.py.test_repo_genome_creation --> schema.Summary
+test_schema.py.test_repo_genome_creation --> schema.Node
+test_schema.py.test_repo_genome_creation --> schema.Edge
+test_schema.py.test_repo_genome_creation --> schema.Config
+test_schema.py.test_repo_genome_creation --> schema.Flow
+test_schema.py.test_repo_genome_creation --> schema.Concept
+test_schema.py.test_repo_genome_creation --> schema.History
+test_schema.py.test_repo_genome_creation --> schema.Risk
+test_schema.py.test_repo_genome_creation --> schema.Contract
+test_schema.py.test_repo_genome_creation --> schema.Tests
+test_schema.py.test_repo_genome_creation --> schema.GenomeDiff
+test_schema.py.test_repo_genome_creation --> schema.RepoGenome
+test_schema.py.test_repo_genome_serialization --> test_schema.py
+test_schema.py.test_repo_genome_serialization --> test_schema.test_node_creation
+test_schema.py.test_repo_genome_serialization --> test_schema.test_edge_creation
+test_schema.py.test_repo_genome_serialization --> test_schema.test_repo_genome_creation
+test_schema.py.test_repo_genome_serialization --> test_schema.test_repo_genome_serialization
+test_schema.py.test_repo_genome_serialization --> test_schema.test_repo_genome_from_dict
+test_schema.py.test_repo_genome_serialization --> test_schema.test_risk_model
+test_schema.py.test_repo_genome_serialization --> test_schema.test_genome_save_load
+test_schema.py.test_repo_genome_serialization --> schema.py
+test_schema.py.test_repo_genome_serialization --> schema._compress_field_name
+test_schema.py.test_repo_genome_serialization --> schema._expand_field_name
+test_schema.py.test_repo_genome_serialization --> schema._compress_dict
+test_schema.py.test_repo_genome_serialization --> schema._expand_dict
+test_schema.py.test_repo_genome_serialization --> schema.to_dict
+test_schema.py.test_repo_genome_serialization --> schema._to_lite_dict
+test_schema.py.test_repo_genome_serialization --> schema.from_dict
+test_schema.py.test_repo_genome_serialization --> schema.save
+test_schema.py.test_repo_genome_serialization --> schema.load
+test_schema.py.test_repo_genome_serialization --> schema._is_compact_format
+test_schema.py.test_repo_genome_serialization --> schema.NodeType
+test_schema.py.test_repo_genome_serialization --> schema.EdgeType
+test_schema.py.test_repo_genome_serialization --> schema.Metadata
+test_schema.py.test_repo_genome_serialization --> schema.Summary
+test_schema.py.test_repo_genome_serialization --> schema.Node
+test_schema.py.test_repo_genome_serialization --> schema.Edge
+test_schema.py.test_repo_genome_serialization --> schema.Config
+test_schema.py.test_repo_genome_serialization --> schema.Flow
+test_schema.py.test_repo_genome_serialization --> schema.Concept
+test_schema.py.test_repo_genome_serialization --> schema.History
+test_schema.py.test_repo_genome_serialization --> schema.Risk
+test_schema.py.test_repo_genome_serialization --> schema.Contract
+test_schema.py.test_repo_genome_serialization --> schema.Tests
+test_schema.py.test_repo_genome_serialization --> schema.GenomeDiff
+test_schema.py.test_repo_genome_serialization --> schema.RepoGenome
+test_schema.py.test_repo_genome_from_dict --> test_schema.py
+test_schema.py.test_repo_genome_from_dict --> test_schema.test_node_creation
+test_schema.py.test_repo_genome_from_dict --> test_schema.test_edge_creation
+test_schema.py.test_repo_genome_from_dict --> test_schema.test_repo_genome_creation
+test_schema.py.test_repo_genome_from_dict --> test_schema.test_repo_genome_serialization
+test_schema.py.test_repo_genome_from_dict --> test_schema.test_repo_genome_from_dict
+test_schema.py.test_repo_genome_from_dict --> test_schema.test_risk_model
+test_schema.py.test_repo_genome_from_dict --> test_schema.test_genome_save_load
+test_schema.py.test_repo_genome_from_dict --> schema.py
+test_schema.py.test_repo_genome_from_dict --> schema._compress_field_name
+test_schema.py.test_repo_genome_from_dict --> schema._expand_field_name
+test_schema.py.test_repo_genome_from_dict --> schema._compress_dict
+test_schema.py.test_repo_genome_from_dict --> schema._expand_dict
+test_schema.py.test_repo_genome_from_dict --> schema.to_dict
+test_schema.py.test_repo_genome_from_dict --> schema._to_lite_dict
+test_schema.py.test_repo_genome_from_dict --> schema.from_dict
+test_schema.py.test_repo_genome_from_dict --> schema.save
+test_schema.py.test_repo_genome_from_dict --> schema.load
+test_schema.py.test_repo_genome_from_dict --> schema._is_compact_format
+test_schema.py.test_repo_genome_from_dict --> schema.NodeType
+test_schema.py.test_repo_genome_from_dict --> schema.EdgeType
+test_schema.py.test_repo_genome_from_dict --> schema.Metadata
+test_schema.py.test_repo_genome_from_dict --> schema.Summary
+test_schema.py.test_repo_genome_from_dict --> schema.Node
+test_schema.py.test_repo_genome_from_dict --> schema.Edge
+test_schema.py.test_repo_genome_from_dict --> schema.Config
+test_schema.py.test_repo_genome_from_dict --> schema.Flow
+test_schema.py.test_repo_genome_from_dict --> schema.Concept
+test_schema.py.test_repo_genome_from_dict --> schema.History
+test_schema.py.test_repo_genome_from_dict --> schema.Risk
+test_schema.py.test_repo_genome_from_dict --> schema.Contract
+test_schema.py.test_repo_genome_from_dict --> schema.Tests
+test_schema.py.test_repo_genome_from_dict --> schema.GenomeDiff
+test_schema.py.test_repo_genome_from_dict --> schema.RepoGenome
+test_schema.py.test_risk_model --> test_schema.py
+test_schema.py.test_risk_model --> test_schema.test_node_creation
+test_schema.py.test_risk_model --> test_schema.test_edge_creation
+test_schema.py.test_risk_model --> test_schema.test_repo_genome_creation
+test_schema.py.test_risk_model --> test_schema.test_repo_genome_serialization
+test_schema.py.test_risk_model --> test_schema.test_repo_genome_from_dict
+test_schema.py.test_risk_model --> test_schema.test_risk_model
+test_schema.py.test_risk_model --> test_schema.test_genome_save_load
+test_schema.py.test_risk_model --> schema.py
+test_schema.py.test_risk_model --> schema._compress_field_name
+test_schema.py.test_risk_model --> schema._expand_field_name
+test_schema.py.test_risk_model --> schema._compress_dict
+test_schema.py.test_risk_model --> schema._expand_dict
+test_schema.py.test_risk_model --> schema.to_dict
+test_schema.py.test_risk_model --> schema._to_lite_dict
+test_schema.py.test_risk_model --> schema.from_dict
+test_schema.py.test_risk_model --> schema.save
+test_schema.py.test_risk_model --> schema.load
+test_schema.py.test_risk_model --> schema._is_compact_format
+test_schema.py.test_risk_model --> schema.NodeType
+test_schema.py.test_risk_model --> schema.EdgeType
+test_schema.py.test_risk_model --> schema.Metadata
+test_schema.py.test_risk_model --> schema.Summary
+test_schema.py.test_risk_model --> schema.Node
+test_schema.py.test_risk_model --> schema.Edge
+test_schema.py.test_risk_model --> schema.Config
+test_schema.py.test_risk_model --> schema.Flow
+test_schema.py.test_risk_model --> schema.Concept
+test_schema.py.test_risk_model --> schema.History
+test_schema.py.test_risk_model --> schema.Risk
+test_schema.py.test_risk_model --> schema.Contract
+test_schema.py.test_risk_model --> schema.Tests
+test_schema.py.test_risk_model --> schema.GenomeDiff
+test_schema.py.test_risk_model --> schema.RepoGenome
+test_schema.py.test_genome_save_load --> test_schema.py
+test_schema.py.test_genome_save_load --> test_schema.test_node_creation
+test_schema.py.test_genome_save_load --> test_schema.test_edge_creation
+test_schema.py.test_genome_save_load --> test_schema.test_repo_genome_creation
+test_schema.py.test_genome_save_load --> test_schema.test_repo_genome_serialization
+test_schema.py.test_genome_save_load --> test_schema.test_repo_genome_from_dict
+test_schema.py.test_genome_save_load --> test_schema.test_risk_model
+test_schema.py.test_genome_save_load --> test_schema.test_genome_save_load
+test_schema.py.test_genome_save_load --> schema.py
+test_schema.py.test_genome_save_load --> schema._compress_field_name
+test_schema.py.test_genome_save_load --> schema._expand_field_name
+test_schema.py.test_genome_save_load --> schema._compress_dict
+test_schema.py.test_genome_save_load --> schema._expand_dict
+test_schema.py.test_genome_save_load --> schema.to_dict
+test_schema.py.test_genome_save_load --> schema._to_lite_dict
+test_schema.py.test_genome_save_load --> schema.from_dict
+test_schema.py.test_genome_save_load --> schema.save
+test_schema.py.test_genome_save_load --> schema.load
+test_schema.py.test_genome_save_load --> schema._is_compact_format
+test_schema.py.test_genome_save_load --> schema.NodeType
+test_schema.py.test_genome_save_load --> schema.EdgeType
+test_schema.py.test_genome_save_load --> schema.Metadata
+test_schema.py.test_genome_save_load --> schema.Summary
+test_schema.py.test_genome_save_load --> schema.Node
+test_schema.py.test_genome_save_load --> schema.Edge
+test_schema.py.test_genome_save_load --> schema.Config
+test_schema.py.test_genome_save_load --> schema.Flow
+test_schema.py.test_genome_save_load --> schema.Concept
+test_schema.py.test_genome_save_load --> schema.History
+test_schema.py.test_genome_save_load --> schema.Risk
+test_schema.py.test_genome_save_load --> schema.Contract
+test_schema.py.test_genome_save_load --> schema.Tests
+test_schema.py.test_genome_save_load --> schema.GenomeDiff
+test_schema.py.test_genome_save_load --> schema.RepoGenome
+test_streaming.py.test_streaming_save --> test_streaming.py
+test_streaming.py.test_streaming_save --> test_streaming.sample_genome
+test_streaming.py.test_streaming_save --> test_streaming.test_streaming_save
+test_streaming.py.test_streaming_save --> test_streaming.test_streaming_save_compact
+test_streaming.py.test_streaming_save --> test_streaming.test_streaming_save_compressed
+test_streaming.py.test_streaming_save --> streaming.py
+test_streaming.py.test_streaming_save --> streaming.__init__
+test_streaming.py.test_streaming_save --> streaming.__enter__
+test_streaming.py.test_streaming_save --> streaming.__exit__
+test_streaming.py.test_streaming_save --> streaming._write
+test_streaming.py.test_streaming_save --> streaming._write_indent
+test_streaming.py.test_streaming_save --> streaming._write_key
+test_streaming.py.test_streaming_save --> streaming._write_separator
+test_streaming.py.test_streaming_save --> streaming.start_object
+test_streaming.py.test_streaming_save --> streaming.end_object
+test_streaming.py.test_streaming_save --> streaming.start_array
+test_streaming.py.test_streaming_save --> streaming.end_array
+test_streaming.py.test_streaming_save --> streaming.write_metadata
+test_streaming.py.test_streaming_save --> streaming.write_summary
+test_streaming.py.test_streaming_save --> streaming.write_nodes
+test_streaming.py.test_streaming_save --> streaming.write_edges
+test_streaming.py.test_streaming_save --> streaming.write_flows
+test_streaming.py.test_streaming_save --> streaming.write_concepts
+test_streaming.py.test_streaming_save --> streaming.write_history
+test_streaming.py.test_streaming_save --> streaming.write_risk
+test_streaming.py.test_streaming_save --> streaming.write_contracts
+test_streaming.py.test_streaming_save --> streaming.write_tests
+test_streaming.py.test_streaming_save --> streaming._write_object_fields
+test_streaming.py.test_streaming_save --> streaming.save_streaming
+test_streaming.py.test_streaming_save --> streaming.StreamingGenomeWriter
+test_streaming.py.test_streaming_save_compact --> test_streaming.py
+test_streaming.py.test_streaming_save_compact --> test_streaming.sample_genome
+test_streaming.py.test_streaming_save_compact --> test_streaming.test_streaming_save
+test_streaming.py.test_streaming_save_compact --> test_streaming.test_streaming_save_compact
+test_streaming.py.test_streaming_save_compact --> test_streaming.test_streaming_save_compressed
+test_streaming.py.test_streaming_save_compact --> streaming.py
+test_streaming.py.test_streaming_save_compact --> streaming.__init__
+test_streaming.py.test_streaming_save_compact --> streaming.__enter__
+test_streaming.py.test_streaming_save_compact --> streaming.__exit__
+test_streaming.py.test_streaming_save_compact --> streaming._write
+test_streaming.py.test_streaming_save_compact --> streaming._write_indent
+test_streaming.py.test_streaming_save_compact --> streaming._write_key
+test_streaming.py.test_streaming_save_compact --> streaming._write_separator
+test_streaming.py.test_streaming_save_compact --> streaming.start_object
+test_streaming.py.test_streaming_save_compact --> streaming.end_object
+test_streaming.py.test_streaming_save_compact --> streaming.start_array
+test_streaming.py.test_streaming_save_compact --> streaming.end_array
+test_streaming.py.test_streaming_save_compact --> streaming.write_metadata
+test_streaming.py.test_streaming_save_compact --> streaming.write_summary
+test_streaming.py.test_streaming_save_compact --> streaming.write_nodes
+test_streaming.py.test_streaming_save_compact --> streaming.write_edges
+test_streaming.py.test_streaming_save_compact --> streaming.write_flows
+test_streaming.py.test_streaming_save_compact --> streaming.write_concepts
+test_streaming.py.test_streaming_save_compact --> streaming.write_history
+test_streaming.py.test_streaming_save_compact --> streaming.write_risk
+test_streaming.py.test_streaming_save_compact --> streaming.write_contracts
+test_streaming.py.test_streaming_save_compact --> streaming.write_tests
+test_streaming.py.test_streaming_save_compact --> streaming._write_object_fields
+test_streaming.py.test_streaming_save_compact --> streaming.save_streaming
+test_streaming.py.test_streaming_save_compact --> streaming.StreamingGenomeWriter
+test_streaming.py.test_streaming_save_compressed --> test_streaming.py
+test_streaming.py.test_streaming_save_compressed --> test_streaming.sample_genome
+test_streaming.py.test_streaming_save_compressed --> test_streaming.test_streaming_save
+test_streaming.py.test_streaming_save_compressed --> test_streaming.test_streaming_save_compact
+test_streaming.py.test_streaming_save_compressed --> test_streaming.test_streaming_save_compressed
+test_streaming.py.test_streaming_save_compressed --> streaming.py
+test_streaming.py.test_streaming_save_compressed --> streaming.__init__
+test_streaming.py.test_streaming_save_compressed --> streaming.__enter__
+test_streaming.py.test_streaming_save_compressed --> streaming.__exit__
+test_streaming.py.test_streaming_save_compressed --> streaming._write
+test_streaming.py.test_streaming_save_compressed --> streaming._write_indent
+test_streaming.py.test_streaming_save_compressed --> streaming._write_key
+test_streaming.py.test_streaming_save_compressed --> streaming._write_separator
+test_streaming.py.test_streaming_save_compressed --> streaming.start_object
+test_streaming.py.test_streaming_save_compressed --> streaming.end_object
+test_streaming.py.test_streaming_save_compressed --> streaming.start_array
+test_streaming.py.test_streaming_save_compressed --> streaming.end_array
+test_streaming.py.test_streaming_save_compressed --> streaming.write_metadata
+test_streaming.py.test_streaming_save_compressed --> streaming.write_summary
+test_streaming.py.test_streaming_save_compressed --> streaming.write_nodes
+test_streaming.py.test_streaming_save_compressed --> streaming.write_edges
+test_streaming.py.test_streaming_save_compressed --> streaming.write_flows
+test_streaming.py.test_streaming_save_compressed --> streaming.write_concepts
+test_streaming.py.test_streaming_save_compressed --> streaming.write_history
+test_streaming.py.test_streaming_save_compressed --> streaming.write_risk
+test_streaming.py.test_streaming_save_compressed --> streaming.write_contracts
+test_streaming.py.test_streaming_save_compressed --> streaming.write_tests
+test_streaming.py.test_streaming_save_compressed --> streaming._write_object_fields
+test_streaming.py.test_streaming_save_compressed --> streaming.save_streaming
+test_streaming.py.test_streaming_save_compressed --> streaming.StreamingGenomeWriter
+test_repospider.py.test_repospider_initialization --> test_repospider.py
+test_repospider.py.test_repospider_initialization --> test_repospider.test_repospider_initialization
+test_repospider.py.test_repospider_initialization --> test_repospider.test_repospider_analyze_empty_repo
+test_repospider.py.test_repospider_initialization --> test_repospider.test_repospider_analyze_python_file
+test_repospider.py.test_repospider_initialization --> test_repospider.test_repospider_with_real_codebase
+test_repospider.py.test_repospider_initialization --> repospider.py
+test_repospider.py.test_repospider_initialization --> repospider.__init__
+test_repospider.py.test_repospider_initialization --> repospider.analyze
+test_repospider.py.test_repospider_initialization --> repospider._detect_language
+test_repospider.py.test_repospider_initialization --> repospider._is_text_file
+test_repospider.py.test_repospider_initialization --> repospider._make_node_id
+test_repospider.py.test_repospider_initialization --> repospider._detect_visibility
+test_repospider.py.test_repospider_initialization --> repospider._extract_docstring
+test_repospider.py.test_repospider_initialization --> repospider._resolve_import
+test_repospider.py.test_repospider_initialization --> repospider.RepoSpider
+test_repospider.py.test_repospider_analyze_empty_repo --> test_repospider.py
+test_repospider.py.test_repospider_analyze_empty_repo --> test_repospider.test_repospider_initialization
+test_repospider.py.test_repospider_analyze_empty_repo --> test_repospider.test_repospider_analyze_empty_repo
+test_repospider.py.test_repospider_analyze_empty_repo --> test_repospider.test_repospider_analyze_python_file
+test_repospider.py.test_repospider_analyze_empty_repo --> test_repospider.test_repospider_with_real_codebase
+test_repospider.py.test_repospider_analyze_empty_repo --> repospider.py
+test_repospider.py.test_repospider_analyze_empty_repo --> repospider.__init__
+test_repospider.py.test_repospider_analyze_empty_repo --> repospider.analyze
+test_repospider.py.test_repospider_analyze_empty_repo --> repospider._detect_language
+test_repospider.py.test_repospider_analyze_empty_repo --> repospider._is_text_file
+test_repospider.py.test_repospider_analyze_empty_repo --> repospider._make_node_id
+test_repospider.py.test_repospider_analyze_empty_repo --> repospider._detect_visibility
+test_repospider.py.test_repospider_analyze_empty_repo --> repospider._extract_docstring
+test_repospider.py.test_repospider_analyze_empty_repo --> repospider._resolve_import
+test_repospider.py.test_repospider_analyze_empty_repo --> repospider.RepoSpider
+test_repospider.py.test_repospider_analyze_python_file --> test_repospider.py
+test_repospider.py.test_repospider_analyze_python_file --> test_repospider.test_repospider_initialization
+test_repospider.py.test_repospider_analyze_python_file --> test_repospider.test_repospider_analyze_empty_repo
+test_repospider.py.test_repospider_analyze_python_file --> test_repospider.test_repospider_analyze_python_file
+test_repospider.py.test_repospider_analyze_python_file --> test_repospider.test_repospider_with_real_codebase
+test_repospider.py.test_repospider_analyze_python_file --> repospider.py
+test_repospider.py.test_repospider_analyze_python_file --> repospider.__init__
+test_repospider.py.test_repospider_analyze_python_file --> repospider.analyze
+test_repospider.py.test_repospider_analyze_python_file --> repospider._detect_language
+test_repospider.py.test_repospider_analyze_python_file --> repospider._is_text_file
+test_repospider.py.test_repospider_analyze_python_file --> repospider._make_node_id
+test_repospider.py.test_repospider_analyze_python_file --> repospider._detect_visibility
+test_repospider.py.test_repospider_analyze_python_file --> repospider._extract_docstring
+test_repospider.py.test_repospider_analyze_python_file --> repospider._resolve_import
+test_repospider.py.test_repospider_analyze_python_file --> repospider.RepoSpider
+test_repospider.py.test_repospider_with_real_codebase --> test_repospider.py
+test_repospider.py.test_repospider_with_real_codebase --> test_repospider.test_repospider_initialization
+test_repospider.py.test_repospider_with_real_codebase --> test_repospider.test_repospider_analyze_empty_repo
+test_repospider.py.test_repospider_with_real_codebase --> test_repospider.test_repospider_analyze_python_file
+test_repospider.py.test_repospider_with_real_codebase --> test_repospider.test_repospider_with_real_codebase
+test_repospider.py.test_repospider_with_real_codebase --> repospider.py
+test_repospider.py.test_repospider_with_real_codebase --> repospider.__init__
+test_repospider.py.test_repospider_with_real_codebase --> repospider.analyze
+test_repospider.py.test_repospider_with_real_codebase --> repospider._detect_language
+test_repospider.py.test_repospider_with_real_codebase --> repospider._is_text_file
+test_repospider.py.test_repospider_with_real_codebase --> repospider._make_node_id
+test_repospider.py.test_repospider_with_real_codebase --> repospider._detect_visibility
+test_repospider.py.test_repospider_with_real_codebase --> repospider._extract_docstring
+test_repospider.py.test_repospider_with_real_codebase --> repospider._resolve_import
+test_repospider.py.test_repospider_with_real_codebase --> repospider.RepoSpider
+test_security.py.test_security_analyzer_detects_secrets --> test_security.py
+test_security.py.test_security_analyzer_detects_secrets --> test_security.temp_repo
+test_security.py.test_security_analyzer_detects_secrets --> test_security.test_security_analyzer_detects_secrets
+test_security.py.test_security_analyzer_detects_secrets --> test_security.test_security_analyzer_detects_vulnerabilities
+test_security.py.test_security_analyzer_detects_secrets --> test_security.test_security_analyzer_detects_permissions
+test_security.py.test_security_analyzer_detects_secrets --> security.py
+test_security.py.test_security_analyzer_detects_secrets --> security.__init__
+test_security.py.test_security_analyzer_detects_secrets --> security.analyze
+test_security.py.test_security_analyzer_detects_secrets --> security._detect_secrets
+test_security.py.test_security_analyzer_detects_secrets --> security._detect_vulnerabilities
+test_security.py.test_security_analyzer_detects_secrets --> security._detect_permission_issues
+test_security.py.test_security_analyzer_detects_secrets --> security._calculate_severity
+test_security.py.test_security_analyzer_detects_secrets --> security.SecurityAnalyzer
+test_security.py.test_security_analyzer_detects_vulnerabilities --> test_security.py
+test_security.py.test_security_analyzer_detects_vulnerabilities --> test_security.temp_repo
+test_security.py.test_security_analyzer_detects_vulnerabilities --> test_security.test_security_analyzer_detects_secrets
+test_security.py.test_security_analyzer_detects_vulnerabilities --> test_security.test_security_analyzer_detects_vulnerabilities
+test_security.py.test_security_analyzer_detects_vulnerabilities --> test_security.test_security_analyzer_detects_permissions
+test_security.py.test_security_analyzer_detects_vulnerabilities --> security.py
+test_security.py.test_security_analyzer_detects_vulnerabilities --> security.__init__
+test_security.py.test_security_analyzer_detects_vulnerabilities --> security.analyze
+test_security.py.test_security_analyzer_detects_vulnerabilities --> security._detect_secrets
+test_security.py.test_security_analyzer_detects_vulnerabilities --> security._detect_vulnerabilities
+test_security.py.test_security_analyzer_detects_vulnerabilities --> security._detect_permission_issues
+test_security.py.test_security_analyzer_detects_vulnerabilities --> security._calculate_severity
+test_security.py.test_security_analyzer_detects_vulnerabilities --> security.SecurityAnalyzer
+test_security.py.test_security_analyzer_detects_permissions --> test_security.py
+test_security.py.test_security_analyzer_detects_permissions --> test_security.temp_repo
+test_security.py.test_security_analyzer_detects_permissions --> test_security.test_security_analyzer_detects_secrets
+test_security.py.test_security_analyzer_detects_permissions --> test_security.test_security_analyzer_detects_vulnerabilities
+test_security.py.test_security_analyzer_detects_permissions --> test_security.test_security_analyzer_detects_permissions
+test_security.py.test_security_analyzer_detects_permissions --> security.py
+test_security.py.test_security_analyzer_detects_permissions --> security.__init__
+test_security.py.test_security_analyzer_detects_permissions --> security.analyze
+test_security.py.test_security_analyzer_detects_permissions --> security._detect_secrets
+test_security.py.test_security_analyzer_detects_permissions --> security._detect_vulnerabilities
+test_security.py.test_security_analyzer_detects_permissions --> security._detect_permission_issues
+test_security.py.test_security_analyzer_detects_permissions --> security._calculate_severity
+test_security.py.test_security_analyzer_detects_permissions --> security.SecurityAnalyzer
+test_cli.py.test_generate_with_logging --> test_cli.py
+test_cli.py.test_generate_with_logging --> test_cli.test_generate_with_logging
+test_cli.py.test_generate_with_logging --> main.py
+test_cli.py.test_generate_with_logging --> main.main
+test_cli.py.test_generate_with_logging --> main.generate
+test_cli.py.test_generate_with_logging --> main.update
+test_cli.py.test_generate_with_logging --> main.validate
+test_cli.py.test_generate_with_logging --> main.diff
+test_cli.py.test_generate_with_logging --> main.init
+test_cli.py.test_generate_with_logging --> main.export
+test_cli.py.test_generate_with_logging --> main.query
+test_cli.py.test_generate_with_logging --> main.ragnatela
+test_cli.py.test_generate_with_logging --> main.mcp_server
+test_cli.py.test_generate_with_logging --> main.watch
+test_cli.py.test_generate_with_logging --> main.generator_factory
+test_cli.py.test_generate_with_logging --> output.py
+test_cli.py.test_generate_with_logging --> output.create_progress_bar
+test_cli.py.test_generate_with_logging --> output.print_success
+test_cli.py.test_generate_with_logging --> output.print_error
+test_cli.py.test_generate_with_logging --> output.print_warning
+test_cli.py.test_generate_with_logging --> output.print_info
+test_cli.py.test_generate_with_logging --> output.format_file_size
+test_cli.py.test_generate_with_logging --> __init__.py
+test_python_ast.py.test_analyze_simple_python_file --> test_python_ast.py
+test_python_ast.py.test_analyze_simple_python_file --> test_python_ast.test_analyze_simple_python_file
+test_python_ast.py.test_analyze_simple_python_file --> test_python_ast.test_analyze_file_with_main_block
+test_python_ast.py.test_analyze_simple_python_file --> test_python_ast.test_analyze_invalid_syntax
+test_python_ast.py.test_analyze_file_with_main_block --> test_python_ast.py
+test_python_ast.py.test_analyze_file_with_main_block --> test_python_ast.test_analyze_simple_python_file
+test_python_ast.py.test_analyze_file_with_main_block --> test_python_ast.test_analyze_file_with_main_block
+test_python_ast.py.test_analyze_file_with_main_block --> test_python_ast.test_analyze_invalid_syntax
+test_python_ast.py.test_analyze_invalid_syntax --> test_python_ast.py
+test_python_ast.py.test_analyze_invalid_syntax --> test_python_ast.test_analyze_simple_python_file
+test_python_ast.py.test_analyze_invalid_syntax --> test_python_ast.test_analyze_file_with_main_block
+test_python_ast.py.test_analyze_invalid_syntax --> test_python_ast.test_analyze_invalid_syntax
+test_advanced_query.py.test_sql_query_nodes --> test_advanced_query.py
+test_advanced_query.py.test_sql_query_nodes --> test_advanced_query.sample_genome
+test_advanced_query.py.test_sql_query_nodes --> test_advanced_query.test_sql_query_nodes
+test_advanced_query.py.test_sql_query_nodes --> test_advanced_query.test_sql_query_edges
+test_advanced_query.py.test_sql_query_nodes --> test_advanced_query.test_graphql_query
+test_advanced_query.py.test_sql_query_nodes --> test_advanced_query.test_simple_query
+test_advanced_query.py.test_sql_query_nodes --> test_advanced_query.test_query_with_order_by
+test_advanced_query.py.test_sql_query_nodes --> test_advanced_query.test_query_with_limit
+test_advanced_query.py.test_sql_query_nodes --> advanced_query.py
+test_advanced_query.py.test_sql_query_nodes --> advanced_query.__init__
+test_advanced_query.py.test_sql_query_nodes --> advanced_query.execute
+test_advanced_query.py.test_sql_query_nodes --> advanced_query._execute_sql
+test_advanced_query.py.test_sql_query_nodes --> advanced_query._execute_graphql
+test_advanced_query.py.test_sql_query_nodes --> advanced_query._execute_simple
+test_advanced_query.py.test_sql_query_nodes --> advanced_query._parse_where_clause
+test_advanced_query.py.test_sql_query_nodes --> advanced_query._parse_graphql_args
+test_advanced_query.py.test_sql_query_nodes --> advanced_query._query_nodes_sql
+test_advanced_query.py.test_sql_query_nodes --> advanced_query._query_edges_sql
+test_advanced_query.py.test_sql_query_nodes --> advanced_query._query_nodes_graphql
+test_advanced_query.py.test_sql_query_nodes --> advanced_query._query_edges_graphql
+test_advanced_query.py.test_sql_query_nodes --> advanced_query._match_conditions
+test_advanced_query.py.test_sql_query_nodes --> advanced_query._match_edge_conditions
+test_advanced_query.py.test_sql_query_nodes --> advanced_query.AdvancedQuery
+test_advanced_query.py.test_sql_query_edges --> test_advanced_query.py
+test_advanced_query.py.test_sql_query_edges --> test_advanced_query.sample_genome
+test_advanced_query.py.test_sql_query_edges --> test_advanced_query.test_sql_query_nodes
+test_advanced_query.py.test_sql_query_edges --> test_advanced_query.test_sql_query_edges
+test_advanced_query.py.test_sql_query_edges --> test_advanced_query.test_graphql_query
+test_advanced_query.py.test_sql_query_edges --> test_advanced_query.test_simple_query
+test_advanced_query.py.test_sql_query_edges --> test_advanced_query.test_query_with_order_by
+test_advanced_query.py.test_sql_query_edges --> test_advanced_query.test_query_with_limit
+test_advanced_query.py.test_sql_query_edges --> advanced_query.py
+test_advanced_query.py.test_sql_query_edges --> advanced_query.__init__
+test_advanced_query.py.test_sql_query_edges --> advanced_query.execute
+test_advanced_query.py.test_sql_query_edges --> advanced_query._execute_sql
+test_advanced_query.py.test_sql_query_edges --> advanced_query._execute_graphql
+test_advanced_query.py.test_sql_query_edges --> advanced_query._execute_simple
+test_advanced_query.py.test_sql_query_edges --> advanced_query._parse_where_clause
+test_advanced_query.py.test_sql_query_edges --> advanced_query._parse_graphql_args
+test_advanced_query.py.test_sql_query_edges --> advanced_query._query_nodes_sql
+test_advanced_query.py.test_sql_query_edges --> advanced_query._query_edges_sql
+test_advanced_query.py.test_sql_query_edges --> advanced_query._query_nodes_graphql
+test_advanced_query.py.test_sql_query_edges --> advanced_query._query_edges_graphql
+test_advanced_query.py.test_sql_query_edges --> advanced_query._match_conditions
+test_advanced_query.py.test_sql_query_edges --> advanced_query._match_edge_conditions
+test_advanced_query.py.test_sql_query_edges --> advanced_query.AdvancedQuery
+test_advanced_query.py.test_graphql_query --> test_advanced_query.py
+test_advanced_query.py.test_graphql_query --> test_advanced_query.sample_genome
+test_advanced_query.py.test_graphql_query --> test_advanced_query.test_sql_query_nodes
+test_advanced_query.py.test_graphql_query --> test_advanced_query.test_sql_query_edges
+test_advanced_query.py.test_graphql_query --> test_advanced_query.test_graphql_query
+test_advanced_query.py.test_graphql_query --> test_advanced_query.test_simple_query
+test_advanced_query.py.test_graphql_query --> test_advanced_query.test_query_with_order_by
+test_advanced_query.py.test_graphql_query --> test_advanced_query.test_query_with_limit
+test_advanced_query.py.test_graphql_query --> advanced_query.py
+test_advanced_query.py.test_graphql_query --> advanced_query.__init__
+test_advanced_query.py.test_graphql_query --> advanced_query.execute
+test_advanced_query.py.test_graphql_query --> advanced_query._execute_sql
+test_advanced_query.py.test_graphql_query --> advanced_query._execute_graphql
+test_advanced_query.py.test_graphql_query --> advanced_query._execute_simple
+test_advanced_query.py.test_graphql_query --> advanced_query._parse_where_clause
+test_advanced_query.py.test_graphql_query --> advanced_query._parse_graphql_args
+test_advanced_query.py.test_graphql_query --> advanced_query._query_nodes_sql
+test_advanced_query.py.test_graphql_query --> advanced_query._query_edges_sql
+test_advanced_query.py.test_graphql_query --> advanced_query._query_nodes_graphql
+test_advanced_query.py.test_graphql_query --> advanced_query._query_edges_graphql
+test_advanced_query.py.test_graphql_query --> advanced_query._match_conditions
+test_advanced_query.py.test_graphql_query --> advanced_query._match_edge_conditions
+test_advanced_query.py.test_graphql_query --> advanced_query.AdvancedQuery
+test_advanced_query.py.test_simple_query --> test_advanced_query.py
+test_advanced_query.py.test_simple_query --> test_advanced_query.sample_genome
+test_advanced_query.py.test_simple_query --> test_advanced_query.test_sql_query_nodes
+test_advanced_query.py.test_simple_query --> test_advanced_query.test_sql_query_edges
+test_advanced_query.py.test_simple_query --> test_advanced_query.test_graphql_query
+test_advanced_query.py.test_simple_query --> test_advanced_query.test_simple_query
+test_advanced_query.py.test_simple_query --> test_advanced_query.test_query_with_order_by
+test_advanced_query.py.test_simple_query --> test_advanced_query.test_query_with_limit
+test_advanced_query.py.test_simple_query --> advanced_query.py
+test_advanced_query.py.test_simple_query --> advanced_query.__init__
+test_advanced_query.py.test_simple_query --> advanced_query.execute
+test_advanced_query.py.test_simple_query --> advanced_query._execute_sql
+test_advanced_query.py.test_simple_query --> advanced_query._execute_graphql
+test_advanced_query.py.test_simple_query --> advanced_query._execute_simple
+test_advanced_query.py.test_simple_query --> advanced_query._parse_where_clause
+test_advanced_query.py.test_simple_query --> advanced_query._parse_graphql_args
+test_advanced_query.py.test_simple_query --> advanced_query._query_nodes_sql
+test_advanced_query.py.test_simple_query --> advanced_query._query_edges_sql
+test_advanced_query.py.test_simple_query --> advanced_query._query_nodes_graphql
+test_advanced_query.py.test_simple_query --> advanced_query._query_edges_graphql
+test_advanced_query.py.test_simple_query --> advanced_query._match_conditions
+test_advanced_query.py.test_simple_query --> advanced_query._match_edge_conditions
+test_advanced_query.py.test_simple_query --> advanced_query.AdvancedQuery
+test_advanced_query.py.test_query_with_order_by --> test_advanced_query.py
+test_advanced_query.py.test_query_with_order_by --> test_advanced_query.sample_genome
+test_advanced_query.py.test_query_with_order_by --> test_advanced_query.test_sql_query_nodes
+test_advanced_query.py.test_query_with_order_by --> test_advanced_query.test_sql_query_edges
+test_advanced_query.py.test_query_with_order_by --> test_advanced_query.test_graphql_query
+test_advanced_query.py.test_query_with_order_by --> test_advanced_query.test_simple_query
+test_advanced_query.py.test_query_with_order_by --> test_advanced_query.test_query_with_order_by
+test_advanced_query.py.test_query_with_order_by --> test_advanced_query.test_query_with_limit
+test_advanced_query.py.test_query_with_order_by --> advanced_query.py
+test_advanced_query.py.test_query_with_order_by --> advanced_query.__init__
+test_advanced_query.py.test_query_with_order_by --> advanced_query.execute
+test_advanced_query.py.test_query_with_order_by --> advanced_query._execute_sql
+test_advanced_query.py.test_query_with_order_by --> advanced_query._execute_graphql
+test_advanced_query.py.test_query_with_order_by --> advanced_query._execute_simple
+test_advanced_query.py.test_query_with_order_by --> advanced_query._parse_where_clause
+test_advanced_query.py.test_query_with_order_by --> advanced_query._parse_graphql_args
+test_advanced_query.py.test_query_with_order_by --> advanced_query._query_nodes_sql
+test_advanced_query.py.test_query_with_order_by --> advanced_query._query_edges_sql
+test_advanced_query.py.test_query_with_order_by --> advanced_query._query_nodes_graphql
+test_advanced_query.py.test_query_with_order_by --> advanced_query._query_edges_graphql
+test_advanced_query.py.test_query_with_order_by --> advanced_query._match_conditions
+test_advanced_query.py.test_query_with_order_by --> advanced_query._match_edge_conditions
+test_advanced_query.py.test_query_with_order_by --> advanced_query.AdvancedQuery
+test_advanced_query.py.test_query_with_limit --> test_advanced_query.py
+test_advanced_query.py.test_query_with_limit --> test_advanced_query.sample_genome
+test_advanced_query.py.test_query_with_limit --> test_advanced_query.test_sql_query_nodes
+test_advanced_query.py.test_query_with_limit --> test_advanced_query.test_sql_query_edges
+test_advanced_query.py.test_query_with_limit --> test_advanced_query.test_graphql_query
+test_advanced_query.py.test_query_with_limit --> test_advanced_query.test_simple_query
+test_advanced_query.py.test_query_with_limit --> test_advanced_query.test_query_with_order_by
+test_advanced_query.py.test_query_with_limit --> test_advanced_query.test_query_with_limit
+test_advanced_query.py.test_query_with_limit --> advanced_query.py
+test_advanced_query.py.test_query_with_limit --> advanced_query.__init__
+test_advanced_query.py.test_query_with_limit --> advanced_query.execute
+test_advanced_query.py.test_query_with_limit --> advanced_query._execute_sql
+test_advanced_query.py.test_query_with_limit --> advanced_query._execute_graphql
+test_advanced_query.py.test_query_with_limit --> advanced_query._execute_simple
+test_advanced_query.py.test_query_with_limit --> advanced_query._parse_where_clause
+test_advanced_query.py.test_query_with_limit --> advanced_query._parse_graphql_args
+test_advanced_query.py.test_query_with_limit --> advanced_query._query_nodes_sql
+test_advanced_query.py.test_query_with_limit --> advanced_query._query_edges_sql
+test_advanced_query.py.test_query_with_limit --> advanced_query._query_nodes_graphql
+test_advanced_query.py.test_query_with_limit --> advanced_query._query_edges_graphql
+test_advanced_query.py.test_query_with_limit --> advanced_query._match_conditions
+test_advanced_query.py.test_query_with_limit --> advanced_query._match_edge_conditions
+test_advanced_query.py.test_query_with_limit --> advanced_query.AdvancedQuery
+test_schema.py.test_node_creation --> test_schema.py
+test_schema.py.test_node_creation --> test_schema.test_node_creation
+test_schema.py.test_node_creation --> test_schema.test_edge_creation
+test_schema.py.test_node_creation --> test_schema.test_repo_genome_creation
+test_schema.py.test_node_creation --> test_schema.test_repo_genome_serialization
+test_schema.py.test_node_creation --> test_schema.test_repo_genome_from_dict
+test_schema.py.test_node_creation --> test_schema.test_risk_model
+test_schema.py.test_node_creation --> test_schema.test_genome_save_load
+test_schema.py.test_node_creation --> schema.py
+test_schema.py.test_node_creation --> schema._compress_field_name
+test_schema.py.test_node_creation --> schema._expand_field_name
+test_schema.py.test_node_creation --> schema._compress_dict
+test_schema.py.test_node_creation --> schema._expand_dict
+test_schema.py.test_node_creation --> schema.to_dict
+test_schema.py.test_node_creation --> schema._to_lite_dict
+test_schema.py.test_node_creation --> schema.from_dict
+test_schema.py.test_node_creation --> schema.save
+test_schema.py.test_node_creation --> schema.load
+test_schema.py.test_node_creation --> schema._is_compact_format
+test_schema.py.test_node_creation --> schema.NodeType
+test_schema.py.test_node_creation --> schema.EdgeType
+test_schema.py.test_node_creation --> schema.Metadata
+test_schema.py.test_node_creation --> schema.Summary
+test_schema.py.test_node_creation --> schema.Node
+test_schema.py.test_node_creation --> schema.Edge
+test_schema.py.test_node_creation --> schema.Config
+test_schema.py.test_node_creation --> schema.Flow
+test_schema.py.test_node_creation --> schema.Concept
+test_schema.py.test_node_creation --> schema.History
+test_schema.py.test_node_creation --> schema.Risk
+test_schema.py.test_node_creation --> schema.Contract
+test_schema.py.test_node_creation --> schema.Tests
+test_schema.py.test_node_creation --> schema.GenomeDiff
+test_schema.py.test_node_creation --> schema.RepoGenome
+test_schema.py.test_edge_creation --> test_schema.py
+test_schema.py.test_edge_creation --> test_schema.test_node_creation
+test_schema.py.test_edge_creation --> test_schema.test_edge_creation
+test_schema.py.test_edge_creation --> test_schema.test_repo_genome_creation
+test_schema.py.test_edge_creation --> test_schema.test_repo_genome_serialization
+test_schema.py.test_edge_creation --> test_schema.test_repo_genome_from_dict
+test_schema.py.test_edge_creation --> test_schema.test_risk_model
+test_schema.py.test_edge_creation --> test_schema.test_genome_save_load
+test_schema.py.test_edge_creation --> schema.py
+test_schema.py.test_edge_creation --> schema._compress_field_name
+test_schema.py.test_edge_creation --> schema._expand_field_name
+test_schema.py.test_edge_creation --> schema._compress_dict
+test_schema.py.test_edge_creation --> schema._expand_dict
+test_schema.py.test_edge_creation --> schema.to_dict
+test_schema.py.test_edge_creation --> schema._to_lite_dict
+test_schema.py.test_edge_creation --> schema.from_dict
+test_schema.py.test_edge_creation --> schema.save
+test_schema.py.test_edge_creation --> schema.load
+test_schema.py.test_edge_creation --> schema._is_compact_format
+test_schema.py.test_edge_creation --> schema.NodeType
+test_schema.py.test_edge_creation --> schema.EdgeType
+test_schema.py.test_edge_creation --> schema.Metadata
+test_schema.py.test_edge_creation --> schema.Summary
+test_schema.py.test_edge_creation --> schema.Node
+test_schema.py.test_edge_creation --> schema.Edge
+test_schema.py.test_edge_creation --> schema.Config
+test_schema.py.test_edge_creation --> schema.Flow
+test_schema.py.test_edge_creation --> schema.Concept
+test_schema.py.test_edge_creation --> schema.History
+test_schema.py.test_edge_creation --> schema.Risk
+test_schema.py.test_edge_creation --> schema.Contract
+test_schema.py.test_edge_creation --> schema.Tests
+test_schema.py.test_edge_creation --> schema.GenomeDiff
+test_schema.py.test_edge_creation --> schema.RepoGenome
+test_schema.py.test_repo_genome_creation --> test_schema.py
+test_schema.py.test_repo_genome_creation --> test_schema.test_node_creation
+test_schema.py.test_repo_genome_creation --> test_schema.test_edge_creation
+test_schema.py.test_repo_genome_creation --> test_schema.test_repo_genome_creation
+test_schema.py.test_repo_genome_creation --> test_schema.test_repo_genome_serialization
+test_schema.py.test_repo_genome_creation --> test_schema.test_repo_genome_from_dict
+test_schema.py.test_repo_genome_creation --> test_schema.test_risk_model
+test_schema.py.test_repo_genome_creation --> test_schema.test_genome_save_load
+test_schema.py.test_repo_genome_creation --> schema.py
+test_schema.py.test_repo_genome_creation --> schema._compress_field_name
+test_schema.py.test_repo_genome_creation --> schema._expand_field_name
+test_schema.py.test_repo_genome_creation --> schema._compress_dict
+test_schema.py.test_repo_genome_creation --> schema._expand_dict
+test_schema.py.test_repo_genome_creation --> schema.to_dict
+test_schema.py.test_repo_genome_creation --> schema._to_lite_dict
+test_schema.py.test_repo_genome_creation --> schema.from_dict
+test_schema.py.test_repo_genome_creation --> schema.save
+test_schema.py.test_repo_genome_creation --> schema.load
+test_schema.py.test_repo_genome_creation --> schema._is_compact_format
+test_schema.py.test_repo_genome_creation --> schema.NodeType
+test_schema.py.test_repo_genome_creation --> schema.EdgeType
+test_schema.py.test_repo_genome_creation --> schema.Metadata
+test_schema.py.test_repo_genome_creation --> schema.Summary
+test_schema.py.test_repo_genome_creation --> schema.Node
+test_schema.py.test_repo_genome_creation --> schema.Edge
+test_schema.py.test_repo_genome_creation --> schema.Config
+test_schema.py.test_repo_genome_creation --> schema.Flow
+test_schema.py.test_repo_genome_creation --> schema.Concept
+test_schema.py.test_repo_genome_creation --> schema.History
+test_schema.py.test_repo_genome_creation --> schema.Risk
+test_schema.py.test_repo_genome_creation --> schema.Contract
+test_schema.py.test_repo_genome_creation --> schema.Tests
+test_schema.py.test_repo_genome_creation --> schema.GenomeDiff
+test_schema.py.test_repo_genome_creation --> schema.RepoGenome
+test_schema.py.test_repo_genome_serialization --> test_schema.py
+test_schema.py.test_repo_genome_serialization --> test_schema.test_node_creation
+test_schema.py.test_repo_genome_serialization --> test_schema.test_edge_creation
+test_schema.py.test_repo_genome_serialization --> test_schema.test_repo_genome_creation
+test_schema.py.test_repo_genome_serialization --> test_schema.test_repo_genome_serialization
+test_schema.py.test_repo_genome_serialization --> test_schema.test_repo_genome_from_dict
+test_schema.py.test_repo_genome_serialization --> test_schema.test_risk_model
+test_schema.py.test_repo_genome_serialization --> test_schema.test_genome_save_load
+test_schema.py.test_repo_genome_serialization --> schema.py
+test_schema.py.test_repo_genome_serialization --> schema._compress_field_name
+test_schema.py.test_repo_genome_serialization --> schema._expand_field_name
+test_schema.py.test_repo_genome_serialization --> schema._compress_dict
+test_schema.py.test_repo_genome_serialization --> schema._expand_dict
+test_schema.py.test_repo_genome_serialization --> schema.to_dict
+test_schema.py.test_repo_genome_serialization --> schema._to_lite_dict
+test_schema.py.test_repo_genome_serialization --> schema.from_dict
+test_schema.py.test_repo_genome_serialization --> schema.save
+test_schema.py.test_repo_genome_serialization --> schema.load
+test_schema.py.test_repo_genome_serialization --> schema._is_compact_format
+test_schema.py.test_repo_genome_serialization --> schema.NodeType
+test_schema.py.test_repo_genome_serialization --> schema.EdgeType
+test_schema.py.test_repo_genome_serialization --> schema.Metadata
+test_schema.py.test_repo_genome_serialization --> schema.Summary
+test_schema.py.test_repo_genome_serialization --> schema.Node
+test_schema.py.test_repo_genome_serialization --> schema.Edge
+test_schema.py.test_repo_genome_serialization --> schema.Config
+test_schema.py.test_repo_genome_serialization --> schema.Flow
+test_schema.py.test_repo_genome_serialization --> schema.Concept
+test_schema.py.test_repo_genome_serialization --> schema.History
+test_schema.py.test_repo_genome_serialization --> schema.Risk
+test_schema.py.test_repo_genome_serialization --> schema.Contract
+test_schema.py.test_repo_genome_serialization --> schema.Tests
+test_schema.py.test_repo_genome_serialization --> schema.GenomeDiff
+test_schema.py.test_repo_genome_serialization --> schema.RepoGenome
+test_schema.py.test_repo_genome_from_dict --> test_schema.py
+test_schema.py.test_repo_genome_from_dict --> test_schema.test_node_creation
+test_schema.py.test_repo_genome_from_dict --> test_schema.test_edge_creation
+test_schema.py.test_repo_genome_from_dict --> test_schema.test_repo_genome_creation
+test_schema.py.test_repo_genome_from_dict --> test_schema.test_repo_genome_serialization
+test_schema.py.test_repo_genome_from_dict --> test_schema.test_repo_genome_from_dict
+test_schema.py.test_repo_genome_from_dict --> test_schema.test_risk_model
+test_schema.py.test_repo_genome_from_dict --> test_schema.test_genome_save_load
+test_schema.py.test_repo_genome_from_dict --> schema.py
+test_schema.py.test_repo_genome_from_dict --> schema._compress_field_name
+test_schema.py.test_repo_genome_from_dict --> schema._expand_field_name
+test_schema.py.test_repo_genome_from_dict --> schema._compress_dict
+test_schema.py.test_repo_genome_from_dict --> schema._expand_dict
+test_schema.py.test_repo_genome_from_dict --> schema.to_dict
+test_schema.py.test_repo_genome_from_dict --> schema._to_lite_dict
+test_schema.py.test_repo_genome_from_dict --> schema.from_dict
+test_schema.py.test_repo_genome_from_dict --> schema.save
+test_schema.py.test_repo_genome_from_dict --> schema.load
+test_schema.py.test_repo_genome_from_dict --> schema._is_compact_format
+test_schema.py.test_repo_genome_from_dict --> schema.NodeType
+test_schema.py.test_repo_genome_from_dict --> schema.EdgeType
+test_schema.py.test_repo_genome_from_dict --> schema.Metadata
+test_schema.py.test_repo_genome_from_dict --> schema.Summary
+test_schema.py.test_repo_genome_from_dict --> schema.Node
+test_schema.py.test_repo_genome_from_dict --> schema.Edge
+test_schema.py.test_repo_genome_from_dict --> schema.Config
+test_schema.py.test_repo_genome_from_dict --> schema.Flow
+test_schema.py.test_repo_genome_from_dict --> schema.Concept
+test_schema.py.test_repo_genome_from_dict --> schema.History
+test_schema.py.test_repo_genome_from_dict --> schema.Risk
+test_schema.py.test_repo_genome_from_dict --> schema.Contract
+test_schema.py.test_repo_genome_from_dict --> schema.Tests
+test_schema.py.test_repo_genome_from_dict --> schema.GenomeDiff
+test_schema.py.test_repo_genome_from_dict --> schema.RepoGenome
+test_schema.py.test_risk_model --> test_schema.py
+test_schema.py.test_risk_model --> test_schema.test_node_creation
+test_schema.py.test_risk_model --> test_schema.test_edge_creation
+test_schema.py.test_risk_model --> test_schema.test_repo_genome_creation
+test_schema.py.test_risk_model --> test_schema.test_repo_genome_serialization
+test_schema.py.test_risk_model --> test_schema.test_repo_genome_from_dict
+test_schema.py.test_risk_model --> test_schema.test_risk_model
+test_schema.py.test_risk_model --> test_schema.test_genome_save_load
+test_schema.py.test_risk_model --> schema.py
+test_schema.py.test_risk_model --> schema._compress_field_name
+test_schema.py.test_risk_model --> schema._expand_field_name
+test_schema.py.test_risk_model --> schema._compress_dict
+test_schema.py.test_risk_model --> schema._expand_dict
+test_schema.py.test_risk_model --> schema.to_dict
+test_schema.py.test_risk_model --> schema._to_lite_dict
+test_schema.py.test_risk_model --> schema.from_dict
+test_schema.py.test_risk_model --> schema.save
+test_schema.py.test_risk_model --> schema.load
+test_schema.py.test_risk_model --> schema._is_compact_format
+test_schema.py.test_risk_model --> schema.NodeType
+test_schema.py.test_risk_model --> schema.EdgeType
+test_schema.py.test_risk_model --> schema.Metadata
+test_schema.py.test_risk_model --> schema.Summary
+test_schema.py.test_risk_model --> schema.Node
+test_schema.py.test_risk_model --> schema.Edge
+test_schema.py.test_risk_model --> schema.Config
+test_schema.py.test_risk_model --> schema.Flow
+test_schema.py.test_risk_model --> schema.Concept
+test_schema.py.test_risk_model --> schema.History
+test_schema.py.test_risk_model --> schema.Risk
+test_schema.py.test_risk_model --> schema.Contract
+test_schema.py.test_risk_model --> schema.Tests
+test_schema.py.test_risk_model --> schema.GenomeDiff
+test_schema.py.test_risk_model --> schema.RepoGenome
+test_schema.py.test_genome_save_load --> test_schema.py
+test_schema.py.test_genome_save_load --> test_schema.test_node_creation
+test_schema.py.test_genome_save_load --> test_schema.test_edge_creation
+test_schema.py.test_genome_save_load --> test_schema.test_repo_genome_creation
+test_schema.py.test_genome_save_load --> test_schema.test_repo_genome_serialization
+test_schema.py.test_genome_save_load --> test_schema.test_repo_genome_from_dict
+test_schema.py.test_genome_save_load --> test_schema.test_risk_model
+test_schema.py.test_genome_save_load --> test_schema.test_genome_save_load
+test_schema.py.test_genome_save_load --> schema.py
+test_schema.py.test_genome_save_load --> schema._compress_field_name
+test_schema.py.test_genome_save_load --> schema._expand_field_name
+test_schema.py.test_genome_save_load --> schema._compress_dict
+test_schema.py.test_genome_save_load --> schema._expand_dict
+test_schema.py.test_genome_save_load --> schema.to_dict
+test_schema.py.test_genome_save_load --> schema._to_lite_dict
+test_schema.py.test_genome_save_load --> schema.from_dict
+test_schema.py.test_genome_save_load --> schema.save
+test_schema.py.test_genome_save_load --> schema.load
+test_schema.py.test_genome_save_load --> schema._is_compact_format
+test_schema.py.test_genome_save_load --> schema.NodeType
+test_schema.py.test_genome_save_load --> schema.EdgeType
+test_schema.py.test_genome_save_load --> schema.Metadata
+test_schema.py.test_genome_save_load --> schema.Summary
+test_schema.py.test_genome_save_load --> schema.Node
+test_schema.py.test_genome_save_load --> schema.Edge
+test_schema.py.test_genome_save_load --> schema.Config
+test_schema.py.test_genome_save_load --> schema.Flow
+test_schema.py.test_genome_save_load --> schema.Concept
+test_schema.py.test_genome_save_load --> schema.History
+test_schema.py.test_genome_save_load --> schema.Risk
+test_schema.py.test_genome_save_load --> schema.Contract
+test_schema.py.test_genome_save_load --> schema.Tests
+test_schema.py.test_genome_save_load --> schema.GenomeDiff
+test_schema.py.test_genome_save_load --> schema.RepoGenome
+test_streaming.py.test_streaming_save --> test_streaming.py
+test_streaming.py.test_streaming_save --> test_streaming.sample_genome
+test_streaming.py.test_streaming_save --> test_streaming.test_streaming_save
+test_streaming.py.test_streaming_save --> test_streaming.test_streaming_save_compact
+test_streaming.py.test_streaming_save --> test_streaming.test_streaming_save_compressed
+test_streaming.py.test_streaming_save --> streaming.py
+test_streaming.py.test_streaming_save --> streaming.__init__
+test_streaming.py.test_streaming_save --> streaming.__enter__
+test_streaming.py.test_streaming_save --> streaming.__exit__
+test_streaming.py.test_streaming_save --> streaming._write
+test_streaming.py.test_streaming_save --> streaming._write_indent
+test_streaming.py.test_streaming_save --> streaming._write_key
+test_streaming.py.test_streaming_save --> streaming._write_separator
+test_streaming.py.test_streaming_save --> streaming.start_object
+test_streaming.py.test_streaming_save --> streaming.end_object
+test_streaming.py.test_streaming_save --> streaming.start_array
+test_streaming.py.test_streaming_save --> streaming.end_array
+test_streaming.py.test_streaming_save --> streaming.write_metadata
+test_streaming.py.test_streaming_save --> streaming.write_summary
+test_streaming.py.test_streaming_save --> streaming.write_nodes
+test_streaming.py.test_streaming_save --> streaming.write_edges
+test_streaming.py.test_streaming_save --> streaming.write_flows
+test_streaming.py.test_streaming_save --> streaming.write_concepts
+test_streaming.py.test_streaming_save --> streaming.write_history
+test_streaming.py.test_streaming_save --> streaming.write_risk
+test_streaming.py.test_streaming_save --> streaming.write_contracts
+test_streaming.py.test_streaming_save --> streaming.write_tests
+test_streaming.py.test_streaming_save --> streaming._write_object_fields
+test_streaming.py.test_streaming_save --> streaming.save_streaming
+test_streaming.py.test_streaming_save --> streaming.StreamingGenomeWriter
+test_streaming.py.test_streaming_save_compact --> test_streaming.py
+test_streaming.py.test_streaming_save_compact --> test_streaming.sample_genome
+test_streaming.py.test_streaming_save_compact --> test_streaming.test_streaming_save
+test_streaming.py.test_streaming_save_compact --> test_streaming.test_streaming_save_compact
+test_streaming.py.test_streaming_save_compact --> test_streaming.test_streaming_save_compressed
+test_streaming.py.test_streaming_save_compact --> streaming.py
+test_streaming.py.test_streaming_save_compact --> streaming.__init__
+test_streaming.py.test_streaming_save_compact --> streaming.__enter__
+test_streaming.py.test_streaming_save_compact --> streaming.__exit__
+test_streaming.py.test_streaming_save_compact --> streaming._write
+test_streaming.py.test_streaming_save_compact --> streaming._write_indent
+test_streaming.py.test_streaming_save_compact --> streaming._write_key
+test_streaming.py.test_streaming_save_compact --> streaming._write_separator
+test_streaming.py.test_streaming_save_compact --> streaming.start_object
+test_streaming.py.test_streaming_save_compact --> streaming.end_object
+test_streaming.py.test_streaming_save_compact --> streaming.start_array
+test_streaming.py.test_streaming_save_compact --> streaming.end_array
+test_streaming.py.test_streaming_save_compact --> streaming.write_metadata
+test_streaming.py.test_streaming_save_compact --> streaming.write_summary
+test_streaming.py.test_streaming_save_compact --> streaming.write_nodes
+test_streaming.py.test_streaming_save_compact --> streaming.write_edges
+test_streaming.py.test_streaming_save_compact --> streaming.write_flows
+test_streaming.py.test_streaming_save_compact --> streaming.write_concepts
+test_streaming.py.test_streaming_save_compact --> streaming.write_history
+test_streaming.py.test_streaming_save_compact --> streaming.write_risk
+test_streaming.py.test_streaming_save_compact --> streaming.write_contracts
+test_streaming.py.test_streaming_save_compact --> streaming.write_tests
+test_streaming.py.test_streaming_save_compact --> streaming._write_object_fields
+test_streaming.py.test_streaming_save_compact --> streaming.save_streaming
+test_streaming.py.test_streaming_save_compact --> streaming.StreamingGenomeWriter
+test_streaming.py.test_streaming_save_compressed --> test_streaming.py
+test_streaming.py.test_streaming_save_compressed --> test_streaming.sample_genome
+test_streaming.py.test_streaming_save_compressed --> test_streaming.test_streaming_save
+test_streaming.py.test_streaming_save_compressed --> test_streaming.test_streaming_save_compact
+test_streaming.py.test_streaming_save_compressed --> test_streaming.test_streaming_save_compressed
+test_streaming.py.test_streaming_save_compressed --> streaming.py
+test_streaming.py.test_streaming_save_compressed --> streaming.__init__
+test_streaming.py.test_streaming_save_compressed --> streaming.__enter__
+test_streaming.py.test_streaming_save_compressed --> streaming.__exit__
+test_streaming.py.test_streaming_save_compressed --> streaming._write
+test_streaming.py.test_streaming_save_compressed --> streaming._write_indent
+test_streaming.py.test_streaming_save_compressed --> streaming._write_key
+test_streaming.py.test_streaming_save_compressed --> streaming._write_separator
+test_streaming.py.test_streaming_save_compressed --> streaming.start_object
+test_streaming.py.test_streaming_save_compressed --> streaming.end_object
+test_streaming.py.test_streaming_save_compressed --> streaming.start_array
+test_streaming.py.test_streaming_save_compressed --> streaming.end_array
+test_streaming.py.test_streaming_save_compressed --> streaming.write_metadata
+test_streaming.py.test_streaming_save_compressed --> streaming.write_summary
+test_streaming.py.test_streaming_save_compressed --> streaming.write_nodes
+test_streaming.py.test_streaming_save_compressed --> streaming.write_edges
+test_streaming.py.test_streaming_save_compressed --> streaming.write_flows
+test_streaming.py.test_streaming_save_compressed --> streaming.write_concepts
+test_streaming.py.test_streaming_save_compressed --> streaming.write_history
+test_streaming.py.test_streaming_save_compressed --> streaming.write_risk
+test_streaming.py.test_streaming_save_compressed --> streaming.write_contracts
+test_streaming.py.test_streaming_save_compressed --> streaming.write_tests
+test_streaming.py.test_streaming_save_compressed --> streaming._write_object_fields
+test_streaming.py.test_streaming_save_compressed --> streaming.save_streaming
+test_streaming.py.test_streaming_save_compressed --> streaming.StreamingGenomeWriter
+test_repospider.py.test_repospider_initialization --> test_repospider.py
+test_repospider.py.test_repospider_initialization --> test_repospider.test_repospider_initialization
+test_repospider.py.test_repospider_initialization --> test_repospider.test_repospider_analyze_empty_repo
+test_repospider.py.test_repospider_initialization --> test_repospider.test_repospider_analyze_python_file
+test_repospider.py.test_repospider_initialization --> test_repospider.test_repospider_with_real_codebase
+test_repospider.py.test_repospider_initialization --> repospider.py
+test_repospider.py.test_repospider_initialization --> repospider.__init__
+test_repospider.py.test_repospider_initialization --> repospider.analyze
+test_repospider.py.test_repospider_initialization --> repospider._detect_language
+test_repospider.py.test_repospider_initialization --> repospider._is_text_file
+test_repospider.py.test_repospider_initialization --> repospider._make_node_id
+test_repospider.py.test_repospider_initialization --> repospider._detect_visibility
+test_repospider.py.test_repospider_initialization --> repospider._extract_docstring
+test_repospider.py.test_repospider_initialization --> repospider._resolve_import
+test_repospider.py.test_repospider_initialization --> repospider.RepoSpider
+test_repospider.py.test_repospider_analyze_empty_repo --> test_repospider.py
+test_repospider.py.test_repospider_analyze_empty_repo --> test_repospider.test_repospider_initialization
+test_repospider.py.test_repospider_analyze_empty_repo --> test_repospider.test_repospider_analyze_empty_repo
+test_repospider.py.test_repospider_analyze_empty_repo --> test_repospider.test_repospider_analyze_python_file
+test_repospider.py.test_repospider_analyze_empty_repo --> test_repospider.test_repospider_with_real_codebase
+test_repospider.py.test_repospider_analyze_empty_repo --> repospider.py
+test_repospider.py.test_repospider_analyze_empty_repo --> repospider.__init__
+test_repospider.py.test_repospider_analyze_empty_repo --> repospider.analyze
+test_repospider.py.test_repospider_analyze_empty_repo --> repospider._detect_language
+test_repospider.py.test_repospider_analyze_empty_repo --> repospider._is_text_file
+test_repospider.py.test_repospider_analyze_empty_repo --> repospider._make_node_id
+test_repospider.py.test_repospider_analyze_empty_repo --> repospider._detect_visibility
+test_repospider.py.test_repospider_analyze_empty_repo --> repospider._extract_docstring
+test_repospider.py.test_repospider_analyze_empty_repo --> repospider._resolve_import
+test_repospider.py.test_repospider_analyze_empty_repo --> repospider.RepoSpider
+test_repospider.py.test_repospider_analyze_python_file --> test_repospider.py
+test_repospider.py.test_repospider_analyze_python_file --> test_repospider.test_repospider_initialization
+test_repospider.py.test_repospider_analyze_python_file --> test_repospider.test_repospider_analyze_empty_repo
+test_repospider.py.test_repospider_analyze_python_file --> test_repospider.test_repospider_analyze_python_file
+test_repospider.py.test_repospider_analyze_python_file --> test_repospider.test_repospider_with_real_codebase
+test_repospider.py.test_repospider_analyze_python_file --> repospider.py
+test_repospider.py.test_repospider_analyze_python_file --> repospider.__init__
+test_repospider.py.test_repospider_analyze_python_file --> repospider.analyze
+test_repospider.py.test_repospider_analyze_python_file --> repospider._detect_language
+test_repospider.py.test_repospider_analyze_python_file --> repospider._is_text_file
+test_repospider.py.test_repospider_analyze_python_file --> repospider._make_node_id
+test_repospider.py.test_repospider_analyze_python_file --> repospider._detect_visibility
+test_repospider.py.test_repospider_analyze_python_file --> repospider._extract_docstring
+test_repospider.py.test_repospider_analyze_python_file --> repospider._resolve_import
+test_repospider.py.test_repospider_analyze_python_file --> repospider.RepoSpider
+test_repospider.py.test_repospider_with_real_codebase --> test_repospider.py
+test_repospider.py.test_repospider_with_real_codebase --> test_repospider.test_repospider_initialization
+test_repospider.py.test_repospider_with_real_codebase --> test_repospider.test_repospider_analyze_empty_repo
+test_repospider.py.test_repospider_with_real_codebase --> test_repospider.test_repospider_analyze_python_file
+test_repospider.py.test_repospider_with_real_codebase --> test_repospider.test_repospider_with_real_codebase
+test_repospider.py.test_repospider_with_real_codebase --> repospider.py
+test_repospider.py.test_repospider_with_real_codebase --> repospider.__init__
+test_repospider.py.test_repospider_with_real_codebase --> repospider.analyze
+test_repospider.py.test_repospider_with_real_codebase --> repospider._detect_language
+test_repospider.py.test_repospider_with_real_codebase --> repospider._is_text_file
+test_repospider.py.test_repospider_with_real_codebase --> repospider._make_node_id
+test_repospider.py.test_repospider_with_real_codebase --> repospider._detect_visibility
+test_repospider.py.test_repospider_with_real_codebase --> repospider._extract_docstring
+test_repospider.py.test_repospider_with_real_codebase --> repospider._resolve_import
+test_repospider.py.test_repospider_with_real_codebase --> repospider.RepoSpider
+test_security.py.test_security_analyzer_detects_secrets --> test_security.py
+test_security.py.test_security_analyzer_detects_secrets --> test_security.temp_repo
+test_security.py.test_security_analyzer_detects_secrets --> test_security.test_security_analyzer_detects_secrets
+test_security.py.test_security_analyzer_detects_secrets --> test_security.test_security_analyzer_detects_vulnerabilities
+test_security.py.test_security_analyzer_detects_secrets --> test_security.test_security_analyzer_detects_permissions
+test_security.py.test_security_analyzer_detects_secrets --> security.py
+test_security.py.test_security_analyzer_detects_secrets --> security.__init__
+test_security.py.test_security_analyzer_detects_secrets --> security.analyze
+test_security.py.test_security_analyzer_detects_secrets --> security._detect_secrets
+test_security.py.test_security_analyzer_detects_secrets --> security._detect_vulnerabilities
+test_security.py.test_security_analyzer_detects_secrets --> security._detect_permission_issues
+test_security.py.test_security_analyzer_detects_secrets --> security._calculate_severity
+test_security.py.test_security_analyzer_detects_secrets --> security.SecurityAnalyzer
+test_security.py.test_security_analyzer_detects_vulnerabilities --> test_security.py
+test_security.py.test_security_analyzer_detects_vulnerabilities --> test_security.temp_repo
+test_security.py.test_security_analyzer_detects_vulnerabilities --> test_security.test_security_analyzer_detects_secrets
+test_security.py.test_security_analyzer_detects_vulnerabilities --> test_security.test_security_analyzer_detects_vulnerabilities
+test_security.py.test_security_analyzer_detects_vulnerabilities --> test_security.test_security_analyzer_detects_permissions
+test_security.py.test_security_analyzer_detects_vulnerabilities --> security.py
+test_security.py.test_security_analyzer_detects_vulnerabilities --> security.__init__
+test_security.py.test_security_analyzer_detects_vulnerabilities --> security.analyze
+test_security.py.test_security_analyzer_detects_vulnerabilities --> security._detect_secrets
+test_security.py.test_security_analyzer_detects_vulnerabilities --> security._detect_vulnerabilities
+test_security.py.test_security_analyzer_detects_vulnerabilities --> security._detect_permission_issues
+test_security.py.test_security_analyzer_detects_vulnerabilities --> security._calculate_severity
+test_security.py.test_security_analyzer_detects_vulnerabilities --> security.SecurityAnalyzer
+test_security.py.test_security_analyzer_detects_permissions --> test_security.py
+test_security.py.test_security_analyzer_detects_permissions --> test_security.temp_repo
+test_security.py.test_security_analyzer_detects_permissions --> test_security.test_security_analyzer_detects_secrets
+test_security.py.test_security_analyzer_detects_permissions --> test_security.test_security_analyzer_detects_vulnerabilities
+test_security.py.test_security_analyzer_detects_permissions --> test_security.test_security_analyzer_detects_permissions
+test_security.py.test_security_analyzer_detects_permissions --> security.py
+test_security.py.test_security_analyzer_detects_permissions --> security.__init__
+test_security.py.test_security_analyzer_detects_permissions --> security.analyze
+test_security.py.test_security_analyzer_detects_permissions --> security._detect_secrets
+test_security.py.test_security_analyzer_detects_permissions --> security._detect_vulnerabilities
+test_security.py.test_security_analyzer_detects_permissions --> security._detect_permission_issues
+test_security.py.test_security_analyzer_detects_permissions --> security._calculate_severity
+test_security.py.test_security_analyzer_detects_permissions --> security.SecurityAnalyzer
+LLM_INIT_PROMPT.md --> LLM_INIT_PROMPT.md#1-RepoGenome LLM Initialization Prompt
+LLM_INIT_PROMPT.md --> LLM_INIT_PROMPT.md#2-Core Instructions
+LLM_INIT_PROMPT.md --> LLM_INIT_PROMPT.md#3-Session Startup
+LLM_INIT_PROMPT.md --> LLM_INIT_PROMPT.md#3-Codebase Scanning
+LLM_INIT_PROMPT.md --> LLM_INIT_PROMPT.md#3-File and Function Searching
+LLM_INIT_PROMPT.md --> LLM_INIT_PROMPT.md#3-Before Code Changes
+LLM_INIT_PROMPT.md --> LLM_INIT_PROMPT.md#3-After Code Changes
+LLM_INIT_PROMPT.md --> LLM_INIT_PROMPT.md#3-Quick Reference
+LLM_INIT_PROMPT.md --> LLM_INIT_PROMPT.md#3-Fallback (If RepoGenome Unavailable)
+LLM_INIT_PROMPT.md --> LLM_INIT_PROMPT.md#3-Examples
+LLM_INIT_PROMPT.md --> LLM_INIT_PROMPT.md#3-Available Resources
+LLM_INIT_PROMPT.md --> LLM_INIT_PROMPT.md#3-Available Tools
+LLM_INIT_PROMPT.md --> LLM_INIT_PROMPT.md#3-Key Principles
+README.md --> README.md#1-🧬 RepoGenome
+README.md --> README.md#3-Unified Repository Intelligence Artifact Generator
+README.md --> README.md#2-✨ Features
+README.md --> README.md#3-🆕 Recent Enhancements (v0.8.0)
+README.md --> README.md#2-🤖 Using RepoGenome with AI Agents
+README.md --> README.md#3-Quick Setup for AI Agents
+README.md --> README.md#4-1. Generate Your Genome
+README.md --> README.md#1-Generate initial genome
+README.md --> README.md#1-Or generate with compression for smaller file size
+README.md --> README.md#4-2. Configure MCP Server
+README.md --> README.md#4-3. Configure Agent Initialization Prompt
+README.md --> README.md#2-📥 Installation
+README.md --> README.md#3-Prerequisites
+README.md --> README.md#3-Install from Source
+README.md --> README.md#3-Optional Dependencies
+README.md --> README.md#2-🚀 Quick Start
+README.md --> README.md#3-CLI Usage
+README.md --> README.md#1-Generate with debug logging
+README.md --> README.md#1-Generate with compression options (reduce file siz
+README.md --> README.md#1-Generate ultra-compact lite version (essential dat
+README.md --> README.md#1-Update an existing genome incrementally
+README.md --> README.md#1-Validate a genome file
+README.md --> README.md#1-Compare two genomes
+README.md --> README.md#1-Watch repository and auto-regenerate on changes
+README.md --> README.md#1-Start MCP server for AI agent integration
+README.md --> README.md#3-Library Usage
+README.md --> README.md#1-Generate genome
+README.md --> README.md#1-Load and query genome
+README.md --> README.md#1-Query nodes
+README.md --> README.md#1-Access genome data
+README.md --> README.md#3-Incremental Updates
+README.md --> README.md#1-Load existing genome
+README.md --> README.md#1-Update incrementally (only analyzes changed files)
+README.md --> README.md#1-Save updated genome
+README.md --> README.md#3-Advanced Features (v0.8.0+)
+README.md --> README.md#4-Context Optimization
+README.md --> README.md#1-Compact mode: Use short field names
+README.md --> README.md#1-Minified: Remove indentation
+README.md --> README.md#1-Lite mode: Only essential fields
+README.md --> README.md#1-Gzip compression
+README.md --> README.md#1-Combine options for maximum compression
+README.md --> README.md#4-Advanced Query Language
+README.md --> README.md#1-SQL-like queries
+README.md --> README.md#1-GraphQL-style queries
+README.md --> README.md#1-Natural language queries
+README.md --> README.md#4-Query Improvements
+README.md --> README.md#1-Query with pagination
+README.md --> README.md#1-Results can be paginated via MCP tools
+README.md --> OR logic
+README.md --> README.md#1-Query results are automatically cached for 5 minut
+README.md --> README.md#1-Cache statistics available via cache.get_stats()
+README.md --> README.md#4-Graph Database Backend
+README.md --> README.md#1-Save to database
+README.md --> README.md#1-Load from database
+README.md --> README.md#1-Query nodes
+README.md --> README.md#1-Query edges
+README.md --> README.md#4-Export Formats
+README.md --> README.md#1-Export to GraphML (for Cytoscape, yEd, etc.)
+README.md --> README.md#1-Export to DOT (for Graphviz)
+README.md --> README.md#1-Export to CSV (creates genome.nodes.csv and genome
+README.md --> README.md#1-Export to Neo4j Cypher (for graph database import)
+README.md --> README.md#1-Export to PlantUML (for architecture diagrams)
+README.md --> README.md#4-Performance Optimizations
+README.md --> README.md#4-Security Analysis
+README.md --> README.md#1-Security findings are in the security section (if 
+README.md --> README.md#4-Watch Mode
+README.md --> README.md#1-Watch repository and auto-regenerate
+README.md --> README.md#2-📚 Documentation
+README.md --> README.md#3-RepoGenome Schema
+README.md --> README.md#2-🏗️ Architecture
+README.md --> README.md#3-Analyzer Architecture
+README.md --> README.md#2-🌐 Language Support
+README.md --> README.md#3-Programming Languages (Full Structural Analysis)
+README.md --> README.md#3-File Type Analyzers
+README.md --> README.md#3-Additional File Types
+README.md --> README.md#2-🔌 MCP Server
+README.md --> README.md#3-Starting the MCP Server
+README.md --> README.md#3-MCP Resources
+README.md --> README.md#3-MCP Tools
+README.md --> README.md#3-Agent Contract (MCP)
+README.md --> README.md#3-Configuring MCP Server with Coding Agents
+README.md --> README.md#3-Agent Contract
+README.md --> README.md#2-🧪 Testing
+README.md --> README.md#1-Install development dependencies
+README.md --> README.md#1-Run all tests
+README.md --> README.md#1-Run with coverage
+README.md --> README.md#2-🔧 Troubleshooting
+README.md --> README.md#3-macOS Git Hang Issue
+README.md --> README.md#3-Large Repositories
+README.md --> README.md#2-🤝 Contributing
+README.md --> README.md#3-How to Contribute
+README.md --> README.md#3-Adding New Language Support
+README.md --> README.md#2-🛣️ Roadmap
+README.md --> README.md#2-📄 License
+README.md --> README.md#2-⭐ Show Your Support
+repogenome.json --> repogenome.json.metadata
+repogenome.json --> repogenome.json.summary
+repogenome.json --> repogenome.json.nodes
+repogenome.json --> repogenome.json.edges
+repogenome.json --> repogenome.json.flows
+repogenome.json --> repogenome.json.concepts
+repogenome.json --> repogenome.json.history
+repogenome.json --> repogenome.json.risk
+repogenome.json --> repogenome.json.contracts
+repogenome.json --> repogenome.json.tests
+sample_genome.json --> sample_genome.json.metadata
+sample_genome.json --> sample_genome.json.summary
+sample_genome.json --> sample_genome.json.nodes
+sample_genome.json --> sample_genome.json.edges
+sample_genome.json --> sample_genome.json.flows
+sample_genome.json --> sample_genome.json.concepts
+sample_genome.json --> sample_genome.json.history
+sample_genome.json --> sample_genome.json.risk
+sample_genome.json --> sample_genome.json.contracts
+sample_genome.json --> sample_genome.json.tests
+__init__.py --> generator.py
+__init__.py --> genome.py
+__init__.py --> schema.py
+__init__.py --> server.py
+test_cli.py --> test_cli.test_generate_with_logging
+test_cli.py --> main.py
+test_python_ast.py --> test_python_ast.test_analyze_simple_python_file
+test_python_ast.py --> test_python_ast.test_analyze_file_with_main_block
+test_python_ast.py --> test_python_ast.test_analyze_invalid_syntax
+test_python_ast.py --> ast_analyzer.py
+test_advanced_query.py --> test_advanced_query.sample_genome
+test_advanced_query.py --> test_advanced_query.test_sql_query_nodes
+test_advanced_query.py --> test_advanced_query.test_sql_query_edges
+test_advanced_query.py --> test_advanced_query.test_graphql_query
+test_advanced_query.py --> test_advanced_query.test_simple_query
+test_advanced_query.py --> test_advanced_query.test_query_with_order_by
+test_advanced_query.py --> test_advanced_query.test_query_with_limit
+test_advanced_query.py --> advanced_query.py
+test_advanced_query.py --> schema.py
+test_advanced_query.py --> schema.py
+test_advanced_query.py --> schema.py
+test_advanced_query.py --> schema.py
+test_advanced_query.py --> schema.py
+test_schema.py --> test_schema.test_node_creation
+test_schema.py --> test_schema.test_edge_creation
+test_schema.py --> test_schema.test_repo_genome_creation
+test_schema.py --> test_schema.test_repo_genome_serialization
+test_schema.py --> test_schema.test_repo_genome_from_dict
+test_schema.py --> test_schema.test_risk_model
+test_schema.py --> test_schema.test_genome_save_load
+test_schema.py --> schema.py
+test_schema.py --> schema.py
+test_schema.py --> schema.py
+test_schema.py --> schema.py
+test_schema.py --> schema.py
+test_schema.py --> schema.py
+test_streaming.py --> test_streaming.sample_genome
+test_streaming.py --> test_streaming.test_streaming_save
+test_streaming.py --> test_streaming.test_streaming_save_compact
+test_streaming.py --> test_streaming.test_streaming_save_compressed
+test_streaming.py --> schema.py
+test_streaming.py --> schema.py
+test_streaming.py --> schema.py
+test_streaming.py --> schema.py
+test_streaming.py --> schema.py
+test_streaming.py --> streaming.py
+test_repospider.py --> test_repospider.test_repospider_initialization
+test_repospider.py --> test_repospider.test_repospider_analyze_empty_repo
+test_repospider.py --> test_repospider.test_repospider_analyze_python_file
+test_repospider.py --> test_repospider.test_repospider_with_real_codebase
+test_repospider.py --> repospider.py
+test_security.py --> test_security.temp_repo
+test_security.py --> test_security.test_security_analyzer_detects_secrets
+test_security.py --> test_security.test_security_analyzer_detects_vulnerabilities
+test_security.py --> test_security.test_security_analyzer_detects_permissions
+test_security.py --> security.py
+call_graph.py --> call_graph.analyze_file
+call_graph.py --> call_graph.__init__
+call_graph.py --> call_graph.visit_FunctionDef
+call_graph.py --> call_graph.visit_Call
+call_graph.py --> call_graph._get_call_name
+call_graph.py --> call_graph.CallGraphBuilder
+call_graph.py --> call_graph._CallVisitor
+dependency_resolver.py --> dependency_resolver.resolve_python_import
+dependency_resolver.py --> dependency_resolver.resolve_typescript_import
+dependency_resolver.py --> dependency_resolver.DependencyResolver
+main.py --> main.main
+main.py --> main.generate
+main.py --> main.update
+main.py --> main.validate
+main.py --> main.diff
+main.py --> main.init
+main.py --> main.export
+main.py --> main.query
+main.py --> main.ragnatela
+main.py --> main.mcp_server
+main.py --> main.watch
+main.py --> main.generator_factory
+main.py --> output.py
+main.py --> output.py
+main.py --> output.py
+main.py --> output.py
+main.py --> output.py
+main.py --> config.py
+main.py --> config.py
+main.py --> generator.py
+main.py --> schema.py
+main.py --> output.py
+main.py --> json_diff.py
+main.py --> graphml.py
+main.py --> dot.py
+main.py --> tools.py
+main.py --> storage.py
+main.py --> cypher.py
+main.py --> plantuml.py
+main.py --> query.py
+main.py --> query.py
+main.py --> ragnatela.py
+main.py --> server.py
+main.py --> watch.py
+main.py --> generator.py
+main.watch --> main.generator_factory
+output.py --> output.create_progress_bar
+output.py --> output.print_success
+output.py --> output.print_error
+output.py --> output.print_warning
+output.py --> output.print_info
+output.py --> output.format_file_size
+advanced_query.py --> advanced_query.__init__
+advanced_query.py --> advanced_query.execute
+advanced_query.py --> advanced_query._execute_sql
+advanced_query.py --> advanced_query._execute_graphql
+advanced_query.py --> advanced_query._execute_simple
+advanced_query.py --> advanced_query._parse_where_clause
+advanced_query.py --> advanced_query._parse_graphql_args
+advanced_query.py --> advanced_query._query_nodes_sql
+advanced_query.py --> advanced_query._query_edges_sql
+advanced_query.py --> advanced_query._query_nodes_graphql
+advanced_query.py --> advanced_query._query_edges_graphql
+advanced_query.py --> advanced_query._match_conditions
+advanced_query.py --> advanced_query._match_edge_conditions
+advanced_query.py --> advanced_query.AdvancedQuery
+advanced_query.py --> schema.py
+advanced_query.py --> schema.py
+advanced_query.py --> schema.py
+advanced_query.py --> schema.py
+advanced_query.py --> schema.py
+cache.py --> cache.__init__
+cache.py --> cache.get_file_hash
+cache.py --> cache.get_cache_key
+cache.py --> cache.get
+cache.py --> cache.set
+cache.py --> cache.clear
+cache.py --> cache.invalidate_file
+cache.py --> cache._evict_oldest
+cache.py --> cache.get_stats
+cache.py --> cache.invalidate_pattern
+cache.py --> cache.AnalysisCache
+cache.py --> errors.py
+config.py --> config.__init__
+config.py --> config.load
+config.py --> config.should_analyze_file
+config.py --> config.get_enabled_subsystems
+config.py --> config.to_dict
+config.py --> config.create_default_config
+config.py --> config.RepoGenomeConfig
+db_backend.py --> db_backend.save_genome
+db_backend.py --> db_backend.load_genome
+db_backend.py --> db_backend.query_nodes
+db_backend.py --> db_backend.query_edges
+db_backend.py --> db_backend.get_neighbors
+db_backend.py --> db_backend.close
+db_backend.py --> db_backend.__init__
+db_backend.py --> db_backend._create_schema
+db_backend.py --> db_backend.save_genome
+db_backend.py --> db_backend.load_genome
+db_backend.py --> db_backend.query_nodes
+db_backend.py --> db_backend.query_edges
+db_backend.py --> db_backend.get_neighbors
+db_backend.py --> db_backend.close
+db_backend.py --> db_backend.__enter__
+db_backend.py --> db_backend.__exit__
+db_backend.py --> db_backend.create_backend
+db_backend.py --> db_backend.GraphBackend
+db_backend.py --> db_backend.SQLiteBackend
+db_backend.py --> schema.py
+db_backend.py --> schema.py
+db_backend.py --> schema.py
+db_backend.py --> schema.py
+db_backend.py --> schema.py
+db_backend.py --> schema.py
+db_backend.py --> schema.py
+db_backend.py --> schema.py
+db_backend.py --> schema.py
+db_backend.py --> schema.py
+db_backend.py --> schema.py
+db_backend.py --> schema.py
+db_backend.py --> schema.py
+db_backend.py --> schema.py
+db_backend.py --> schema.py
+db_backend.py --> schema.py
+errors.py --> errors.__init__
+errors.py --> errors.__str__
+errors.py --> errors.__init__
+errors.py --> errors.get_recovery_suggestion
+errors.py --> errors.collect_errors
+errors.py --> errors.wrapper
+errors.py --> errors.handle_analysis_error
+errors.py --> errors.create_error_recovery_strategy
+errors.py --> errors.RepoGenomeError
+errors.py --> errors.AnalysisError
+errors.py --> errors.ConfigError
+generator.py --> generator.__init__
+generator.py --> generator.generate
+generator.py --> generator._generate_full
+generator.py --> generator._generate_incremental
+generator.py --> generator._build_summary
+generator.py --> generator._detect_architectural_style
+generator.py --> generator._identify_hotspots
+generator.py --> generator._identify_do_not_touch
+generator.py --> generator._calculate_risk
+generator.py --> generator.RepoGenomeGenerator
+generator.py --> merger.py
+generator.py --> metadata.py
+generator.py --> schema.py
+generator.py --> schema.py
+generator.py --> base.py
+generator.py --> chronomap.py
+generator.py --> contractlens.py
+generator.py --> flowweaver.py
+generator.py --> intentatlas.py
+generator.py --> repospider.py
+generator.py --> testgalaxy.py
+generator.py --> security.py
+generator.py --> schema.py
+genome.py --> genome.__init__
+genome.py --> genome._build_indexes
+genome.py --> genome.get_nodes_by_type
+genome.py --> genome.get_edges_from
+genome.py --> genome.get_edges_to
+genome.py --> genome.get_node
+genome.py --> genome.save
+genome.py --> genome.load
+genome.py --> genome.Genome
+genome.py --> schema.py
+genome.py --> schema.py
+genome.py --> schema.py
+merger.py --> merger.__init__
+merger.py --> merger.update_incremental
+merger.py --> merger._determine_subsystems_to_update
+merger.py --> merger._merge_data
+merger.py --> merger.GenomeMerger
+merger.py --> schema.py
+merger.py --> schema.py
+merger.py --> git_utils.py
+merger.py --> json_diff.py
+merger.py --> json_diff.py
+merger.py --> schema.py
+metadata.py --> metadata.detect_languages
+metadata.py --> metadata.detect_frameworks
+metadata.py --> metadata.extract_metadata
+metadata.py --> schema.py
+metadata.py --> git_utils.py
+metadata.extract_metadata --> metadata.detect_languages
+metadata.extract_metadata --> metadata.detect_frameworks
+query.py --> query.__init__
+query.py --> query.query_nodes
+query.py --> query.query_edges
+query.py --> query.get_neighbors
+query.py --> query._match_filters
+query.py --> query.parse_simple_query
+query.py --> query.GenomeQuery
+query.py --> schema.py
+query.py --> schema.py
+schema.py --> schema._compress_field_name
+schema.py --> schema._expand_field_name
+schema.py --> schema._compress_dict
+schema.py --> schema._expand_dict
+schema.py --> schema.to_dict
+schema.py --> schema.to_dict
+schema.py --> schema._to_lite_dict
+schema.py --> schema.from_dict
+schema.py --> schema.save
+schema.py --> schema.load
+schema.py --> schema._is_compact_format
+schema.py --> schema.NodeType
+schema.py --> schema.EdgeType
+schema.py --> schema.Metadata
+schema.py --> schema.Summary
+schema.py --> schema.Node
+schema.py --> schema.Edge
+schema.py --> schema.Config
+schema.py --> schema.Flow
+schema.py --> schema.Concept
+schema.py --> schema.History
+schema.py --> schema.Risk
+schema.py --> schema.Contract
+schema.py --> schema.Tests
+schema.py --> schema.GenomeDiff
+schema.py --> schema.RepoGenome
+schema.py --> schema.Config
+schema.py --> streaming.py
+schema._compress_dict --> schema._compress_field_name
+schema._compress_dict --> schema._compress_dict
+schema._expand_dict --> schema._expand_field_name
+schema._expand_dict --> schema._expand_dict
+schema.to_dict --> schema._compress_dict
+schema._to_lite_dict --> schema._compress_dict
+schema.from_dict --> schema._is_compact_format
+schema.from_dict --> schema._expand_dict
+streaming.py --> streaming.__init__
+streaming.py --> streaming.__enter__
+streaming.py --> streaming.__exit__
+streaming.py --> streaming._write
+streaming.py --> streaming._write_indent
+streaming.py --> streaming._write_key
+streaming.py --> streaming._write_separator
+streaming.py --> streaming.start_object
+streaming.py --> streaming.end_object
+streaming.py --> streaming.start_array
+streaming.py --> streaming.end_array
+streaming.py --> streaming.write_metadata
+streaming.py --> streaming.write_summary
+streaming.py --> streaming.write_nodes
+streaming.py --> streaming.write_edges
+streaming.py --> streaming.write_flows
+streaming.py --> streaming.write_concepts
+streaming.py --> streaming.write_history
+streaming.py --> streaming.write_risk
+streaming.py --> streaming.write_contracts
+streaming.py --> streaming.write_tests
+streaming.py --> streaming._write_object_fields
+streaming.py --> streaming.save_streaming
+streaming.py --> streaming.StreamingGenomeWriter
+streaming.py --> schema.py
+streaming.py --> schema.py
+streaming.py --> schema.py
+streaming.py --> schema.py
+streaming.py --> schema.py
+streaming.py --> schema.py
+streaming.py --> schema.py
+streaming.py --> schema.py
+streaming.py --> schema.py
+streaming.py --> schema.py
+streaming.py --> schema.py
+streaming.py --> schema.py
+streaming.py --> schema.py
+watch.py --> watch.__init__
+watch.py --> watch.should_ignore
+watch.py --> watch.on_any_event
+watch.py --> watch._schedule_callback
+watch.py --> watch.trigger
+watch.py --> watch.watch_and_regenerate
+watch.py --> watch.on_changes
+watch.py --> watch.GenomeWatcher
+cypher.py --> cypher.export_cypher
+cypher.py --> schema.py
+dot.py --> dot.export_dot
+dot.py --> dot._escape_dot_id
+dot.py --> dot._escape_dot_label
+dot.py --> schema.py
+dot.export_dot --> dot._escape_dot_id
+dot.export_dot --> dot._escape_dot_label
+graphml.py --> graphml.export_graphml
+graphml.py --> graphml._escape_xml
+graphml.py --> schema.py
+graphml.export_graphml --> graphml._escape_xml
+plantuml.py --> plantuml.export_plantuml
+plantuml.py --> schema.py
+__init__.py --> cypher.py
+__init__.py --> dot.py
+__init__.py --> graphml.py
+__init__.py --> plantuml.py
+contract.py --> contract.__init__
+contract.py --> contract.check_genome_loaded
+contract.py --> contract.mark_genome_loaded
+contract.py --> contract.add_citation
+contract.py --> contract.get_citations
+contract.py --> contract.mark_edit
+contract.py --> contract.check_impact_before_edit
+contract.py --> contract.mark_impact_checked
+contract.py --> contract.validate_before_action
+contract.py --> contract.update_validation_result
+contract.py --> contract.reset_edit_state
+contract.py --> contract.get_contract_status
+contract.py --> contract.enforce_contract_middleware
+contract.py --> contract.AgentContract
+resources.py --> resources.__init__
+resources.py --> resources.get_current
+resources.py --> resources.get_summary
+resources.py --> resources.get_diff
+resources.py --> resources.read_resource
+resources.py --> resources.get_stats
+resources.py --> resources.get_node_resource
+resources.py --> resources.read_resource
+resources.py --> resources.list_resources
+resources.py --> resources.RepoGenomeResources
+resources.py --> storage.py
+resources.py --> tools.py
+resources.py --> tools.py
+server.py --> server.__init__
+server.py --> server._register_resources
+server.py --> server._register_tools
+server.py --> server.run_sync
+server.py --> server.create_server
+server.py --> server.RepoGenomeMCPServer
+server.py --> contract.py
+server.py --> resources.py
+server.py --> storage.py
+server.py --> tools.py
+storage.py --> storage.__init__
+storage.py --> storage.load_genome
+storage.py --> storage.save_genome
+storage.py --> storage.is_stale
+storage.py --> storage.is_genome_file_present
+storage.py --> storage.get_load_error
+storage.py --> storage.get_genome_status
+storage.py --> storage.get_summary
+storage.py --> storage.get_diff
+storage.py --> storage.GenomeStorage
+storage.py --> schema.py
+storage.py --> git_utils.py
+storage.py --> json_diff.py
+tools.py --> tools.__init__
+tools.py --> tools.scan
+tools.py --> tools.query
+tools.py --> tools.impact
+tools.py --> tools.update
+tools.py --> tools.validate
+tools.py --> tools.get_node
+tools.py --> tools.search
+tools.py --> tools.dependencies
+tools.py --> tools.get_dependencies
+tools.py --> tools.stats
+tools.py --> tools.export
+tools.py --> tools._export_csv
+tools.py --> tools.RepoGenomeTools
+tools.py --> generator.py
+tools.py --> query.py
+tools.py --> query.py
+tools.py --> schema.py
+tools.py --> storage.py
+tools.py --> graphml.py
+tools.py --> dot.py
+tools.py --> cypher.py
+tools.py --> plantuml.py
+tools.dependencies --> tools.get_dependencies
+tools.get_dependencies --> tools.get_dependencies
+__init__.py --> server.py
+base.py --> base.__init__
+base.py --> base.analyze
+base.py --> base.update_incremental
+base.py --> base.get_dependencies
+base.py --> base.is_required
+base.py --> base.Subsystem
+chronomap.py --> chronomap.__init__
+chronomap.py --> chronomap.analyze
+chronomap.py --> chronomap.ChronoMap
+chronomap.py --> schema.py
+chronomap.py --> base.py
+chronomap.py --> git_utils.py
+chronomap.py --> git_utils.py
+chronomap.py --> git_utils.py
+contractlens.py --> contractlens.__init__
+contractlens.py --> contractlens.analyze
+contractlens.py --> contractlens._identify_public_apis
+contractlens.py --> contractlens._find_dependencies
+contractlens.py --> contractlens._calculate_fan_in
+contractlens.py --> contractlens.ContractLens
+contractlens.py --> schema.py
+contractlens.py --> base.py
+flowweaver.py --> flowweaver.__init__
+flowweaver.py --> flowweaver.analyze
+flowweaver.py --> flowweaver._build_call_graph
+flowweaver.py --> flowweaver._trace_from_entry
+flowweaver.py --> flowweaver.dfs
+flowweaver.py --> flowweaver._detect_side_effects
+flowweaver.py --> flowweaver.FlowWeaver
+flowweaver.py --> ast_analyzer.py
+flowweaver.py --> schema.py
+flowweaver.py --> base.py
+flowweaver._trace_from_entry --> flowweaver.dfs
+flowweaver.dfs --> flowweaver.dfs
+intentatlas.py --> intentatlas.__init__
+intentatlas.py --> intentatlas.analyze
+intentatlas.py --> intentatlas._extract_from_directories
+intentatlas.py --> intentatlas._extract_from_naming
+intentatlas.py --> intentatlas._extract_from_docs
+intentatlas.py --> intentatlas.IntentAtlas
+intentatlas.py --> schema.py
+intentatlas.py --> base.py
+repospider.py --> repospider.__init__
+repospider.py --> repospider.analyze
+repospider.py --> repospider._detect_language
+repospider.py --> repospider._is_text_file
+repospider.py --> repospider._make_node_id
+repospider.py --> repospider._detect_visibility
+repospider.py --> repospider._extract_docstring
+repospider.py --> repospider._resolve_import
+repospider.py --> repospider.RepoSpider
+repospider.py --> call_graph.py
+repospider.py --> dependency_resolver.py
+repospider.py --> ast_analyzer.py
+repospider.py --> ts_analyzer.py
+repospider.py --> java_analyzer.py
+repospider.py --> go_analyzer.py
+repospider.py --> cpp_analyzer.py
+repospider.py --> rust_analyzer.py
+repospider.py --> csharp_analyzer.py
+repospider.py --> ruby_analyzer.py
+repospider.py --> php_analyzer.py
+repospider.py --> md_analyzer.py
+repospider.py --> json_analyzer.py
+repospider.py --> yaml_analyzer.py
+repospider.py --> html_analyzer.py
+repospider.py --> css_analyzer.py
+repospider.py --> shell_analyzer.py
+repospider.py --> sql_analyzer.py
+repospider.py --> schema.py
+repospider.py --> schema.py
+repospider.py --> schema.py
+repospider.py --> schema.py
+repospider.py --> base.py
+repospider.py --> errors.py
+security.py --> security.__init__
+security.py --> security.analyze
+security.py --> security._detect_secrets
+security.py --> security._detect_vulnerabilities
+security.py --> security._detect_permission_issues
+security.py --> security._calculate_severity
+security.py --> security.SecurityAnalyzer
+security.py --> schema.py
+security.py --> schema.py
+security.py --> base.py
+testgalaxy.py --> testgalaxy.__init__
+testgalaxy.py --> testgalaxy.analyze
+testgalaxy.py --> testgalaxy._detect_language
+testgalaxy.py --> testgalaxy._extract_test_functions
+testgalaxy.py --> testgalaxy._find_tested_code
+testgalaxy.py --> testgalaxy._load_coverage_data
+testgalaxy.py --> testgalaxy.TestGalaxy
+testgalaxy.py --> schema.py
+testgalaxy.py --> schema.py
+testgalaxy.py --> schema.py
+testgalaxy.py --> schema.py
+testgalaxy.py --> schema.py
+testgalaxy.py --> base.py
+git_utils.py --> git_utils.get_repo_hash
+git_utils.py --> git_utils._get_repo_hash_gitpython_with_timeout
+git_utils.py --> git_utils.gitpython_operation
+git_utils.py --> git_utils._get_repo_hash_subprocess
+git_utils.py --> git_utils.get_changed_files
+git_utils.py --> git_utils.get_file_history
+git_utils.py --> git_utils.calculate_churn_score
+git_utils.py --> git_utils.get_last_major_change
+git_utils.get_repo_hash --> git_utils._get_repo_hash_subprocess
+git_utils.get_repo_hash --> git_utils._get_repo_hash_gitpython_with_timeout
+git_utils.calculate_churn_score --> git_utils.get_file_history
+git_utils.get_last_major_change --> git_utils.get_file_history
+json_diff.py --> json_diff.compute_genome_diff
+json_diff.py --> json_diff._normalize_edges
+json_diff.py --> json_diff._edge_to_tuple
+json_diff.py --> json_diff.get_affected_nodes
+json_diff.py --> schema.py
+json_diff.py --> schema.py
+json_diff.compute_genome_diff --> json_diff._normalize_edges
+json_diff.compute_genome_diff --> json_diff._edge_to_tuple
+json_diff._normalize_edges --> json_diff._edge_to_tuple
+parallel.py --> parallel.get_optimal_workers
+parallel.py --> parallel.process_files_parallel
+parallel.py --> parallel.batch_process
+parallel.process_files_parallel --> parallel.get_optimal_workers
+parallel.batch_process --> parallel.get_optimal_workers
+ragnatela.py --> ragnatela.find_latest_repogenome
+ragnatela.py --> ragnatela.compute_node_clusters
+ragnatela.py --> ragnatela.compute_degree_centrality
+ragnatela.py --> ragnatela.compute_3d_layout
+ragnatela.py --> ragnatela.compute_node_sizes
+ragnatela.py --> ragnatela.get_node_color
+ragnatela.py --> ragnatela.__init__
+ragnatela.py --> ragnatela._create_visuals
+ragnatela.py --> ragnatela._setup_interaction
+ragnatela.py --> ragnatela.on_mouse_wheel
+ragnatela.py --> ragnatela.on_camera_update
+ragnatela.py --> ragnatela.on_mouse_press
+ragnatela.py --> ragnatela.on_mouse_move
+ragnatela.py --> ragnatela.on_key_press
+ragnatela.py --> ragnatela._update_node_sizes_for_distance
+ragnatela.py --> ragnatela._update_edge_lod
+ragnatela.py --> ragnatela._build_spatial_index
+ragnatela.py --> ragnatela._find_clicked_node
+ragnatela.py --> ragnatela._show_tooltip
+ragnatela.py --> ragnatela._hide_tooltip
+ragnatela.py --> ragnatela._create_node_labels
+ragnatela.py --> ragnatela.on_camera_update_labels
+ragnatela.py --> ragnatela._toggle_labels
+ragnatela.py --> ragnatela._toggle_search
+ragnatela.py --> ragnatela._create_search_ui
+ragnatela.py --> ragnatela._update_search_display
+ragnatela.py --> ragnatela._remove_search_ui
+ragnatela.py --> ragnatela._apply_filters
+ragnatela.py --> ragnatela._rebuild_visuals_from_data
+ragnatela.py --> ragnatela.fade_in
+ragnatela.py --> ragnatela._highlight_paths
+ragnatela.py --> ragnatela._update_hover_highlighting
+ragnatela.py --> ragnatela._update_selection_indicator
+ragnatela.py --> ragnatela._update_multi_selection_indicators
+ragnatela.py --> ragnatela._clear_path_highlighting
+ragnatela.py --> ragnatela._focus_on_node
+ragnatela.py --> ragnatela._animate_camera
+ragnatela.py --> ragnatela._toggle_minimap
+ragnatela.py --> ragnatela._create_minimap
+ragnatela.py --> ragnatela._update_minimap
+ragnatela.py --> ragnatela._remove_minimap
+ragnatela.py --> ragnatela._toggle_clustering
+ragnatela.py --> ragnatela._toggle_help_overlay
+ragnatela.py --> ragnatela._create_help_overlay
+ragnatela.py --> ragnatela._remove_help_overlay
+ragnatela.py --> ragnatela._add_next_batch
+ragnatela.py --> ragnatela.run
+ragnatela.py --> ragnatela.visualize_ragnatela
+ragnatela.py --> ragnatela.RagnatelaCanvas
+ragnatela.py --> schema.py
+ragnatela.__init__ --> ragnatela.compute_degree_centrality
+ragnatela.__init__ --> ragnatela.compute_node_clusters
+ragnatela.__init__ --> ragnatela.compute_3d_layout
+ragnatela.__init__ --> ragnatela.compute_node_sizes
+ragnatela._create_visuals --> ragnatela.get_node_color
+ragnatela._apply_filters --> ragnatela.get_node_color
+ragnatela.visualize_ragnatela --> ragnatela.find_latest_repogenome
+__init__.py --> ragnatela.py
+cpp_analyzer.py --> cpp_analyzer.analyze_file
+cpp_analyzer.py --> cpp_analyzer._remove_comments
+cpp_analyzer.py --> cpp_analyzer._extract_includes
+cpp_analyzer.py --> cpp_analyzer._extract_classes
+cpp_analyzer.py --> cpp_analyzer._extract_functions
+cpp_analyzer.py --> cpp_analyzer._extract_entry_points
+cpp_analyzer.py --> cpp_analyzer.analyze_cpp_file
+cpp_analyzer.py --> cpp_analyzer.CPPAnalyzer
+csharp_analyzer.py --> csharp_analyzer.analyze_file
+csharp_analyzer.py --> csharp_analyzer._remove_comments
+csharp_analyzer.py --> csharp_analyzer._extract_namespace
+csharp_analyzer.py --> csharp_analyzer._extract_using_statements
+csharp_analyzer.py --> csharp_analyzer._extract_classes
+csharp_analyzer.py --> csharp_analyzer._extract_methods
+csharp_analyzer.py --> csharp_analyzer._extract_entry_points
+csharp_analyzer.py --> csharp_analyzer.analyze_csharp_file
+csharp_analyzer.py --> csharp_analyzer.CSharpAnalyzer
+css_analyzer.py --> css_analyzer.analyze_file
+css_analyzer.py --> css_analyzer._extract_selectors
+css_analyzer.py --> css_analyzer._classify_selector
+css_analyzer.py --> css_analyzer._extract_rules
+css_analyzer.py --> css_analyzer._extract_media_queries
+css_analyzer.py --> css_analyzer._extract_keyframes
+css_analyzer.py --> css_analyzer._extract_imports
+css_analyzer.py --> css_analyzer._extract_urls
+css_analyzer.py --> css_analyzer.analyze_css_file
+css_analyzer.py --> css_analyzer.CSSAnalyzer
+go_analyzer.py --> go_analyzer.analyze_file
+go_analyzer.py --> go_analyzer._extract_package
+go_analyzer.py --> go_analyzer._extract_imports
+go_analyzer.py --> go_analyzer._extract_types
+go_analyzer.py --> go_analyzer._extract_functions
+go_analyzer.py --> go_analyzer._extract_entry_points
+go_analyzer.py --> go_analyzer.analyze_go_file
+go_analyzer.py --> go_analyzer.GoAnalyzer
+html_analyzer.py --> html_analyzer.__init__
+html_analyzer.py --> html_analyzer.handle_starttag
+html_analyzer.py --> html_analyzer.handle_data
+html_analyzer.py --> html_analyzer.analyze_file
+html_analyzer.py --> html_analyzer.analyze_html_file
+html_analyzer.py --> html_analyzer.HTMLStructureParser
+html_analyzer.py --> html_analyzer.HTMLAnalyzer
+java_analyzer.py --> java_analyzer.analyze_file
+java_analyzer.py --> java_analyzer._remove_comments
+java_analyzer.py --> java_analyzer._extract_package
+java_analyzer.py --> java_analyzer._extract_imports
+java_analyzer.py --> java_analyzer._extract_classes
+java_analyzer.py --> java_analyzer._extract_methods
+java_analyzer.py --> java_analyzer._extract_entry_points
+java_analyzer.py --> java_analyzer.analyze_java_file
+java_analyzer.py --> java_analyzer.JavaAnalyzer
+json_analyzer.py --> json_analyzer.analyze_file
+json_analyzer.py --> json_analyzer._extract_keys
+json_analyzer.py --> json_analyzer._extract_structure
+json_analyzer.py --> json_analyzer.analyze_json_file
+json_analyzer.py --> json_analyzer.JSONAnalyzer
+md_analyzer.py --> md_analyzer.analyze_file
+md_analyzer.py --> md_analyzer._extract_headings
+md_analyzer.py --> md_analyzer._extract_links
+md_analyzer.py --> md_analyzer._extract_code_blocks
+md_analyzer.py --> md_analyzer._extract_images
+md_analyzer.py --> md_analyzer._extract_lists
+md_analyzer.py --> md_analyzer._extract_blockquotes
+md_analyzer.py --> md_analyzer.analyze_markdown_file
+md_analyzer.py --> md_analyzer.MarkdownAnalyzer
+php_analyzer.py --> php_analyzer.analyze_file
+php_analyzer.py --> php_analyzer._remove_comments
+php_analyzer.py --> php_analyzer._extract_namespace
+php_analyzer.py --> php_analyzer._extract_use_statements
+php_analyzer.py --> php_analyzer._extract_classes
+php_analyzer.py --> php_analyzer._extract_functions
+php_analyzer.py --> php_analyzer.analyze_php_file
+php_analyzer.py --> php_analyzer.PHPAnalyzer
+ast_analyzer.py --> ast_analyzer.__init__
+ast_analyzer.py --> ast_analyzer.analyze_file
+ast_analyzer.py --> ast_analyzer.__init__
+ast_analyzer.py --> ast_analyzer.visit_Import
+ast_analyzer.py --> ast_analyzer.visit_ImportFrom
+ast_analyzer.py --> ast_analyzer.visit_FunctionDef
+ast_analyzer.py --> ast_analyzer.visit_ClassDef
+ast_analyzer.py --> ast_analyzer.visit_If
+ast_analyzer.py --> ast_analyzer._get_decorator_name
+ast_analyzer.py --> ast_analyzer._get_name
+ast_analyzer.py --> ast_analyzer._extract_route
+ast_analyzer.py --> ast_analyzer.analyze_python_file
+ast_analyzer.py --> ast_analyzer.PythonASTAnalyzer
+ast_analyzer.py --> ast_analyzer._PythonASTVisitor
+ruby_analyzer.py --> ruby_analyzer.analyze_file
+ruby_analyzer.py --> ruby_analyzer._extract_requires
+ruby_analyzer.py --> ruby_analyzer._extract_modules
+ruby_analyzer.py --> ruby_analyzer._extract_classes
+ruby_analyzer.py --> ruby_analyzer._extract_methods
+ruby_analyzer.py --> ruby_analyzer.analyze_ruby_file
+ruby_analyzer.py --> ruby_analyzer.RubyAnalyzer
+rust_analyzer.py --> rust_analyzer.analyze_file
+rust_analyzer.py --> rust_analyzer._extract_module
+rust_analyzer.py --> rust_analyzer._extract_use_statements
+rust_analyzer.py --> rust_analyzer._extract_types
+rust_analyzer.py --> rust_analyzer._extract_functions
+rust_analyzer.py --> rust_analyzer._extract_entry_points
+rust_analyzer.py --> rust_analyzer.analyze_rust_file
+rust_analyzer.py --> rust_analyzer.RustAnalyzer
+shell_analyzer.py --> shell_analyzer.analyze_file
+shell_analyzer.py --> shell_analyzer._extract_shebang
+shell_analyzer.py --> shell_analyzer._extract_functions
+shell_analyzer.py --> shell_analyzer._extract_variables
+shell_analyzer.py --> shell_analyzer._extract_commands
+shell_analyzer.py --> shell_analyzer._extract_conditionals
+shell_analyzer.py --> shell_analyzer._extract_loops
+shell_analyzer.py --> shell_analyzer.analyze_shell_file
+shell_analyzer.py --> shell_analyzer.ShellAnalyzer
+sql_analyzer.py --> sql_analyzer.analyze_file
+sql_analyzer.py --> sql_analyzer._extract_queries
+sql_analyzer.py --> sql_analyzer._extract_tables
+sql_analyzer.py --> sql_analyzer._extract_columns
+sql_analyzer.py --> sql_analyzer._extract_joins
+sql_analyzer.py --> sql_analyzer._extract_views
+sql_analyzer.py --> sql_analyzer._extract_procedures
+sql_analyzer.py --> sql_analyzer.analyze_sql_file
+sql_analyzer.py --> sql_analyzer.SQLAnalyzer
+ts_analyzer.py --> ts_analyzer.__init__
+ts_analyzer.py --> ts_analyzer.analyze_file
+ts_analyzer.py --> ts_analyzer._analyze_with_tree_sitter
+ts_analyzer.py --> ts_analyzer._analyze_with_regex
+ts_analyzer.py --> ts_analyzer._extract_imports_regex
+ts_analyzer.py --> ts_analyzer._extract_functions_regex
+ts_analyzer.py --> ts_analyzer._extract_classes_regex
+ts_analyzer.py --> ts_analyzer._extract_api_routes_regex
+ts_analyzer.py --> ts_analyzer._extract_from_tree_sitter
+ts_analyzer.py --> ts_analyzer.analyze_typescript_file
+ts_analyzer.py --> ts_analyzer.TypeScriptAnalyzer
+yaml_analyzer.py --> yaml_analyzer.analyze_file
+yaml_analyzer.py --> yaml_analyzer._extract_keys
+yaml_analyzer.py --> yaml_analyzer._extract_structure
+yaml_analyzer.py --> yaml_analyzer._extract_anchors
+yaml_analyzer.py --> yaml_analyzer.analyze_yaml_file
+yaml_analyzer.py --> yaml_analyzer.YAMLAnalyzer
+
+@enduml

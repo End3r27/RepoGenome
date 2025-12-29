@@ -18,8 +18,8 @@ RepoGenome generates a comprehensive JSON artifact (`repogenome.json`) that comb
 ## Installation
 
 ```bash
-git clone https://github.com/yourusername/repogenome
-cd repogenome
+git clone https://github.com/End3r27/RepoGenome
+cd RepoGenome
 pip install -e .
 ```
 

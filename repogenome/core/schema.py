@@ -174,7 +174,7 @@ class Metadata(BaseModel):
     repo_hash: Optional[str] = None
     languages: List[str] = Field(default_factory=list)
     frameworks: List[str] = Field(default_factory=list)
-    repogenome_version: str = Field(default="0.1.0")
+    repogenome_version: str = Field(default="0.6.0")
 
 
 class Summary(BaseModel):

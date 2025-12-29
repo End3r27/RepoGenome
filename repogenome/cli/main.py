@@ -23,7 +23,7 @@ console = Console()
 
 
 @click.group()
-@click.version_option(version="0.1.0")
+@click.version_option(version="0.6.0")
 def main():
     """RepoGenome - Unified Repository Intelligence Artifact Generator."""
     pass
@@ -505,6 +505,55 @@ def ragnatela(path: Path, min_connections: int):
         raise click.Abort()
     except Exception as e:
         print_error(f"{e}")
+        raise click.Abort()
+
+
+@main.command()
+@click.argument("path", type=click.Path(exists=True, file_okay=False, path_type=Path), required=False)
+@click.option(
+    "--repo-path",
+    "-r",
+    type=click.Path(exists=True, file_okay=False, path_type=Path),
+    default=None,
+    help="Path to repository root (default: current directory or path argument)",
+)
+def mcp_server(path: Path, repo_path: Path):
+    """Start RepoGenome MCP server.
+    
+    The MCP server exposes RepoGenome as MCP resources and tools for AI agents.
+    It runs on stdio and communicates via the Model Context Protocol.
+    """
+    try:
+        from repogenome.mcp.server import RepoGenomeMCPServer
+
+        # Determine repo path
+        if repo_path:
+            target_path = Path(repo_path).resolve()
+        elif path:
+            target_path = Path(path).resolve()
+        else:
+            target_path = Path.cwd()
+
+        if not target_path.exists() or not target_path.is_dir():
+            print_error(f"Invalid repository path: {target_path}")
+            raise click.Abort()
+
+        console.print(f"[bold]Starting RepoGenome MCP server for:[/bold] {target_path}")
+        console.print("[yellow]Server running on stdio (use with MCP client)[/yellow]")
+
+        # Create and run server
+        server = RepoGenomeMCPServer(target_path)
+        server.run_sync()
+
+    except ImportError as e:
+        print_error(f"MCP SDK not available: {e}")
+        console.print("Install MCP SDK with: pip install mcp>=0.9.0")
+        raise click.Abort()
+    except Exception as e:
+        print_error(f"{e}")
+        if "--verbose" in sys.argv or "-v" in sys.argv:
+            import traceback
+            console.print(traceback.format_exc())
         raise click.Abort()
 
 

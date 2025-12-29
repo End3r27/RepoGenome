@@ -104,7 +104,7 @@ The `repogenome.json` file contains the following sections:
     "repo_hash": "a8f3c1...",
     "languages": ["Python", "TypeScript", "Java", "Go", "Rust"],
     "frameworks": ["FastAPI", "React"],
-    "repogenome_version": "0.1.0"
+    "repogenome_version": "0.6.0"
   }
 }
 ```
@@ -354,6 +354,173 @@ To add support for a new programming language:
 ## License
 
 MIT License - see LICENSE file for details.
+
+## MCP Server
+
+RepoGenome can run as a Model Context Protocol (MCP) server, exposing repository knowledge as MCP resources and tools for AI agents.
+
+### Starting the MCP Server
+
+```bash
+repogenome mcp-server /path/to/repository
+```
+
+The server runs on stdio and communicates via the MCP protocol. Configure it in your MCP client to use RepoGenome resources and tools.
+
+### MCP Resources
+
+- **`repogenome://current`** - Full, up-to-date repository genome (JSON)
+- **`repogenome://summary`** - Fast boot context (summary section only)
+- **`repogenome://diff`** - Changes since last update
+
+### MCP Tools
+
+- **`repogenome.scan`** - Generate or regenerate RepoGenome
+  - Parameters: `scope` (full/structure/flows/history), `incremental` (boolean)
+  
+- **`repogenome.query`** - Query RepoGenome graph
+  - Parameters: `query` (string), `format` (json/graph)
+  - Supports natural language queries: "find all nodes related to authentication"
+  
+- **`repogenome.impact`** - Simulate impact of proposed changes
+  - Parameters: `affected_nodes` (array), `operation` (modify/delete/add)
+  - Returns: Risk score, affected flows, requires_approval flag
+  
+- **`repogenome.update`** - Incrementally update genome after code changes
+  - Parameters: `added_nodes`, `removed_nodes`, `updated_edges`, `reason`
+  - **Mandatory**: Must be called after any code edits
+  
+- **`repogenome.validate`** - Ensure RepoGenome matches repo state
+  - Returns: Validation result with consistency checks
+
+### Agent Contract (MCP)
+
+When using RepoGenome via MCP, agents must follow these rules:
+
+1. **Load `repogenome://current` at session start** - Always read the genome first
+2. **Cite RepoGenome when reasoning** - Reference specific nodes/edges when making claims
+3. **Use `repogenome.impact` before edits** - Check impact before modifying code
+4. **Call `repogenome.update` after edits** - Keep genome current after changes
+5. **Refuse actions if validation fails** - Stop if `repogenome.validate` fails
+
+The MCP server enforces these rules through contract middleware.
+
+### Configuring MCP Server with Coding Agents
+
+#### Cursor
+
+1. Open Cursor Settings (File → Preferences → Settings)
+2. Navigate to "MCP Servers" or "Model Context Protocol"
+3. Add RepoGenome server configuration:
+
+```json
+{
+  "mcpServers": {
+    "repogenome": {
+      "command": "repogenome",
+      "args": ["mcp-server", "${workspaceFolder}"],
+      "env": {}
+    }
+  }
+}
+```
+
+4. Restart Cursor to load the MCP server
+5. The RepoGenome resources and tools will be available in the AI chat
+
+**Usage in Cursor:**
+- Ask: "Load repogenome://current to understand the codebase structure"
+- Query: "Use repogenome.query to find all authentication-related functions"
+- Before editing: "Check impact with repogenome.impact for nodes: auth.login_user"
+- After editing: "Update genome with repogenome.update"
+
+#### Claude Desktop (Claude Code)
+
+1. Open Claude Desktop settings
+2. Navigate to MCP configuration (usually in `~/.config/claude-desktop/mcp.json` or similar)
+3. Add RepoGenome server:
+
+```json
+{
+  "mcpServers": {
+    "repogenome": {
+      "command": "repogenome",
+      "args": ["mcp-server"],
+      "cwd": "/path/to/your/repository"
+    }
+  }
+}
+```
+
+4. Restart Claude Desktop
+5. Claude will have access to RepoGenome resources and tools
+
+**Usage with Claude:**
+- Claude automatically loads `repogenome://summary` for quick context
+- Use tools via natural language: "What functions call auth.login_user?"
+- Impact analysis: "What breaks if I modify db.connect?"
+
+#### Qwen Code
+
+1. Open Qwen Code settings
+2. Find MCP configuration section
+3. Add server configuration:
+
+```json
+{
+  "mcp": {
+    "servers": {
+      "repogenome": {
+        "command": "repogenome",
+        "args": ["mcp-server"],
+        "workingDirectory": "${workspaceRoot}"
+      }
+    }
+  }
+}
+```
+
+4. Restart Qwen Code
+5. Qwen will use RepoGenome for code understanding
+
+**Usage with Qwen:**
+- Qwen reads `repogenome://summary` for fast boot
+- Deep queries use `repogenome.query` on demand
+- Updates genome automatically after code changes
+
+#### Generic MCP Client Configuration
+
+For any MCP-compatible client, use this configuration:
+
+```json
+{
+  "mcpServers": {
+    "repogenome": {
+      "command": "repogenome",
+      "args": ["mcp-server", "/absolute/path/to/repository"],
+      "env": {
+        "REPOGENOME_REPO_PATH": "/absolute/path/to/repository"
+      }
+    }
+  }
+}
+```
+
+**Environment Variables:**
+- `REPOGENOME_REPO_PATH`: Repository root path (if not provided as argument)
+
+**Verifying MCP Server Connection:**
+
+1. Check server is running: The MCP client should show RepoGenome in available servers
+2. Test resources: Try loading `repogenome://summary`
+3. Test tools: Call `repogenome.validate` to verify connection
+
+**Troubleshooting:**
+
+- **Server not found**: Ensure `repogenome` is in your PATH (`pip install -e .`)
+- **Permission errors**: Check repository path is accessible
+- **No genome found**: Run `repogenome generate` first to create initial genome
+- **Connection timeout**: Verify MCP client supports stdio servers
 
 ## Agent Contract
 

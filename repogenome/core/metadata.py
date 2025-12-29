@@ -166,6 +166,6 @@ def extract_metadata(repo_path: Path) -> Metadata:
         repo_hash=repo_hash,
         languages=languages,
         frameworks=frameworks,
-        repogenome_version="0.1.0",
+        repogenome_version="0.6.0",
     )
 

@@ -1,21 +1,59 @@
-# RepoGenome
+<div align="center">
 
-🧬 **Unified Repository Intelligence Artifact Generator**
+[![Version](https://img.shields.io/badge/version-0.6.0-blue.svg?style=for-the-badge&logo=github)](https://github.com/End3r27/RepoGenome/releases)
+[![License](https://img.shields.io/badge/license-MIT-green.svg?style=for-the-badge)](LICENSE)
+[![Python](https://img.shields.io/badge/python-3.8+-blue.svg?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/downloads/)
+[![Stars](https://img.shields.io/github/stars/End3r27/RepoGenome?style=for-the-badge&logo=github&color=yellow)](https://github.com/End3r27/RepoGenome/stargazers)
+[![Forks](https://img.shields.io/github/forks/End3r27/RepoGenome?style=for-the-badge&logo=github&color=blue)](https://github.com/End3r27/RepoGenome/network/members)
+[![Issues](https://img.shields.io/github/issues/End3r27/RepoGenome?style=for-the-badge&logo=github&color=orange)](https://github.com/End3r27/RepoGenome/issues)
+[![Contributors](https://img.shields.io/github/contributors/End3r27/RepoGenome?style=for-the-badge&logo=github&color=purple)](https://github.com/End3r27/RepoGenome/graphs/contributors)
 
-RepoGenome.json is a continuously evolving, machine-readable knowledge organism that encodes the structure, behavior, intent, and history of a codebase.
+</div>
 
-## Overview
+---
+
+<div align="center">
+
+# 🧬 RepoGenome
+
+### Unified Repository Intelligence Artifact Generator
+
+*A continuously evolving, machine-readable knowledge organism that encodes the structure, behavior, intent, and history of your codebase.*
+
+[Features](#-features) • [Installation](#-installation) • [Quick Start](#-quick-start) • [Documentation](#-documentation) • [Contributing](#-contributing)
+
+</div>
+
+---
+
+## ✨ Features
 
 RepoGenome generates a comprehensive JSON artifact (`repogenome.json`) that combines multiple analysis perspectives:
 
-- **RepoSpider**: Structural graph (files, symbols, dependencies)
-- **FlowWeaver**: Runtime execution paths and side effects
-- **IntentAtlas**: Domain concepts and responsibilities
-- **ChronoMap**: Temporal evolution and churn analysis
-- **TestGalaxy**: Test coverage analysis (optional)
-- **ContractLens**: Public API contract analysis
+- **🔍 RepoSpider** - Structural graph analysis (files, symbols, dependencies)
+- **🌊 FlowWeaver** - Runtime execution paths and side effects tracking
+- **🗺️ IntentAtlas** - Domain concepts and responsibility mapping
+- **⏱️ ChronoMap** - Temporal evolution and churn analysis
+- **🧪 TestGalaxy** - Test coverage analysis (optional)
+- **📋 ContractLens** - Public API contract analysis
 
-## Installation
+**Key Capabilities:**
+- **Multi-Language Support** - Analyzes code in 9+ programming languages
+- **Comprehensive File Type Coverage** - Supports code, documentation, config, web, and data files
+- **Cross-Language Analysis** - Builds unified graphs across all languages in a repository
+- **Incremental Updates** - Efficient updates by analyzing only changed files
+- **Platform Compatibility** - Works on Windows, macOS, and Linux with platform-specific optimizations
+- **Extensible Architecture** - Easy to add support for new languages and file types
+- **MCP Server Integration** - Expose repository knowledge to AI agents via Model Context Protocol
+
+## 📥 Installation
+
+### Prerequisites
+
+- Python 3.8 or higher
+- Git (for repository analysis)
+
+### Install from Source
 
 ```bash
 git clone https://github.com/End3r27/RepoGenome
@@ -23,16 +61,14 @@ cd RepoGenome
 pip install -e .
 ```
 
-### Requirements
+### Optional Dependencies
 
-- Python 3.8+
-- Git (for repository analysis)
-- PyYAML (for YAML file analysis, included in dependencies)
+For enhanced TypeScript/JavaScript analysis:
+```bash
+pip install tree-sitter-typescript
+```
 
-Optional dependencies:
-- tree-sitter and tree-sitter-typescript (for enhanced TypeScript/JavaScript analysis)
-
-## Quick Start
+## 🚀 Quick Start
 
 ### CLI Usage
 
@@ -44,31 +80,23 @@ repogenome generate /path/to/repository
 
 This creates a `repogenome.json` file in the repository root.
 
-Generate with debug logging:
+**Additional CLI Commands:**
 
 ```bash
+# Generate with debug logging
 repogenome generate /path/to/repository --log debug
-```
 
-**Note for macOS users**: RepoGenome automatically uses subprocess-based git operations on macOS to avoid hanging issues. To force GitPython usage, set `REPOGENOME_USE_GITPYTHON=true`.
-
-Update an existing genome incrementally:
-
-```bash
+# Update an existing genome incrementally
 repogenome update /path/to/repository
-```
 
-Validate a genome file:
-
-```bash
+# Validate a genome file
 repogenome validate repogenome.json
-```
 
-Compare two genomes:
-
-```bash
+# Compare two genomes
 repogenome diff old_genome.json new_genome.json
 ```
+
+> **Note for macOS users**: RepoGenome automatically uses subprocess-based git operations on macOS to avoid hanging issues. To force GitPython usage, set `REPOGENOME_USE_GITPYTHON=true`.
 
 ### Library Usage
 
@@ -92,11 +120,37 @@ print(f"Total nodes: {len(genome.genome.nodes)}")
 print(f"Total edges: {len(genome.genome.edges)}")
 ```
 
-## RepoGenome Schema
+### Incremental Updates
+
+RepoGenome supports incremental updates to avoid full regeneration:
+
+```python
+from pathlib import Path
+from repogenome import RepoGenomeGenerator
+
+# Load existing genome
+genome = Genome.load("repogenome.json")
+
+# Update incrementally (only analyzes changed files)
+generator = RepoGenomeGenerator(repo_path="./myproject")
+updated_genome = generator.generate(
+    incremental=True, 
+    existing_genome_path=Path("repogenome.json")
+)
+
+# Save updated genome
+updated_genome.save("repogenome.json")
+```
+
+## 📚 Documentation
+
+### RepoGenome Schema
 
 The `repogenome.json` file contains the following sections:
 
-### Metadata
+<details>
+<summary><b>Metadata</b> - Repository and generation information</summary>
+
 ```json
 {
   "metadata": {
@@ -109,8 +163,11 @@ The `repogenome.json` file contains the following sections:
 }
 ```
 
-### Summary
-High-level overview for quick agent boot:
+</details>
+
+<details>
+<summary><b>Summary</b> - High-level overview for quick agent boot</summary>
+
 ```json
 {
   "summary": {
@@ -123,8 +180,11 @@ High-level overview for quick agent boot:
 }
 ```
 
-### Nodes
-Every meaningful entity in the codebase:
+</details>
+
+<details>
+<summary><b>Nodes</b> - Every meaningful entity in the codebase</summary>
+
 ```json
 {
   "nodes": {
@@ -140,8 +200,11 @@ Every meaningful entity in the codebase:
 }
 ```
 
-### Edges
-Relationships between nodes:
+</details>
+
+<details>
+<summary><b>Edges</b> - Relationships between nodes</summary>
+
 ```json
 {
   "edges": [
@@ -154,8 +217,11 @@ Relationships between nodes:
 }
 ```
 
-### Flows
-Runtime execution paths:
+</details>
+
+<details>
+<summary><b>Flows</b> - Runtime execution paths</summary>
+
 ```json
 {
   "flows": [
@@ -169,8 +235,11 @@ Runtime execution paths:
 }
 ```
 
-### Concepts
-Domain groupings:
+</details>
+
+<details>
+<summary><b>Concepts</b> - Domain groupings</summary>
+
 ```json
 {
   "concepts": {
@@ -182,8 +251,11 @@ Domain groupings:
 }
 ```
 
-### History
-Temporal evolution data:
+</details>
+
+<details>
+<summary><b>History</b> - Temporal evolution data</summary>
+
 ```json
 {
   "history": {
@@ -196,8 +268,11 @@ Temporal evolution data:
 }
 ```
 
-### Risk
-Risk assessment per node:
+</details>
+
+<details>
+<summary><b>Risk</b> - Risk assessment per node</summary>
+
 ```json
 {
   "risk": {
@@ -209,8 +284,11 @@ Risk assessment per node:
 }
 ```
 
-### Contracts
-Public API contracts:
+</details>
+
+<details>
+<summary><b>Contracts</b> - Public API contracts</summary>
+
 ```json
 {
   "contracts": {
@@ -222,7 +300,9 @@ Public API contracts:
 }
 ```
 
-## Architecture
+</details>
+
+## 🏗️ Architecture
 
 RepoGenome uses a modular architecture with pluggable subsystems:
 
@@ -263,11 +343,12 @@ RepoGenome includes specialized analyzers for different file types:
 
 All analyzers follow a consistent interface and return structured data that is integrated into the unified RepoGenome graph.
 
-## Language Support
+## 🌐 Language Support
 
 RepoGenome provides comprehensive structural analysis for a wide range of programming languages and file types:
 
 ### Programming Languages (Full Structural Analysis)
+
 - **Python** - Functions, classes, imports, call graphs, entry points
 - **TypeScript/JavaScript** - Functions, classes, imports, API routes
 - **Java** - Classes, methods, packages, imports, entry points
@@ -279,6 +360,7 @@ RepoGenome provides comprehensive structural analysis for a wide range of progra
 - **PHP** - Classes, functions, namespaces, use statements
 
 ### File Type Analyzers
+
 - **Markdown** - Headings, links, code blocks, images, lists
 - **JSON** - Structure, keys, nested data
 - **YAML** - Structure, keys, anchors
@@ -288,6 +370,7 @@ RepoGenome provides comprehensive structural analysis for a wide range of progra
 - **SQL** - Queries, tables, columns, joins, views, procedures
 
 ### Additional File Types
+
 RepoGenome also detects and processes many other file types including:
 - Configuration files: `.toml`, `.xml`, `.ini`, `.cfg`
 - Documentation: `.rst`, `.txt`
@@ -296,66 +379,7 @@ RepoGenome also detects and processes many other file types including:
 
 All analyzers extract structured information including functions, classes, imports, and relationships, enabling comprehensive cross-language repository analysis.
 
-## Incremental Updates
-
-RepoGenome supports incremental updates to avoid full regeneration:
-
-```python
-# Load existing genome
-genome = RepoGenome.load("repogenome.json")
-
-# Update incrementally (only analyzes changed files)
-generator = RepoGenomeGenerator(repo_path="./myproject")
-updated_genome = generator.generate(incremental=True, existing_genome_path=Path("repogenome.json"))
-
-# Save updated genome
-updated_genome.save("repogenome.json")
-```
-
-## Features
-
-- **Multi-Language Support**: Analyzes code in 9+ programming languages
-- **Comprehensive File Type Coverage**: Supports code, documentation, config, web, and data files
-- **Cross-Language Analysis**: Builds unified graphs across all languages in a repository
-- **Incremental Updates**: Efficient updates by analyzing only changed files
-- **Platform Compatibility**: Works on Windows, macOS, and Linux with platform-specific optimizations
-- **Extensible Architecture**: Easy to add support for new languages and file types
-
-## Troubleshooting
-
-### macOS Git Hang Issue
-
-If RepoGenome hangs on macOS when using GitPython, it will automatically fall back to subprocess-based git operations. This is handled transparently. To force GitPython usage (not recommended on macOS), set:
-
-```bash
-export REPOGENOME_USE_GITPYTHON=true
-```
-
-### Large Repositories
-
-For very large repositories, consider:
-- Using incremental updates instead of full generation
-- Excluding specific subsystems if not needed
-- Processing specific file types only
-
-## Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-### Adding New Language Support
-
-To add support for a new programming language:
-
-1. Create a new analyzer in `repogenome/analyzers/<language>/`
-2. Implement the analyzer following the pattern of existing analyzers
-3. Add the language handler in `repogenome/subsystems/repospider.py`
-4. Update language detection in `repogenome/core/metadata.py`
-
-## License
-
-MIT License - see LICENSE file for details.
-
-## MCP Server
+## 🔌 MCP Server
 
 RepoGenome can run as a Model Context Protocol (MCP) server, exposing repository knowledge as MCP resources and tools for AI agents.
 
@@ -407,7 +431,8 @@ The MCP server enforces these rules through contract middleware.
 
 ### Configuring MCP Server with Coding Agents
 
-#### Cursor
+<details>
+<summary><b>Cursor</b> - Click to expand configuration</summary>
 
 1. Open Cursor Settings (File → Preferences → Settings)
 2. Navigate to "MCP Servers" or "Model Context Protocol"
@@ -434,7 +459,10 @@ The MCP server enforces these rules through contract middleware.
 - Before editing: "Check impact with repogenome.impact for nodes: auth.login_user"
 - After editing: "Update genome with repogenome.update"
 
-#### Claude Desktop (Claude Code)
+</details>
+
+<details>
+<summary><b>Claude Desktop (Claude Code)</b> - Click to expand configuration</summary>
 
 1. Open Claude Desktop settings
 2. Navigate to MCP configuration (usually in `~/.config/claude-desktop/mcp.json` or similar)
@@ -460,7 +488,10 @@ The MCP server enforces these rules through contract middleware.
 - Use tools via natural language: "What functions call auth.login_user?"
 - Impact analysis: "What breaks if I modify db.connect?"
 
-#### Qwen Code
+</details>
+
+<details>
+<summary><b>Qwen Code</b> - Click to expand configuration</summary>
 
 1. Open Qwen Code settings
 2. Find MCP configuration section
@@ -488,7 +519,10 @@ The MCP server enforces these rules through contract middleware.
 - Deep queries use `repogenome.query` on demand
 - Updates genome automatically after code changes
 
-#### Generic MCP Client Configuration
+</details>
+
+<details>
+<summary><b>Generic MCP Client Configuration</b> - Click to expand</summary>
 
 For any MCP-compatible client, use this configuration:
 
@@ -522,7 +556,9 @@ For any MCP-compatible client, use this configuration:
 - **No genome found**: Run `repogenome generate` first to create initial genome
 - **Connection timeout**: Verify MCP client supports stdio servers
 
-## Agent Contract
+</details>
+
+### Agent Contract
 
 Any agent using RepoGenome should follow these rules:
 
@@ -532,3 +568,91 @@ Any agent using RepoGenome should follow these rules:
 
 Failure to follow these rules leads to hallucination and incorrect behavior.
 
+## 🧪 Testing
+
+RepoGenome includes a test suite using pytest. To run tests:
+
+```bash
+# Install development dependencies
+pip install -e ".[dev]"
+
+# Run all tests
+pytest
+
+# Run with coverage
+pytest --cov=repogenome --cov-report=html
+```
+
+## 🔧 Troubleshooting
+
+### macOS Git Hang Issue
+
+If RepoGenome hangs on macOS when using GitPython, it will automatically fall back to subprocess-based git operations. This is handled transparently. To force GitPython usage (not recommended on macOS), set:
+
+```bash
+export REPOGENOME_USE_GITPYTHON=true
+```
+
+### Large Repositories
+
+For very large repositories, consider:
+- Using incremental updates instead of full generation
+- Excluding specific subsystems if not needed
+- Processing specific file types only
+
+## 🤝 Contributing
+
+Contributions are welcome! We appreciate your help in making RepoGenome better.
+
+### How to Contribute
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Make your changes
+4. Add tests if applicable
+5. Ensure all tests pass (`pytest`)
+6. Commit your changes (`git commit -m 'Add amazing feature'`)
+7. Push to the branch (`git push origin feature/amazing-feature`)
+8. Open a Pull Request
+
+### Adding New Language Support
+
+To add support for a new programming language:
+
+1. Create a new analyzer in `repogenome/analyzers/<language>/`
+2. Implement the analyzer following the pattern of existing analyzers
+3. Add the language handler in `repogenome/subsystems/repospider.py`
+4. Update language detection in `repogenome/core/metadata.py`
+5. Add tests for the new analyzer
+6. Update this README with the new language
+
+## 🛣️ Roadmap
+
+Future enhancements and planned features:
+
+- [ ] Enhanced visualization tools for genome exploration
+- [ ] Support for additional programming languages
+- [ ] Real-time genome updates via file watchers
+- [ ] Integration with popular IDEs and editors
+- [ ] Cloud-based genome storage and sharing
+- [ ] Advanced query language for genome exploration
+- [ ] Performance optimizations for very large repositories
+- [ ] Machine learning models for code understanding
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## ⭐ Show Your Support
+
+If you find RepoGenome useful, please consider giving it a star! It helps others discover the project.
+
+---
+
+<div align="center">
+
+**Made with ❤️ by the RepoGenome Contributors**
+
+[Report Bug](https://github.com/End3r27/RepoGenome/issues) • [Request Feature](https://github.com/End3r27/RepoGenome/issues) • [Documentation](#-documentation)
+
+</div>

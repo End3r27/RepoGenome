@@ -76,13 +76,35 @@ class RepoGenomeMCPServer:
         @self.server.read_resource()
         async def read_resource(uri: str) -> str:
             """Read resource by URI."""
+            # Convert URI to string if it's not already (handles AnyUrl objects from Pydantic)
+            uri_str = str(uri) if not isinstance(uri, str) else uri
+            
+            # Normalize URI for contract marking
+            normalized_uri = uri_str.strip().lower()
             # Mark genome as loaded if current is accessed
-            if uri == "repogenome://current":
+            if normalized_uri == "repogenome://current":
                 self.contract.mark_genome_loaded()
 
-            content = self.resources.read_resource(uri)
+            content, error = self.resources.read_resource(uri_str)
+            if error is not None:
+                # Format error as JSON with detailed information
+                error_message = (
+                    f"Resource not available: {uri}\n"
+                    f"Error: {error.get('error', 'Unknown error')}\n"
+                    f"Reason: {error.get('reason', 'Unknown reason')}\n"
+                    f"Action: {error.get('action', 'No action specified')}"
+                )
+                raise ValueError(error_message)
+            
             if content is None:
-                raise ValueError(f"Resource not found: {uri}")
+                # Fallback error (should not happen with new implementation)
+                raise ValueError(
+                    f"Resource not found: {uri}\n"
+                    "The resource could not be loaded. "
+                    "This may indicate the genome file is missing, corrupted, or invalid. "
+                    "Run repogenome.scan to generate or regenerate the genome."
+                )
+            
             return content
 
     def _register_tools(self):

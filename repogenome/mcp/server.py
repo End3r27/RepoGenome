@@ -370,6 +370,122 @@ class RepoGenomeMCPServer:
                         },
                     },
                 ),
+                Tool(
+                    name="repogenome.batch",
+                    description="Batch operations: get multiple nodes or dependencies in one call",
+                    inputSchema={
+                        "type": "object",
+                        "properties": {
+                            "operation": {
+                                "type": "string",
+                                "enum": ["get_nodes", "dependencies"],
+                                "description": "Batch operation type",
+                            },
+                            "node_ids": {
+                                "type": "array",
+                                "items": {"type": "string"},
+                                "description": "List of node IDs",
+                            },
+                            "fields": {
+                                "type": ["array", "string"],
+                                "items": {"type": "string"},
+                                "description": "Field selection (for get_nodes)",
+                            },
+                            "include_edges": {
+                                "type": "boolean",
+                                "default": False,
+                                "description": "Include edge information (for get_nodes)",
+                            },
+                            "direction": {
+                                "type": "string",
+                                "enum": ["incoming", "outgoing", "both"],
+                                "default": "both",
+                                "description": "Direction of dependencies (for dependencies)",
+                            },
+                            "depth": {
+                                "type": "integer",
+                                "default": 1,
+                                "description": "Maximum depth (for dependencies)",
+                            },
+                        },
+                        "required": ["operation", "node_ids"],
+                    },
+                ),
+                Tool(
+                    name="repogenome.compare",
+                    description="Compare two nodes or node with previous version",
+                    inputSchema={
+                        "type": "object",
+                        "properties": {
+                            "node_id1": {
+                                "type": "string",
+                                "description": "First node ID",
+                            },
+                            "node_id2": {
+                                "type": "string",
+                                "description": "Second node ID (optional if compare_with_previous=True)",
+                            },
+                            "compare_with_previous": {
+                                "type": "boolean",
+                                "default": False,
+                                "description": "Compare node_id1 with previous genome version",
+                            },
+                        },
+                        "required": ["node_id1"],
+                    },
+                ),
+                Tool(
+                    name="repogenome.filter",
+                    description="Advanced filtering with complex expressions (AND/OR/NOT, ranges, regex)",
+                    inputSchema={
+                        "type": "object",
+                        "properties": {
+                            "filters": {
+                                "type": "object",
+                                "description": "Filter dictionary with AND/OR/NOT logic, range queries, regex patterns",
+                            },
+                            "limit": {
+                                "type": "integer",
+                                "default": 100,
+                                "description": "Maximum number of results",
+                            },
+                            "fields": {
+                                "type": ["array", "string"],
+                                "items": {"type": "string"},
+                                "description": "Field selection",
+                            },
+                        },
+                        "required": ["filters"],
+                    },
+                ),
+                Tool(
+                    name="repogenome.find_path",
+                    description="Find paths between two nodes",
+                    inputSchema={
+                        "type": "object",
+                        "properties": {
+                            "from_node": {
+                                "type": "string",
+                                "description": "Source node ID",
+                            },
+                            "to_node": {
+                                "type": "string",
+                                "description": "Target node ID",
+                            },
+                            "max_depth": {
+                                "type": "integer",
+                                "default": 10,
+                                "description": "Maximum path length",
+                            },
+                            "edge_types": {
+                                "type": "array",
+                                "items": {"type": "string"},
+                                "description": "Optional filter for edge types to consider",
+                            },
+                        },
+                        "required": ["from_node", "to_node"],
+                    },
+                ),
             ]
         # Store for diagnostics
         self._registered_tools = tool_list
@@ -472,6 +588,47 @@ class RepoGenomeMCPServer:
                     result = self.tools.export(
                         format=arguments.get("format", "json"),
                         output_path=arguments.get("output_path"),
+                    )
+
+                elif name == "repogenome.batch":
+                    operation = arguments.get("operation")
+                    node_ids = arguments.get("node_ids", [])
+                    
+                    if operation == "get_nodes":
+                        result = self.tools.batch_get_nodes(
+                            node_ids=node_ids,
+                            fields=arguments.get("fields"),
+                            include_edges=arguments.get("include_edges", False),
+                        )
+                    elif operation == "dependencies":
+                        result = self.tools.batch_dependencies(
+                            node_ids=node_ids,
+                            direction=arguments.get("direction", "both"),
+                            depth=arguments.get("depth", 1),
+                        )
+                    else:
+                        result = {"error": f"Unknown batch operation: {operation}"}
+
+                elif name == "repogenome.compare":
+                    result = self.tools.compare(
+                        node_id1=arguments.get("node_id1", ""),
+                        node_id2=arguments.get("node_id2"),
+                        compare_with_previous=arguments.get("compare_with_previous", False),
+                    )
+
+                elif name == "repogenome.filter":
+                    result = self.tools.filter_nodes(
+                        filters=arguments.get("filters", {}),
+                        limit=arguments.get("limit", 100),
+                        fields=arguments.get("fields"),
+                    )
+
+                elif name == "repogenome.find_path":
+                    result = self.tools.find_path(
+                        from_node=arguments.get("from_node", ""),
+                        to_node=arguments.get("to_node", ""),
+                        max_depth=arguments.get("max_depth", 10),
+                        edge_types=arguments.get("edge_types"),
                     )
 
                 else:

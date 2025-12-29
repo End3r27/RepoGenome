@@ -1,5 +1,6 @@
 """Main generator orchestrator for RepoGenome."""
 
+import logging
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
@@ -26,6 +27,7 @@ class RepoGenomeGenerator:
         self,
         repo_path: Path,
         enabled_subsystems: Optional[List[str]] = None,
+        logger: Optional[logging.Logger] = None,
     ):
         """
         Initialize generator.
@@ -34,8 +36,10 @@ class RepoGenomeGenerator:
             repo_path: Path to repository root
             enabled_subsystems: Optional list of subsystem names to enable.
                                If None, enables all available subsystems.
+            logger: Optional logger instance.
         """
         self.repo_path = Path(repo_path).resolve()
+        self.logger = logger or logging.getLogger(__name__)
         self.subsystems: Dict[str, Subsystem] = {}
 
         # Register all available subsystems
@@ -74,13 +78,17 @@ class RepoGenomeGenerator:
         Returns:
             RepoGenome object
         """
+        self.logger.info("Starting genome generation")
         if incremental and existing_genome_path:
+            self.logger.info("Performing incremental generation")
             return self._generate_incremental(existing_genome_path, progress)
         else:
+            self.logger.info("Performing full generation")
             return self._generate_full(progress)
 
     def _generate_full(self, progress: Optional[Any] = None) -> RepoGenome:
         """Generate complete genome from scratch."""
+        self.logger.info("Extracting metadata")
         # Extract metadata
         metadata = extract_metadata(self.repo_path)
 

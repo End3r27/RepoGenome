@@ -8,7 +8,7 @@ from typing import Optional, Tuple
 from repogenome.core.schema import RepoGenome
 from repogenome.utils.git_utils import get_repo_hash
 
-logger = logging.getLogger(__name__)
+logger: logging.Logger = logging.getLogger(__name__)
 
 
 class GenomeStorage:

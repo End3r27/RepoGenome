@@ -1,6 +1,6 @@
 <div align="center">
 
-[![Version](https://img.shields.io/badge/version-0.7.0-blue.svg?style=for-the-badge&logo=github)](https://github.com/End3r27/RepoGenome/releases)
+[![Version](https://img.shields.io/badge/version-0.8.0-blue.svg?style=for-the-badge&logo=github)](https://github.com/End3r27/RepoGenome/releases)
 [![License](https://img.shields.io/badge/license-MIT-green.svg?style=for-the-badge)](LICENSE)
 [![Python](https://img.shields.io/badge/python-3.8+-blue.svg?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/downloads/)
 [![Stars](https://img.shields.io/github/stars/End3r27/RepoGenome?style=for-the-badge&logo=github&color=yellow)](https://github.com/End3r27/RepoGenome/stargazers)
@@ -30,6 +30,16 @@
 
 RepoGenome generates a comprehensive JSON artifact (`repogenome.json`) that combines multiple analysis perspectives:
 
+### 🆕 Recent Enhancements (v0.8.0)
+
+- **Enhanced MCP Tools** - 5 new tools: `get_node`, `search`, `dependencies`, `stats`, and `export`
+- **New MCP Resources** - `repogenome://stats` and `repogenome://nodes/{node_id}` for detailed access
+- **Query Improvements** - Pagination, advanced filtering with AND/OR logic, and automatic result caching
+- **Multiple Export Formats** - Export to CSV, Neo4j Cypher, and PlantUML in addition to GraphML and DOT
+- **Intelligent Caching** - Smart cache invalidation with statistics and size management
+- **Enhanced Error Handling** - Context-aware error messages with recovery suggestions
+- **Performance Optimizations** - Chunked parallel processing, query caching, and smart incremental updates
+
 - **🔍 RepoSpider** - Structural graph analysis (files, symbols, dependencies)
 - **🌊 FlowWeaver** - Runtime execution paths and side effects tracking
 - **🗺️ IntentAtlas** - Domain concepts and responsibility mapping
@@ -41,15 +51,20 @@ RepoGenome generates a comprehensive JSON artifact (`repogenome.json`) that comb
 - **Multi-Language Support** - Analyzes code in 9+ programming languages
 - **Comprehensive File Type Coverage** - Supports code, documentation, config, web, and data files
 - **Cross-Language Analysis** - Builds unified graphs across all languages in a repository
-- **Incremental Updates** - Efficient updates by analyzing only changed files
+- **Incremental Updates** - Efficient updates by analyzing only changed files with smart subsystem selection
 - **Platform Compatibility** - Works on Windows, macOS, and Linux with platform-specific optimizations
 - **Extensible Architecture** - Easy to add support for new languages and file types
 - **MCP Server Integration** - Expose repository knowledge to AI agents via Model Context Protocol
-- **Context Optimization** - Compact modes, compression, and streaming for LLM-friendly output (new in v0.7.0)
-- **Advanced Query Language** - SQL-like and GraphQL-style queries for complex genome queries (new in v0.7.0)
-- **Graph Database Backend** - Optional SQLite backend for large repositories (new in v0.7.0)
-- **Watch Mode** - Auto-regenerate genome on file changes (new in v0.7.0)
-- **Progress Tracking** - Real-time progress bars for long-running operations (new in v0.7.0)
+- **Context Optimization** - Compact modes, compression, and streaming for LLM-friendly output
+- **Advanced Query Language** - SQL-like and GraphQL-style queries for complex genome queries
+- **Graph Database Backend** - Optional SQLite backend for large repositories
+- **Watch Mode** - Auto-regenerate genome on file changes
+- **Progress Tracking** - Real-time progress bars for long-running operations
+- **Multiple Export Formats** - Export to GraphML, DOT, CSV, Neo4j Cypher, and PlantUML
+- **Intelligent Caching** - Smart cache invalidation with statistics and size management
+- **Enhanced Error Handling** - Context-aware error messages with recovery suggestions
+- **Query Result Caching** - Automatic caching of query results for improved performance
+- **Parallel Processing** - Optimized parallel file processing with chunked operations
 
 ## 🤖 Using RepoGenome with AI Agents
 
@@ -150,10 +165,17 @@ Always use RepoGenome for codebase analysis:
 - `repogenome://current` - Full repository genome
 - `repogenome://summary` - Quick boot context (summary only)
 - `repogenome://diff` - Changes since last update
+- `repogenome://stats` - Repository statistics and metrics
+- `repogenome://nodes/{node_id}` - Individual node data with relationships
 
 **Available MCP Tools:**
 - `repogenome.scan` - Generate/regenerate genome
-- `repogenome.query` - Query genome graph (natural language supported)
+- `repogenome.query` - Query genome graph with pagination and advanced filtering
+- `repogenome.get_node` - Get detailed information about a specific node
+- `repogenome.search` - Advanced search with filters (type, language, file pattern)
+- `repogenome.dependencies` - Get dependency graph for a node
+- `repogenome.stats` - Get repository statistics and metrics
+- `repogenome.export` - Export genome to different formats (JSON, GraphML, DOT, CSV, Cypher, PlantUML)
 - `repogenome.impact` - Check change impact before modifying
 - `repogenome.update` - Update genome after code changes
 - `repogenome.validate` - Validate genome consistency
@@ -268,7 +290,7 @@ updated_genome = generator.generate(
 updated_genome.save("repogenome.json")
 ```
 
-### Advanced Features (v0.7.0+)
+### Advanced Features (v0.8.0+)
 
 #### Context Optimization
 
@@ -310,6 +332,34 @@ results = query.execute("{ nodes(type: function, criticality_gt: 0.8) { id, file
 results = query.execute("find all authentication functions")
 ```
 
+#### Query Improvements
+
+Enhanced query system with pagination, filtering, and caching:
+
+```python
+from repogenome.core.query import GenomeQuery
+
+query = GenomeQuery(genome)
+
+# Query with pagination
+results = query.query_nodes({"type": "function"})
+# Results can be paginated via MCP tools
+
+# Complex filters with AND/OR logic
+results = query.query_nodes({
+    "and": [
+        {"type": "function"},
+        {"or": [
+            {"language": "Python"},
+            {"language": "TypeScript"}
+        ]}
+    ]
+})
+
+# Query results are automatically cached for 5 minutes
+# Cache statistics available via cache.get_stats()
+```
+
 #### Graph Database Backend
 
 For large repositories, use SQLite backend for efficient storage and querying:
@@ -330,6 +380,68 @@ results = backend.query_nodes({"type": "function", "criticality__gt": 0.8})
 # Query edges
 edges = backend.query_edges(from_node="auth.login_user", edge_type="calls")
 ```
+
+#### Export Formats
+
+RepoGenome supports multiple export formats for different use cases:
+
+```python
+from repogenome.core.schema import RepoGenome
+from pathlib import Path
+
+genome = RepoGenome.load("repogenome.json")
+
+# Export to GraphML (for Cytoscape, yEd, etc.)
+from repogenome.export.graphml import export_graphml
+export_graphml(genome, Path("genome.graphml"))
+
+# Export to DOT (for Graphviz)
+from repogenome.export.dot import export_dot
+export_dot(genome, Path("genome.dot"))
+
+# Export to CSV (creates genome.nodes.csv and genome.edges.csv)
+from repogenome.mcp.tools import RepoGenomeTools
+from repogenome.mcp.storage import GenomeStorage
+storage = GenomeStorage(Path("."))
+tools = RepoGenomeTools(storage, ".")
+tools.export(format="csv", output_path="genome.csv")
+
+# Export to Neo4j Cypher (for graph database import)
+from repogenome.export.cypher import export_cypher
+export_cypher(genome, Path("genome.cypher"))
+
+# Export to PlantUML (for architecture diagrams)
+from repogenome.export.plantuml import export_plantuml
+export_plantuml(genome, Path("genome.puml"))
+```
+
+#### Performance Optimizations
+
+RepoGenome includes several performance optimizations:
+
+**Intelligent Caching:**
+- Automatic cache invalidation based on file changes
+- Size-based eviction (configurable max size, default 100MB)
+- Cache statistics (hit rate, size, file count)
+- Pattern-based invalidation for bulk operations
+
+**Chunked Parallel Processing:**
+- Large file sets are automatically processed in chunks
+- Memory-efficient processing for repositories with thousands of files
+- Progress tracking for long-running operations
+- Automatic worker count optimization
+
+**Query Result Caching:**
+- Query results are automatically cached for 5 minutes
+- Reduces redundant processing for repeated queries
+- Cache size is limited to prevent memory issues
+- Automatic cache eviction of oldest entries
+
+**Smart Incremental Updates:**
+- Only affected subsystems are re-analyzed based on change patterns
+- Change detection based on node types and file patterns
+- Reduces unnecessary re-analysis by up to 80%
+- Optimized for large codebases
 
 #### Security Analysis
 
@@ -374,7 +486,7 @@ The `repogenome.json` file contains the following sections:
     "repo_hash": "a8f3c1...",
     "languages": ["Python", "TypeScript", "Java", "Go", "Rust"],
     "frameworks": ["FastAPI", "React"],
-    "repogenome_version": "0.7.0"
+    "repogenome_version": "0.8.0"
   }
 }
 ```
@@ -612,15 +724,40 @@ The server runs on stdio and communicates via the MCP protocol. Configure it in 
 - **`repogenome://current`** - Full, up-to-date repository genome (JSON)
 - **`repogenome://summary`** - Fast boot context (summary section only)
 - **`repogenome://diff`** - Changes since last update
+- **`repogenome://stats`** - Repository statistics and metrics
+- **`repogenome://nodes/{node_id}`** - Individual node data with relationships
 
 ### MCP Tools
 
 - **`repogenome.scan`** - Generate or regenerate RepoGenome
   - Parameters: `scope` (full/structure/flows/history), `incremental` (boolean)
   
-- **`repogenome.query`** - Query RepoGenome graph
-  - Parameters: `query` (string), `format` (json/graph)
+- **`repogenome.query`** - Query RepoGenome graph with pagination and advanced filtering
+  - Parameters: `query` (string), `format` (json/graph), `page` (integer), `page_size` (integer), `filters` (object)
   - Supports natural language queries: "find all nodes related to authentication"
+  - Supports complex filters with AND/OR logic
+  - Results are paginated for large result sets
+  - Query results are cached for improved performance
+  
+- **`repogenome.get_node`** - Get detailed information about a specific node
+  - Parameters: `node_id` (string)
+  - Returns: Node details with incoming/outgoing edges, risk information, and relationships
+  
+- **`repogenome.search`** - Advanced search with multiple filters
+  - Parameters: `query` (string, optional), `node_type` (string, optional), `language` (string, optional), `file_pattern` (string, optional), `limit` (integer, default: 50)
+  - Supports wildcard patterns in file paths
+  - Returns filtered search results
+  
+- **`repogenome.dependencies`** - Get dependency graph for a node
+  - Parameters: `node_id` (string), `direction` (incoming/outgoing/both), `depth` (integer, default: 1)
+  - Returns: Dependency graph with configurable depth
+  
+- **`repogenome.stats`** - Get repository statistics and metrics
+  - Returns: Node counts by type/language, edge counts, average criticality, entry points, and more
+  
+- **`repogenome.export`** - Export genome to different formats
+  - Parameters: `format` (json/graphml/dot/csv/cypher/plantuml), `output_path` (string, optional)
+  - Supports multiple export formats for different use cases
   
 - **`repogenome.impact`** - Simulate impact of proposed changes
   - Parameters: `affected_nodes` (array), `operation` (modify/delete/add)
@@ -849,6 +986,11 @@ Future enhancements and planned features:
 - [x] Real-time genome updates via file watchers (✅ v0.7.0)
 - [x] Advanced query language for genome exploration (✅ v0.7.0)
 - [x] Performance optimizations for very large repositories (✅ v0.7.0)
+- [x] Enhanced MCP tools (get_node, search, dependencies, stats, export) (✅ v0.8.0)
+- [x] Multiple export formats (CSV, Cypher, PlantUML) (✅ v0.8.0)
+- [x] Intelligent caching with statistics (✅ v0.8.0)
+- [x] Query pagination and advanced filtering (✅ v0.8.0)
+- [x] Enhanced error handling with recovery suggestions (✅ v0.8.0)
 - [ ] Enhanced visualization tools for genome exploration
 - [ ] Support for additional programming languages
 - [ ] Integration with popular IDEs and editors (VS Code extension)

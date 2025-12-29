@@ -104,7 +104,7 @@ class GenomeMerger:
         subsystems: Dict[str, Any],
     ) -> List[str]:
         """
-        Determine which subsystems need re-analysis.
+        Determine which subsystems need re-analysis with smart selection.
 
         Args:
             affected_nodes: Set of affected node IDs
@@ -114,32 +114,70 @@ class GenomeMerger:
         Returns:
             List of subsystem names to update
         """
-        # If many nodes affected, update all subsystems
-        if len(affected_nodes) > len(old_genome.get("nodes", {})) * 0.5:
+        total_nodes = len(old_genome.get("nodes", {}))
+        affected_ratio = len(affected_nodes) / total_nodes if total_nodes > 0 else 1.0
+
+        # If many nodes affected (>50%), update all subsystems
+        if affected_ratio > 0.5:
             return list(subsystems.keys())
 
-        # Otherwise, update subsystems that depend on structure
+        # Analyze affected node types to determine which subsystems need updates
+        affected_types = set()
+        affected_files = set()
+        
+        for node_id in affected_nodes:
+            node_data = old_genome.get("nodes", {}).get(node_id, {})
+            node_type = node_data.get("type", "")
+            affected_types.add(node_type)
+            
+            file_path = node_data.get("file", "")
+            if file_path:
+                affected_files.add(file_path)
+
         subsystems_to_update = ["repospider"]  # Always update RepoSpider
 
-        # FlowWeaver depends on structure
+        # FlowWeaver: update if functions/classes changed or entry points affected
         if "flowweaver" in subsystems:
-            subsystems_to_update.append("flowweaver")
+            if any(t in affected_types for t in ["function", "class", "method"]):
+                subsystems_to_update.append("flowweaver")
+            # Check if entry points affected
+            entry_points = old_genome.get("summary", {}).get("entry_points", [])
+            if any(ep in affected_nodes for ep in entry_points):
+                subsystems_to_update.append("flowweaver")
 
-        # IntentAtlas depends on structure
+        # IntentAtlas: update if structure changed significantly
         if "intentatlas" in subsystems:
-            subsystems_to_update.append("intentatlas")
+            if affected_ratio > 0.1 or any(t in affected_types for t in ["class", "module"]):
+                subsystems_to_update.append("intentatlas")
 
-        # ContractLens depends on structure
+        # ContractLens: update if public APIs changed
         if "contractlens" in subsystems:
-            subsystems_to_update.append("contractlens")
+            # Check if any affected nodes are public
+            public_nodes = [
+                nid for nid in affected_nodes
+                if old_genome.get("nodes", {}).get(nid, {}).get("visibility") == "public"
+            ]
+            if public_nodes:
+                subsystems_to_update.append("contractlens")
 
-        # TestGalaxy depends on structure
+        # TestGalaxy: update if test files or tested code changed
         if "testgalaxy" in subsystems:
-            subsystems_to_update.append("testgalaxy")
+            test_files = [f for f in affected_files if "test" in f.lower() or "spec" in f.lower()]
+            if test_files or affected_ratio > 0.05:
+                subsystems_to_update.append("testgalaxy")
 
-        # ChronoMap only if files changed
+        # ChronoMap: always update if files changed (tracks history)
         if affected_nodes and "chronomap" in subsystems:
             subsystems_to_update.append("chronomap")
+
+        # Security: update if security-sensitive files changed
+        if "security" in subsystems:
+            security_files = [
+                f for f in affected_files
+                if any(keyword in f.lower() for keyword in ["auth", "security", "crypto", "password", "token"])
+            ]
+            if security_files:
+                subsystems_to_update.append("security")
 
         return subsystems_to_update
 

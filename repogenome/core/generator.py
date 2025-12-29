@@ -2,7 +2,7 @@
 
 import logging
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Union
 
 from repogenome.core.merger import GenomeMerger
 from repogenome.core.metadata import extract_metadata

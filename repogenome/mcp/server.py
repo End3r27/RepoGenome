@@ -149,6 +149,20 @@ class RepoGenomeMCPServer:
                                 "default": "json",
                                 "description": "Output format",
                             },
+                            "page": {
+                                "type": "integer",
+                                "default": 1,
+                                "description": "Page number (1-indexed)",
+                            },
+                            "page_size": {
+                                "type": "integer",
+                                "default": 50,
+                                "description": "Number of results per page",
+                            },
+                            "filters": {
+                                "type": "object",
+                                "description": "Additional filters (supports AND/OR logic)",
+                            },
                         },
                         "required": ["query"],
                     },
@@ -207,6 +221,99 @@ class RepoGenomeMCPServer:
                     description="Ensure RepoGenome matches repo state",
                     inputSchema={"type": "object", "properties": {}},
                 ),
+                Tool(
+                    name="repogenome.get_node",
+                    description="Get detailed information about a specific node",
+                    inputSchema={
+                        "type": "object",
+                        "properties": {
+                            "node_id": {
+                                "type": "string",
+                                "description": "Node ID to retrieve",
+                            },
+                        },
+                        "required": ["node_id"],
+                    },
+                ),
+                Tool(
+                    name="repogenome.search",
+                    description="Advanced search with filters (type, language, file pattern)",
+                    inputSchema={
+                        "type": "object",
+                        "properties": {
+                            "query": {
+                                "type": "string",
+                                "description": "Text search query",
+                            },
+                            "node_type": {
+                                "type": "string",
+                                "description": "Filter by node type (e.g., 'function', 'class', 'file')",
+                            },
+                            "language": {
+                                "type": "string",
+                                "description": "Filter by programming language",
+                            },
+                            "file_pattern": {
+                                "type": "string",
+                                "description": "File path pattern (supports wildcards)",
+                            },
+                            "limit": {
+                                "type": "integer",
+                                "default": 50,
+                                "description": "Maximum number of results",
+                            },
+                        },
+                    },
+                ),
+                Tool(
+                    name="repogenome.dependencies",
+                    description="Get dependency graph for a node",
+                    inputSchema={
+                        "type": "object",
+                        "properties": {
+                            "node_id": {
+                                "type": "string",
+                                "description": "Node ID to get dependencies for",
+                            },
+                            "direction": {
+                                "type": "string",
+                                "enum": ["incoming", "outgoing", "both"],
+                                "default": "both",
+                                "description": "Direction of dependencies",
+                            },
+                            "depth": {
+                                "type": "integer",
+                                "default": 1,
+                                "description": "Maximum depth to traverse (1 = direct dependencies only)",
+                            },
+                        },
+                        "required": ["node_id"],
+                    },
+                ),
+                Tool(
+                    name="repogenome.stats",
+                    description="Get repository statistics and metrics",
+                    inputSchema={"type": "object", "properties": {}},
+                ),
+                Tool(
+                    name="repogenome.export",
+                    description="Export genome to different formats via MCP",
+                    inputSchema={
+                        "type": "object",
+                        "properties": {
+                            "format": {
+                                "type": "string",
+                                "enum": ["json", "graphml", "dot", "csv", "cypher", "plantuml"],
+                                "default": "json",
+                                "description": "Export format",
+                            },
+                            "output_path": {
+                                "type": "string",
+                                "description": "Optional output path (default: genome location with format extension)",
+                            },
+                        },
+                    },
+                ),
             ]
 
         @self.server.call_tool()
@@ -236,6 +343,9 @@ class RepoGenomeMCPServer:
                     result = self.tools.query(
                         query=arguments.get("query", ""),
                         format=arguments.get("format", "json"),
+                        page=arguments.get("page", 1),
+                        page_size=arguments.get("page_size", 50),
+                        filters=arguments.get("filters"),
                     )
 
                 elif name == "repogenome.impact":
@@ -258,6 +368,36 @@ class RepoGenomeMCPServer:
                 elif name == "repogenome.validate":
                     result = self.tools.validate()
                     self.contract.update_validation_result(result)
+
+                elif name == "repogenome.get_node":
+                    result = self.tools.get_node(
+                        node_id=arguments.get("node_id", ""),
+                    )
+
+                elif name == "repogenome.search":
+                    result = self.tools.search(
+                        query=arguments.get("query"),
+                        node_type=arguments.get("node_type"),
+                        language=arguments.get("language"),
+                        file_pattern=arguments.get("file_pattern"),
+                        limit=arguments.get("limit", 50),
+                    )
+
+                elif name == "repogenome.dependencies":
+                    result = self.tools.dependencies(
+                        node_id=arguments.get("node_id", ""),
+                        direction=arguments.get("direction", "both"),
+                        depth=arguments.get("depth", 1),
+                    )
+
+                elif name == "repogenome.stats":
+                    result = self.tools.stats()
+
+                elif name == "repogenome.export":
+                    result = self.tools.export(
+                        format=arguments.get("format", "json"),
+                        output_path=arguments.get("output_path"),
+                    )
 
                 else:
                     result = {"error": f"Unknown tool: {name}"}

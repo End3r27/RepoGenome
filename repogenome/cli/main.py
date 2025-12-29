@@ -23,7 +23,7 @@ console = Console()
 
 
 @click.group()
-@click.version_option(version="0.7.0")
+@click.version_option(version="0.8.0")
 def main():
     """RepoGenome - Unified Repository Intelligence Artifact Generator."""
     pass
@@ -363,7 +363,7 @@ def init(output: Path):
 @click.option(
     "--format",
     "-f",
-    type=click.Choice(["graphml", "dot", "json"], case_sensitive=False),
+    type=click.Choice(["graphml", "dot", "json", "csv", "cypher", "plantuml"], case_sensitive=False),
     default="graphml",
     help="Export format",
 )
@@ -398,6 +398,27 @@ def export(genome: Path, format: str, output: Path):
         elif format_lower == "json":
             # JSON is already the default format, just copy/save
             loaded_genome.save(str(output))
+        elif format_lower == "csv":
+            from repogenome.mcp.tools import RepoGenomeTools
+            from repogenome.mcp.storage import GenomeStorage
+            
+            # Use the CSV export from tools
+            storage = GenomeStorage(genome.parent)
+            tools = RepoGenomeTools(storage, str(genome.parent))
+            # Temporarily set genome for export
+            storage._cached_genome = loaded_genome
+            result = tools.export(format="csv", output_path=str(output))
+            if "error" in result:
+                print_error(result["error"])
+                raise click.Abort()
+        elif format_lower == "cypher":
+            from repogenome.export.cypher import export_cypher
+
+            export_cypher(loaded_genome, output)
+        elif format_lower == "plantuml":
+            from repogenome.export.plantuml import export_plantuml
+
+            export_plantuml(loaded_genome, output)
         else:
             print_error(f"Unsupported format: {format}")
             raise click.Abort()

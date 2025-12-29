@@ -33,13 +33,14 @@ from repogenome.mcp.tools import RepoGenomeTools
 class RepoGenomeMCPServer:
     """MCP server for RepoGenome."""
 
-    def __init__(self, repo_path: Path, config: Optional[RepoGenomeConfig] = None):
+    def __init__(self, repo_path: Path, config: Optional[RepoGenomeConfig] = None, debug: bool = False):
         """
         Initialize MCP server.
 
         Args:
             repo_path: Path to repository root
             config: Optional configuration (None = load from file or use defaults)
+            debug: Enable debug mode with detailed diagnostics
         """
         if not MCP_AVAILABLE:
             raise ImportError(
@@ -48,33 +49,51 @@ class RepoGenomeMCPServer:
 
         self.repo_path = Path(repo_path).resolve()
         self.config = config or RepoGenomeConfig.load()
+        self.debug = debug
         self.storage = GenomeStorage(self.repo_path)
         self.resources = RepoGenomeResources(self.storage)
         self.tools = RepoGenomeTools(self.storage, str(self.repo_path))
         self.contract = AgentContract()
 
+        # Set up logging if debug mode is enabled
+        if self.debug:
+            import logging
+            logging.basicConfig(level=logging.DEBUG, format='%(levelname)s: %(message)s')
+
         # Create MCP server
         self.server = Server("repogenome")
 
-        # Register handlers
+        # Register handlers (these will populate _registered_tools and _registered_resources)
+        self._registered_tools = []
+        self._registered_resources = []
         self._register_resources()
         self._register_tools()
 
     def _register_resources(self):
         """Register MCP resources."""
+        # Get resources list
+        resources = self.resources.list_resources()
+        resource_list = [
+            Resource(
+                uri=r["uri"],
+                name=r["name"],
+                description=r["description"],
+                mimeType=r["mimeType"],
+            )
+            for r in resources
+        ]
+        # Store for diagnostics
+        self._registered_resources = resource_list
+        if self.debug:
+            import logging
+            logging.debug(f"Registered {len(resource_list)} resources")
+            for r in resource_list:
+                logging.debug(f"  - {r.uri}: {r.description}")
+        
         @self.server.list_resources()
         async def list_resources() -> list[Resource]:
             """List available resources."""
-            resources = self.resources.list_resources()
-            return [
-                Resource(
-                    uri=r["uri"],
-                    name=r["name"],
-                    description=r["description"],
-                    mimeType=r["mimeType"],
-                )
-                for r in resources
-            ]
+            return resource_list
 
         @self.server.read_resource()
         async def read_resource(uri: str) -> str:
@@ -114,10 +133,8 @@ class RepoGenomeMCPServer:
 
     def _register_tools(self):
         """Register MCP tools."""
-        @self.server.list_tools()
-        async def list_tools() -> list[Tool]:
-            """List available tools."""
-            return [
+        # Create tool list
+        tool_list = [
                 Tool(
                     name="repogenome.scan",
                     description="Scan repository and generate RepoGenome",
@@ -354,6 +371,18 @@ class RepoGenomeMCPServer:
                     },
                 ),
             ]
+        # Store for diagnostics
+        self._registered_tools = tool_list
+        if self.debug:
+            import logging
+            logging.debug(f"Registered {len(tool_list)} tools")
+            for tool in tool_list:
+                logging.debug(f"  - {tool.name}: {tool.description}")
+        
+        @self.server.list_tools()
+        async def list_tools() -> list[Tool]:
+            """List available tools."""
+            return tool_list
 
         @self.server.call_tool()
         async def call_tool(name: str, arguments: Dict[str, Any]) -> list[TextContent]:
@@ -464,6 +493,50 @@ class RepoGenomeMCPServer:
             await self.server.run(
                 read_stream, write_stream, self.server.create_initialization_options()
             )
+
+    def log_diagnostics(self, console=None):
+        """
+        Log diagnostic information about the server.
+        
+        Args:
+            console: Optional Rich Console instance for output
+        """
+        from rich.console import Console
+        from rich.table import Table
+        
+        if console is None:
+            console = Console()
+        
+        console.print("\n[bold cyan][DEBUG] RepoGenome MCP Server Diagnostics[/bold cyan]")
+        console.print(f"[dim]Repository path:[/dim] {self.repo_path}")
+        
+        # Check genome file status
+        genome_file = self.repo_path / "repogenome.json"
+        genome_exists = genome_file.exists()
+        console.print(f"[dim]Genome file exists:[/dim] {genome_exists}")
+        if genome_exists:
+            try:
+                file_size = genome_file.stat().st_size
+                size_mb = file_size / (1024 * 1024)
+                console.print(f"[dim]Genome file size:[/dim] {size_mb:.2f} MB")
+            except Exception:
+                pass
+        
+        # Show registered tools
+        console.print(f"\n[dim]Registered {len(self._registered_tools)} tools:[/dim]")
+        for tool in self._registered_tools:
+            console.print(f"  [green]-[/green] [bold]{tool.name}[/bold]: {tool.description}")
+        
+        # Show registered resources
+        console.print(f"\n[dim]Registered {len(self._registered_resources)} resources:[/dim]")
+        for resource in self._registered_resources:
+            console.print(f"  [green]-[/green] [bold]{resource.uri}[/bold]: {resource.description}")
+        
+        # Show contract status
+        console.print(f"\n[dim]Contract status:[/dim]")
+        console.print(f"  [dim]Genome loaded:[/dim] {self.contract.check_genome_loaded()}")
+        
+        console.print("")
 
     def run_sync(self):
         """Run server synchronously (for CLI)."""

@@ -542,7 +542,13 @@ def ragnatela(path: Path, min_connections: int):
     default=None,
     help="Path to repository root (default: current directory or path argument)",
 )
-def mcp_server(path: Path, repo_path: Path):
+@click.option(
+    "--debug",
+    is_flag=True,
+    default=False,
+    help="Enable debug mode with detailed diagnostics",
+)
+def mcp_server(path: Path, repo_path: Path, debug: bool):
     """Start RepoGenome MCP server.
     
     The MCP server exposes RepoGenome as MCP resources and tools for AI agents.
@@ -566,8 +572,13 @@ def mcp_server(path: Path, repo_path: Path):
         console.print(f"[bold]Starting RepoGenome MCP server for:[/bold] {target_path}")
         console.print("[yellow]Server running on stdio (use with MCP client)[/yellow]")
 
-        # Create and run server
-        server = RepoGenomeMCPServer(target_path)
+        # Create server with debug flag
+        server = RepoGenomeMCPServer(target_path, debug=debug)
+        
+        # Show diagnostics if debug mode is enabled
+        if debug:
+            server.log_diagnostics(console)
+        
         server.run_sync()
 
     except ImportError as e:

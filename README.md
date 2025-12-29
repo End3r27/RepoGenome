@@ -51,6 +51,115 @@ RepoGenome generates a comprehensive JSON artifact (`repogenome.json`) that comb
 - **Watch Mode** - Auto-regenerate genome on file changes (new in v0.7.0)
 - **Progress Tracking** - Real-time progress bars for long-running operations (new in v0.7.0)
 
+## 🤖 Using RepoGenome with AI Agents
+
+RepoGenome is designed to work seamlessly with AI coding assistants through the Model Context Protocol (MCP). This enables agents to understand your codebase structure, search for files and functions efficiently, and make informed changes.
+
+### Quick Setup for AI Agents
+
+#### 1. Generate Your Genome
+
+First, generate a RepoGenome for your repository:
+
+```bash
+# Generate initial genome
+repogenome generate /path/to/your/repository
+
+# Or generate with compression for smaller file size
+repogenome generate /path/to/your/repository --compact --minify
+```
+
+This creates a `repogenome.json` file that encodes your entire codebase structure.
+
+#### 2. Configure MCP Server
+
+RepoGenome can run as an MCP server, exposing repository knowledge to AI agents. Configure it in your MCP client:
+
+**For Cursor:**
+1. Open Settings → MCP Servers
+2. Add configuration:
+
+```json
+{
+  "mcpServers": {
+    "repogenome": {
+      "command": "repogenome",
+      "args": ["mcp-server", "${workspaceFolder}"],
+      "env": {}
+    }
+  }
+}
+```
+
+**For Claude Desktop:**
+Add to `~/.config/claude-desktop/mcp.json`:
+
+```json
+{
+  "mcpServers": {
+    "repogenome": {
+      "command": "repogenome",
+      "args": ["mcp-server"],
+      "cwd": "/path/to/your/repository"
+    }
+  }
+}
+```
+
+**For Other MCP Clients:**
+```json
+{
+  "mcpServers": {
+    "repogenome": {
+      "command": "repogenome",
+      "args": ["mcp-server", "/absolute/path/to/repository"]
+    }
+  }
+}
+```
+
+#### 3. Configure Agent Initialization Prompt
+
+To ensure AI agents always use RepoGenome for codebase analysis, add the initialization prompt to your agent's system instructions.
+
+**Option A: Use the Provided Prompt File**
+
+Copy the contents of [`LLM_INIT_PROMPT.md`](LLM_INIT_PROMPT.md) into your agent's system prompt or initialization file.
+
+**Option B: Add to Agent Configuration**
+
+In your agent configuration (Cursor, Claude Desktop, etc.), add this to the system prompt:
+
+```
+Always use RepoGenome for codebase analysis:
+- Load repogenome://summary at session start
+- Use repogenome.scan() for full codebase scans
+- Use repogenome.query() for file/function searches
+- Call repogenome.impact() before code changes
+- Call repogenome.update() after code changes
+```
+
+**Key Benefits:**
+- ✅ Agents automatically understand your codebase structure
+- ✅ Faster file and function searches via genome queries
+- ✅ Impact analysis before making changes
+- ✅ Automatic genome updates after modifications
+- ✅ No manual file scanning needed
+
+**Available MCP Resources:**
+- `repogenome://current` - Full repository genome
+- `repogenome://summary` - Quick boot context (summary only)
+- `repogenome://diff` - Changes since last update
+
+**Available MCP Tools:**
+- `repogenome.scan` - Generate/regenerate genome
+- `repogenome.query` - Query genome graph (natural language supported)
+- `repogenome.impact` - Check change impact before modifying
+- `repogenome.update` - Update genome after code changes
+- `repogenome.validate` - Validate genome consistency
+
+For detailed agent instructions, see [`LLM_INIT_PROMPT.md`](LLM_INIT_PROMPT.md).
+
 ## 📥 Installation
 
 ### Prerequisites

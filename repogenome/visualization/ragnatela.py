@@ -462,6 +462,9 @@ class RagnatelaCanvas(scene.SceneCanvas):
         # Compute node sizes
         self.node_sizes = compute_node_sizes(self.filtered_degree)
         
+        # Build spatial index for faster click detection and frustum culling
+        self._build_spatial_index()
+        
         # Initialize enhancement attributes
         self.clusters_enabled = False
         self.show_labels = False
@@ -482,6 +485,43 @@ class RagnatelaCanvas(scene.SceneCanvas):
         self.animation_start_camera = None
         self.animation_target_camera = None
         self.edge_data = []
+        
+        # Hover and selection highlighting
+        self.hovered_node_id = None
+        self.hover_highlight_visual = None
+        self.selection_highlight_visual = None
+        
+        # Help overlay
+        self.help_overlay_visible = False
+        self.help_view = None
+        
+        # Spatial indexing
+        self.spatial_grid = None  # Grid-based spatial index
+        self.grid_cell_size = None
+        
+        # Multi-select
+        self.selected_nodes = set()  # Set of selected node IDs
+        self.multi_select_visuals = []  # Visual indicators for multi-selected nodes
+        
+        # Path finding
+        self.path_visual = None  # Visual for path between nodes
+        self.path_start_node = None
+        self.path_end_node = None
+        
+        # Performance monitoring
+        self.show_fps = False
+        self.fps_view = None
+        self.fps_text = None
+        self.fps_counter = 0
+        self.fps_timer = None
+        self.last_fps_time = None
+        
+        # Color themes
+        self.color_theme = 'dark'  # 'dark', 'light', 'high_contrast'
+        
+        # Control panel
+        self.control_panel_visible = False
+        self.control_panel_view = None
 
         # Create visual elements
         print("Creating visualization...")
@@ -499,10 +539,25 @@ class RagnatelaCanvas(scene.SceneCanvas):
         # First, collect all node data with their sizes
         node_data = []
         
+        # Get camera for frustum culling
+        camera = self.view.camera
+        camera_distance = camera.distance
+        
+        # Frustum culling: only include nodes that are likely visible
+        # Simple check: nodes within reasonable distance from camera
+        max_visible_distance = camera_distance * 3.0  # Show nodes up to 3x camera distance
+        
         for node_id in self.filtered_node_ids:
             if node_id in self.node_indices:
                 idx = self.node_indices[node_id]
                 if idx < len(self.positions):
+                    node_pos = self.positions[idx]
+                    
+                    # Frustum culling: check if node is within visible range
+                    node_distance = np.linalg.norm(node_pos)
+                    if node_distance > max_visible_distance:
+                        continue  # Skip nodes that are too far
+                    
                     node = self.genome.nodes[node_id]
                     node_size = self.node_sizes.get(node_id, 0.1)
                     # Use cluster color if clustering enabled, otherwise use node type color
@@ -514,7 +569,7 @@ class RagnatelaCanvas(scene.SceneCanvas):
                     
                     node_data.append({
                         'node_id': node_id,
-                        'position': self.positions[idx],
+                        'position': node_pos,
                         'size': node_size,
                         'color': node_color,
                     })
@@ -675,11 +730,16 @@ class RagnatelaCanvas(scene.SceneCanvas):
         @self.view.camera.events.update.connect
         def on_camera_update(event):
             self._update_node_sizes_for_distance()
+            self._update_edge_lod()
 
-        # Mouse click for tooltip
+        # Mouse click for tooltip and selection
         @self.events.mouse_press.connect
         def on_mouse_press(event):
             if event.button == 1:  # Left click
+                # Check for Ctrl key for multi-select
+                modifiers = event.modifiers if hasattr(event, 'modifiers') else []
+                ctrl_pressed = 'Control' in str(modifiers) if modifiers else False
+                
                 # Get mouse position in screen coordinates
                 screen_pos = event.pos
                 
@@ -688,21 +748,115 @@ class RagnatelaCanvas(scene.SceneCanvas):
                 clicked_node_id = self._find_clicked_node(screen_pos)
                 
                 if clicked_node_id:
-                    self.selected_node_id = clicked_node_id
-                    self._show_tooltip(clicked_node_id, screen_pos)
-                    self._highlight_paths(clicked_node_id)
+                    if ctrl_pressed:
+                        # Multi-select mode
+                        if clicked_node_id in self.selected_nodes:
+                            self.selected_nodes.remove(clicked_node_id)
+                        else:
+                            self.selected_nodes.add(clicked_node_id)
+                        # Update selection indicators
+                        self._update_multi_selection_indicators()
+                        if hasattr(self, 'control_panel_text'):
+                            self._update_control_panel()
+                    else:
+                        # Single select
+                        self.selected_nodes = {clicked_node_id}
+                        self.selected_node_id = clicked_node_id
+                        self._show_tooltip(clicked_node_id, screen_pos)
+                        self._highlight_paths(clicked_node_id)
+                        self._update_selection_indicator(clicked_node_id)
+                        self._update_multi_selection_indicators()
+                        if hasattr(self, 'control_panel_text'):
+                            self._update_control_panel()
                 else:
-                    self.selected_node_id = None
-                    self._hide_tooltip()
-                    self._clear_path_highlighting()
+                    # Clicked on empty space - clear selection unless Ctrl is held
+                    if not ctrl_pressed:
+                        self.selected_node_id = None
+                        self.selected_nodes.clear()
+                        self._hide_tooltip()
+                        self._clear_path_highlighting()
+                        self._update_selection_indicator(None)
+                        self._update_multi_selection_indicators()
+                        if hasattr(self, 'control_panel_text'):
+                            self._update_control_panel()
                 
                 self.update()
         
-        # Mouse move for hover info (optional)
+        # Mouse move for hover highlighting
         @self.events.mouse_move.connect
         def on_mouse_move(event):
-            # Could add hover tooltip here
-            pass
+            # Find node under cursor for hover effect
+            screen_pos = event.pos
+            hovered_node_id = self._find_clicked_node(screen_pos)
+            
+            # Update hover highlighting
+            if hovered_node_id != getattr(self, 'hovered_node_id', None):
+                self.hovered_node_id = hovered_node_id
+                self._update_hover_highlighting(hovered_node_id)
+        
+        # Keyboard shortcuts
+        @self.events.key_press.connect
+        def on_key_press(event):
+            key = event.key.name if hasattr(event.key, 'name') else str(event.key)
+            text = event.text if hasattr(event, 'text') else ""
+            
+            if self.search_active:
+                # Handle search input
+                if key == 'Backspace':
+                    self.search_query = self.search_query[:-1]
+                    self._update_search_display()
+                    self._apply_filters()
+                elif key == 'Escape' or key == 'Enter':
+                    self._toggle_search()
+                elif text and len(text) == 1 and ord(text) >= 32:  # Printable character
+                    self.search_query += text
+                    self._update_search_display()
+                    self._apply_filters()
+                return
+            
+            if key == 'L' or key == 'l':
+                self._toggle_labels()
+            elif key == 'S' or key == 's':
+                self._toggle_search()
+            elif key == 'F' or key == 'f':
+                # Focus on selected node (if any)
+                if hasattr(self, 'selected_node_id') and self.selected_node_id:
+                    self._focus_on_node(self.selected_node_id)
+            elif key == 'R' or key == 'r':
+                # Reset camera
+                camera = self.view.camera
+                self.animation_start_camera = {
+                    'center': np.array(camera.center),
+                    'distance': camera.distance,
+                    'elevation': camera.elevation,
+                    'azimuth': camera.azimuth,
+                }
+                self.animation_target_camera = {
+                    'center': np.array([0, 0, 0]),
+                    'distance': 10.0,
+                    'elevation': 30.0,
+                    'azimuth': 45.0,
+                }
+                import time
+                self.animation_start_time = time.time()
+                if self.animation_timer is None:
+                    self.animation_timer = app.Timer(interval=0.016, connect=self._animate_camera, start=True)
+                else:
+                    self.animation_timer.start()
+            elif key == 'M' or key == 'm':
+                # Toggle minimap
+                self._toggle_minimap()
+            elif key == 'C' or key == 'c':
+                # Toggle clustering
+                self._toggle_clustering()
+            elif key == 'H' or key == 'h':
+                # Toggle help overlay
+                self._toggle_help_overlay()
+            elif key == 'Escape':
+                # Clear search/filters
+                self.search_query = ""
+                self.filtered_node_set = None
+                self._apply_filters()
     
     def _update_node_sizes_for_distance(self):
         """Update node sizes based on camera distance for perspective scaling."""
@@ -743,6 +897,79 @@ class RagnatelaCanvas(scene.SceneCanvas):
             # Silently fail if update can't be performed
             pass
     
+    def _update_edge_lod(self):
+        """Update edge level of detail based on camera distance."""
+        if not hasattr(self, 'edge_visual') or self.edge_visual is None:
+            return
+        
+        if not hasattr(self, 'original_edge_positions') or self.original_edge_positions is None:
+            return
+        
+        try:
+            camera = self.view.camera
+            camera_distance = camera.distance
+            
+            # Simplify edges when zoomed out (reduce opacity and width)
+            # When far away, make edges more transparent and thinner
+            if camera_distance > 15.0:
+                # Far away: very thin, very transparent
+                edge_width = 0.5
+                edge_alpha = 0.1
+            elif camera_distance > 10.0:
+                # Medium distance: thin, transparent
+                edge_width = 0.7
+                edge_alpha = 0.2
+            else:
+                # Close: normal
+                edge_width = 1.0
+                edge_alpha = 0.3
+            
+            # Update edge colors with new alpha
+            if hasattr(self, 'original_edge_colors') and self.original_edge_colors is not None:
+                new_edge_colors = self.original_edge_colors.copy()
+                # Adjust alpha channel
+                for i in range(len(new_edge_colors)):
+                    if len(new_edge_colors[i]) >= 4:
+                        new_edge_colors[i] = tuple(list(new_edge_colors[i][:3]) + [edge_alpha])
+                
+                self.edge_visual.set_data(
+                    pos=self.original_edge_positions,
+                    color=new_edge_colors,
+                    width=edge_width,
+                )
+        except Exception:
+            # Silently fail if update can't be performed
+            pass
+    
+    
+    def _build_spatial_index(self):
+        """Build spatial index (grid-based) for faster node lookup."""
+        if not hasattr(self, 'positions') or len(self.positions) == 0:
+            return
+        
+        # Calculate grid cell size based on node distribution
+        positions = self.positions
+        min_pos = positions.min(axis=0)
+        max_pos = positions.max(axis=0)
+        extent = max_pos - min_pos
+        
+        # Use grid with approximately 10 cells per dimension
+        num_cells = 10
+        self.grid_cell_size = extent / num_cells
+        self.grid_cell_size = np.maximum(self.grid_cell_size, 0.1)  # Minimum cell size
+        
+        # Build grid: map cell indices to node indices
+        self.spatial_grid = {}
+        
+        for i, pos in enumerate(positions):
+            # Calculate grid cell indices
+            cell_idx = ((pos - min_pos) / self.grid_cell_size).astype(int)
+            cell_idx = np.clip(cell_idx, 0, num_cells - 1)
+            cell_key = tuple(cell_idx)
+            
+            if cell_key not in self.spatial_grid:
+                self.spatial_grid[cell_key] = []
+            self.spatial_grid[cell_key].append(i)
     
     def _find_clicked_node(self, screen_pos):
         """Find which node was clicked based on screen position using simplified projection."""
@@ -780,7 +1007,24 @@ class RagnatelaCanvas(scene.SceneCanvas):
         # Approximate view direction (towards origin)
         view_dir = -camera_pos / np.linalg.norm(camera_pos)
         
-        for i, node_pos_3d in enumerate(self.node_positions_array):
+        # Use spatial grid to narrow down candidate nodes
+        candidate_indices = []
+        if self.spatial_grid is not None:
+            # Find cells near click ray (simplified: check all cells for now)
+            # Can be optimized to only check relevant cells
+            for cell_nodes in self.spatial_grid.values():
+                candidate_indices.extend(cell_nodes)
+        else:
+            # Fallback: check all nodes
+            candidate_indices = list(range(len(self.node_positions_array)))
+        
+        fov_rad = np.radians(camera.fov)
+        
+        for i in candidate_indices:
+            if i >= len(self.node_positions_array):
+                continue
+            
+            node_pos_3d = self.node_positions_array[i]
             # Calculate vector from camera to node
             to_node = node_pos_3d - camera_pos
             dist_to_node = np.linalg.norm(to_node)
@@ -929,7 +1173,7 @@ class RagnatelaCanvas(scene.SceneCanvas):
             self.tooltip_bg.visible = False
     
     def _create_node_labels(self, node_data):
-        """Create text labels for nodes."""
+        """Create text labels for nodes with LOD (Level of Detail)."""
         # Clear existing labels
         for label in self.node_labels:
             try:
@@ -941,25 +1185,54 @@ class RagnatelaCanvas(scene.SceneCanvas):
         if not self.show_labels:
             return
         
-        # Create labels for each node
+        # Get camera for distance calculation
+        camera = self.view.camera
+        camera_distance = camera.distance
+        
+        # LOD threshold: hide labels beyond this distance
+        label_distance_threshold = camera_distance * 1.5
+        
+        # Create labels for each node (only if within distance threshold)
         for nd in node_data:
             node_id = nd['node_id']
             position = nd['position']
             
+            # Calculate distance from camera to node for LOD
+            # Simplified distance calculation
+            node_distance = np.linalg.norm(position)
+            
+            # Skip labels that are too far (LOD)
+            if node_distance > label_distance_threshold:
+                continue
+            
             # Truncate long node IDs
             label_text = node_id[:30] + "..." if len(node_id) > 30 else node_id
+            
+            # Adjust font size based on distance (smaller for distant nodes)
+            base_font_size = 10
+            distance_factor = max(0.5, min(1.0, label_distance_threshold / max(node_distance, 0.1)))
+            font_size = int(base_font_size * distance_factor)
             
             # Create text visual positioned near the node
             label = visuals.Text(
                 text=label_text,
                 pos=position,
                 color="white",
-                font_size=10,
+                font_size=font_size,
                 parent=self.view.scene,
             )
             # Offset label slightly above node
             label.pos = (position[0], position[1] + 0.3, position[2])
             self.node_labels.append(label)
+        
+        # Update labels when camera changes (for LOD)
+        @self.view.camera.events.update.connect
+        def on_camera_update_labels(event):
+            if self.show_labels:
+                # Recreate labels with updated LOD
+                if hasattr(self, 'all_node_data'):
+                    current_data = self.all_node_data[:self.rendered_count] if hasattr(self, 'rendered_count') else self.all_node_data
+                    self._create_node_labels(current_data)
     
     def _toggle_labels(self):
         """Toggle node labels on/off."""
@@ -1252,6 +1525,133 @@ class RagnatelaCanvas(scene.SceneCanvas):
                 width=2 if highlighted else 1,
             )
     
+    def _update_hover_highlighting(self, node_id):
+        """Update hover highlighting for a node."""
+        # Remove old hover highlight
+        if self.hover_highlight_visual is not None:
+            try:
+                self.hover_highlight_visual.parent = None
+            except:
+                pass
+            self.hover_highlight_visual = None
+        
+        if node_id is None:
+            return
+        
+        # Find node position
+        if node_id not in self.position_to_node_id:
+            return
+        
+        idx = self.position_to_node_id.index(node_id)
+        if idx >= len(self.node_positions_array):
+            return
+        
+        node_pos = self.node_positions_array[idx]
+        node_size = self.node_sizes_array[idx] if idx < len(self.node_sizes_array) else 10
+        
+        # Create highlight ring around node
+        highlight_size = node_size * 1.3
+        
+        # Create highlight visual (ring/sphere outline)
+        self.hover_highlight_visual = visuals.Markers(
+            parent=self.view.scene,
+        )
+        self.hover_highlight_visual.set_data(
+            pos=np.array([node_pos]),
+            size=highlight_size,
+            face_color=(1.0, 1.0, 0.0, 0.3),  # Yellow tint, semi-transparent
+            edge_color=(1.0, 1.0, 0.0, 0.8),  # Bright yellow edge
+            edge_width=2,
+        )
+    
+    def _update_selection_indicator(self, node_id):
+        """Update visual indicator for selected node."""
+        # Remove old selection indicator
+        if self.selection_highlight_visual is not None:
+            try:
+                self.selection_highlight_visual.parent = None
+            except:
+                pass
+            self.selection_highlight_visual = None
+        
+        if node_id is None:
+            return
+        
+        # Find node position
+        if node_id not in self.position_to_node_id:
+            return
+        
+        idx = self.position_to_node_id.index(node_id)
+        if idx >= len(self.node_positions_array):
+            return
+        
+        node_pos = self.node_positions_array[idx]
+        node_size = self.node_sizes_array[idx] if idx < len(self.node_sizes_array) else 10
+        
+        # Create selection indicator (pulsing ring)
+        highlight_size = node_size * 1.5
+        
+        # Create selection visual with bright cyan color
+        self.selection_highlight_visual = visuals.Markers(
+            parent=self.view.scene,
+        )
+        self.selection_highlight_visual.set_data(
+            pos=np.array([node_pos]),
+            size=highlight_size,
+            face_color=(0.0, 1.0, 1.0, 0.4),  # Cyan tint, semi-transparent
+            edge_color=(0.0, 1.0, 1.0, 1.0),  # Bright cyan edge
+            edge_width=3,
+        )
+    
+    def _update_multi_selection_indicators(self):
+        """Update visual indicators for all selected nodes in multi-select mode."""
+        # Clear existing multi-select indicators
+        if hasattr(self, 'multi_select_visuals'):
+            for visual in self.multi_select_visuals:
+                try:
+                    visual.parent = None
+                except:
+                    pass
+        self.multi_select_visuals = []
+        
+        if not self.selected_nodes:
+            return
+        
+        # Create indicators for all selected nodes
+        positions = []
+        sizes = []
+        
+        for node_id in self.selected_nodes:
+            if node_id not in self.position_to_node_id:
+                continue
+            
+            idx = self.position_to_node_id.index(node_id)
+            if idx >= len(self.node_positions_array):
+                continue
+            
+            node_pos = self.node_positions_array[idx]
+            node_size = self.node_sizes_array[idx] if idx < len(self.node_sizes_array) else 10
+            
+            positions.append(node_pos)
+            sizes.append(node_size * 1.3)  # Slightly larger than node
+        
+        if positions:
+            positions_array = np.array(positions)
+            sizes_array = np.array(sizes)
+            
+            # Create visual for all selected nodes
+            multi_visual = visuals.Markers(
+                parent=self.view.scene,
+            )
+            multi_visual.set_data(
+                pos=positions_array,
+                size=sizes_array,
+                face_color=(0.0, 0.8, 1.0, 0.3),  # Light cyan, semi-transparent
+                edge_color=(0.0, 0.8, 1.0, 0.8),  # Light cyan edge
+                edge_width=2,
+            )
+            self.multi_select_visuals = [multi_visual]
+    
     def _clear_path_highlighting(self):
         """Clear path highlighting and restore original edge colors."""
         if not hasattr(self, 'edge_visual') or self.edge_visual is None:
@@ -1427,6 +1827,71 @@ class RagnatelaCanvas(scene.SceneCanvas):
         if hasattr(self, 'all_node_data'):
             self._create_visuals()
         self.update()
+    
+    def _toggle_help_overlay(self):
+        """Toggle help overlay showing keyboard shortcuts."""
+        self.help_overlay_visible = not self.help_overlay_visible
+        if self.help_overlay_visible:
+            self._create_help_overlay()
+        else:
+            self._remove_help_overlay()
+        self.update()
+    
+    def _create_help_overlay(self):
+        """Create help overlay with keyboard shortcuts."""
+        if self.help_view is not None:
+            return
+        
+        width, height = self.size
+        
+        # Create 2D overlay view for help
+        self.help_view = self.central_widget.add_view(camera='panzoom')
+        self.help_view.camera.set_range(x=(0, width), y=(0, height))
+        self.help_view.interactive = False
+        
+        # Help background
+        help_bg = visuals.Rectangle(
+            pos=(width - 320, 10),
+            size=(310, 400),
+            color=(0.1, 0.1, 0.1, 0.95),
+            parent=self.help_view.scene,
+        )
+        
+        # Help text with shortcuts
+        help_text = """Keyboard Shortcuts:
+
+L - Toggle node labels
+S - Toggle search
+F - Focus on selected node
+R - Reset camera
+M - Toggle minimap
+C - Toggle clustering
+H - Toggle this help
+
+Mouse Controls:
+- Drag: Rotate camera
+- Wheel: Zoom in/out
+- Click: Select node
+
+Press H to close"""
+        
+        self.help_text_visual = visuals.Text(
+            text=help_text,
+            pos=(width - 315, 20),
+            color="white",
+            font_size=12,
+            parent=self.help_view.scene,
+        )
+    
+    def _remove_help_overlay(self):
+        """Remove help overlay."""
+        if self.help_view is not None:
+            try:
+                self.help_view.parent = None
+            except:
+                pass
+            self.help_view = None
+            self.help_text_visual = None
     
     def _add_next_batch(self, event=None):
         """Add next batch of nodes for progressive rendering."""

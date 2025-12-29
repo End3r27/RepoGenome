@@ -25,6 +25,11 @@ class RepoGenomeConfig:
         max_file_size: int = 10 * 1024 * 1024,  # 10MB
         enable_cache: bool = True,
         parallel_workers: Optional[int] = None,
+        compact_fields: bool = False,
+        minify_json: bool = False,
+        max_summary_length: Optional[int] = 200,
+        exclude_defaults: bool = False,
+        enable_compression: bool = False,
     ):
         """
         Initialize configuration.
@@ -38,6 +43,11 @@ class RepoGenomeConfig:
             max_file_size: Maximum file size to analyze (bytes)
             enable_cache: Whether to enable caching
             parallel_workers: Number of parallel workers (None = auto)
+            compact_fields: Use compact field names in output
+            minify_json: Minify JSON output (no indentation)
+            max_summary_length: Maximum length for summaries (None = no limit)
+            exclude_defaults: Exclude fields with default values
+            enable_compression: Use gzip compression for output
         """
         self.enabled_subsystems = enabled_subsystems
         self.disabled_subsystems = disabled_subsystems or []
@@ -56,6 +66,11 @@ class RepoGenomeConfig:
         self.max_file_size = max_file_size
         self.enable_cache = enable_cache
         self.parallel_workers = parallel_workers
+        self.compact_fields = compact_fields
+        self.minify_json = minify_json
+        self.max_summary_length = max_summary_length
+        self.exclude_defaults = exclude_defaults
+        self.enable_compression = enable_compression
 
     @classmethod
     def load(cls, config_path: Optional[Path] = None) -> "RepoGenomeConfig":
@@ -103,6 +118,11 @@ class RepoGenomeConfig:
             max_file_size=config_data.get("max_file_size", 10 * 1024 * 1024),
             enable_cache=config_data.get("enable_cache", True),
             parallel_workers=config_data.get("parallel_workers"),
+            compact_fields=config_data.get("compact_fields", False),
+            minify_json=config_data.get("minify_json", False),
+            max_summary_length=config_data.get("max_summary_length", 200),
+            exclude_defaults=config_data.get("exclude_defaults", False),
+            enable_compression=config_data.get("enable_compression", False),
         )
 
     def should_analyze_file(self, file_path: Path) -> bool:
@@ -157,6 +177,11 @@ class RepoGenomeConfig:
             "max_file_size": self.max_file_size,
             "enable_cache": self.enable_cache,
             "parallel_workers": self.parallel_workers,
+            "compact_fields": self.compact_fields,
+            "minify_json": self.minify_json,
+            "max_summary_length": self.max_summary_length,
+            "exclude_defaults": self.exclude_defaults,
+            "enable_compression": self.enable_compression,
         }
 
 
@@ -195,6 +220,13 @@ enable_cache = true
 
 # Number of parallel workers (None = auto-detect)
 # parallel_workers = 4
+
+# Output compression options
+compact_fields = false
+minify_json = false
+max_summary_length = 200
+exclude_defaults = false
+enable_compression = false
 """
     with open(output_path, "w", encoding="utf-8") as f:
         f.write(config_content)

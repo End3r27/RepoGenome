@@ -59,7 +59,51 @@ def main():
     default=None,
     help="Set logging level",
 )
-def generate(path: Path, output: Path, subsystems, exclude_subsystems, incremental, log):
+@click.option(
+    "--compact",
+    is_flag=True,
+    help="Use compact field names in output",
+)
+@click.option(
+    "--minify",
+    is_flag=True,
+    help="Minify JSON output (no indentation, combines with --compact)",
+)
+@click.option(
+    "--lite",
+    is_flag=True,
+    help="Ultra-compact mode with only essential fields",
+)
+@click.option(
+    "--compress",
+    is_flag=True,
+    help="Compress output with gzip (.json.gz)",
+)
+@click.option(
+    "--max-summary-length",
+    type=int,
+    default=None,
+    help="Maximum length for summaries (default: 200, 0 = no summaries)",
+)
+@click.option(
+    "--exclude-defaults",
+    is_flag=True,
+    help="Exclude fields with default values",
+)
+def generate(
+    path: Path,
+    output: Path,
+    subsystems,
+    exclude_subsystems,
+    incremental,
+    log,
+    compact,
+    minify,
+    lite,
+    compress,
+    max_summary_length,
+    exclude_defaults,
+):
     """Generate a new RepoGenome for the repository."""
     if log:
         logging.basicConfig(level=log.upper(), format='%(asctime)s - %(levelname)s - %(message)s')
@@ -103,10 +147,32 @@ def generate(path: Path, output: Path, subsystems, exclude_subsystems, increment
         else:
             genome = generator.generate(incremental=False)
 
-        # Save genome
-        genome.save(str(output))
+        # Load config for compression options (CLI flags override config)
+        config = RepoGenomeConfig.load()
+        
+        # Determine compression options (CLI flags take precedence)
+        use_compact = compact or (minify and not compact) or config.compact_fields
+        use_minify = minify or config.minify_json
+        use_lite = lite
+        use_compress = compress or config.enable_compression
+        use_exclude_defaults = exclude_defaults or config.exclude_defaults
+        summary_length = max_summary_length if max_summary_length is not None else config.max_summary_length
+        
+        # Save genome with compression options
+        genome.save(
+            str(output),
+            compact=use_compact,
+            lite=use_lite,
+            minify=use_minify,
+            exclude_defaults=use_exclude_defaults,
+            max_summary_length=summary_length,
+            compress=use_compress,
+        )
 
-        console.print(f"[green]OK[/green] Genome generated: {output}")
+        # Show file size
+        file_size = output.stat().st_size if output.exists() else 0
+        size_mb = file_size / (1024 * 1024)
+        console.print(f"[green]OK[/green] Genome generated: {output} ({size_mb:.2f} MB)")
 
         # Print summary
         summary = genome.summary

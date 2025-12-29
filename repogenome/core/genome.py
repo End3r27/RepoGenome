@@ -20,6 +20,27 @@ class Genome:
             genome: RepoGenome instance
         """
         self.genome = genome
+        self._edge_index_from: Optional[Dict[str, List[Edge]]] = None
+        self._edge_index_to: Optional[Dict[str, List[Edge]]] = None
+        self._build_indexes()
+    
+    def _build_indexes(self) -> None:
+        """Build reverse indexes for faster edge lookups."""
+        self._edge_index_from = {}
+        self._edge_index_to = {}
+        
+        for edge_data in self.genome.edges:
+            edge = Edge(**edge_data) if isinstance(edge_data, dict) else edge_data
+            from_node = edge.from_
+            to_node = edge.to
+            
+            if from_node not in self._edge_index_from:
+                self._edge_index_from[from_node] = []
+            self._edge_index_from[from_node].append(edge)
+            
+            if to_node not in self._edge_index_to:
+                self._edge_index_to[to_node] = []
+            self._edge_index_to[to_node].append(edge)
 
     def get_nodes_by_type(self, node_type: str) -> List[Node]:
         """
@@ -47,6 +68,10 @@ class Genome:
         Returns:
             List of edges
         """
+        if self._edge_index_from:
+            return self._edge_index_from.get(from_node, [])
+        
+        # Fallback to linear search if index not built
         edges = []
         for edge_data in self.genome.edges:
             edge_from = edge_data.get("from") or edge_data.get("from_")
@@ -64,6 +89,10 @@ class Genome:
         Returns:
             List of edges
         """
+        if self._edge_index_to:
+            return self._edge_index_to.get(to_node, [])
+        
+        # Fallback to linear search if index not built
         edges = []
         for edge_data in self.genome.edges:
             if edge_data.get("to") == to_node:

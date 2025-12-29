@@ -1,0 +1,2 @@
+"""YAML file analyzer."""
+

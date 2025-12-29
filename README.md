@@ -23,6 +23,15 @@ cd RepoGenome
 pip install -e .
 ```
 
+### Requirements
+
+- Python 3.8+
+- Git (for repository analysis)
+- PyYAML (for YAML file analysis, included in dependencies)
+
+Optional dependencies:
+- tree-sitter and tree-sitter-typescript (for enhanced TypeScript/JavaScript analysis)
+
 ## Quick Start
 
 ### CLI Usage
@@ -34,6 +43,14 @@ repogenome generate /path/to/repository
 ```
 
 This creates a `repogenome.json` file in the repository root.
+
+Generate with debug logging:
+
+```bash
+repogenome generate /path/to/repository --log debug
+```
+
+**Note for macOS users**: RepoGenome automatically uses subprocess-based git operations on macOS to avoid hanging issues. To force GitPython usage, set `REPOGENOME_USE_GITPYTHON=true`.
 
 Update an existing genome incrementally:
 
@@ -85,7 +102,7 @@ The `repogenome.json` file contains the following sections:
   "metadata": {
     "generated_at": "2025-01-12T18:42:00Z",
     "repo_hash": "a8f3c1...",
-    "languages": ["Python", "TypeScript"],
+    "languages": ["Python", "TypeScript", "Java", "Go", "Rust"],
     "frameworks": ["FastAPI", "React"],
     "repogenome_version": "0.1.0"
   }
@@ -223,15 +240,61 @@ RepoGenome uses a modular architecture with pluggable subsystems:
 │Repo    │  │Flow     │  │Intent│  │Chrono│
 │Spider  │  │Weaver   │  │Atlas │  │Map   │
 └────────┘  └─────────┘  └──────┘  └──────┘
+    │
+    ├─── Language Analyzers ────────────────┐
+    │   Python, TypeScript, Java, Go,       │
+    │   C++, Rust, C#, Ruby, PHP            │
+    │                                        │
+    └─── File Type Analyzers ────────────────┤
+        Markdown, JSON, YAML, HTML, CSS,     │
+        Shell, SQL                           │
+                                            │
 ```
+
+### Analyzer Architecture
+
+RepoGenome includes specialized analyzers for different file types:
+
+- **Code Analyzers**: Extract functions, classes, imports, and structural relationships
+- **Documentation Analyzers**: Extract headings, links, and document structure
+- **Config Analyzers**: Parse configuration file structure and keys
+- **Web Analyzers**: Extract HTML structure, CSS selectors, and relationships
+- **Data Analyzers**: Extract SQL queries, tables, and database structure
+
+All analyzers follow a consistent interface and return structured data that is integrated into the unified RepoGenome graph.
 
 ## Language Support
 
-Currently supported languages:
-- Python (full support)
-- TypeScript/JavaScript (basic support)
+RepoGenome provides comprehensive structural analysis for a wide range of programming languages and file types:
 
-More languages can be added by implementing language-specific analyzers.
+### Programming Languages (Full Structural Analysis)
+- **Python** - Functions, classes, imports, call graphs, entry points
+- **TypeScript/JavaScript** - Functions, classes, imports, API routes
+- **Java** - Classes, methods, packages, imports, entry points
+- **Go** - Functions, types (structs/interfaces), packages, imports, entry points
+- **C++** - Classes, functions, includes, entry points
+- **Rust** - Functions, structs, enums, traits, modules, use statements, entry points
+- **C#** - Classes, methods, namespaces, using statements, entry points
+- **Ruby** - Classes, modules, methods, requires
+- **PHP** - Classes, functions, namespaces, use statements
+
+### File Type Analyzers
+- **Markdown** - Headings, links, code blocks, images, lists
+- **JSON** - Structure, keys, nested data
+- **YAML** - Structure, keys, anchors
+- **HTML** - Tags, links, scripts, stylesheets, forms, meta tags
+- **CSS** - Selectors, rules, media queries, keyframes
+- **Shell Scripts** - Functions, variables, commands, conditionals
+- **SQL** - Queries, tables, columns, joins, views, procedures
+
+### Additional File Types
+RepoGenome also detects and processes many other file types including:
+- Configuration files: `.toml`, `.xml`, `.ini`, `.cfg`
+- Documentation: `.rst`, `.txt`
+- Web: `.html`, `.css`, `.scss`, `.sass`, `.less`
+- And many more (see metadata detection for full list)
+
+All analyzers extract structured information including functions, classes, imports, and relationships, enabling comprehensive cross-language repository analysis.
 
 ## Incremental Updates
 
@@ -249,9 +312,44 @@ updated_genome = generator.generate(incremental=True, existing_genome_path=Path(
 updated_genome.save("repogenome.json")
 ```
 
+## Features
+
+- **Multi-Language Support**: Analyzes code in 9+ programming languages
+- **Comprehensive File Type Coverage**: Supports code, documentation, config, web, and data files
+- **Cross-Language Analysis**: Builds unified graphs across all languages in a repository
+- **Incremental Updates**: Efficient updates by analyzing only changed files
+- **Platform Compatibility**: Works on Windows, macOS, and Linux with platform-specific optimizations
+- **Extensible Architecture**: Easy to add support for new languages and file types
+
+## Troubleshooting
+
+### macOS Git Hang Issue
+
+If RepoGenome hangs on macOS when using GitPython, it will automatically fall back to subprocess-based git operations. This is handled transparently. To force GitPython usage (not recommended on macOS), set:
+
+```bash
+export REPOGENOME_USE_GITPYTHON=true
+```
+
+### Large Repositories
+
+For very large repositories, consider:
+- Using incremental updates instead of full generation
+- Excluding specific subsystems if not needed
+- Processing specific file types only
+
 ## Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
+
+### Adding New Language Support
+
+To add support for a new programming language:
+
+1. Create a new analyzer in `repogenome/analyzers/<language>/`
+2. Implement the analyzer following the pattern of existing analyzers
+3. Add the language handler in `repogenome/subsystems/repospider.py`
+4. Update language detection in `repogenome/core/metadata.py`
 
 ## License
 

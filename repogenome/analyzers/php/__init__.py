@@ -1,0 +1,2 @@
+"""PHP file analyzer."""
+

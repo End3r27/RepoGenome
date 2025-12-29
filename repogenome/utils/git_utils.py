@@ -1,6 +1,9 @@
 """Git utility functions for repository analysis."""
 
+import os
 import subprocess
+import sys
+import threading
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
@@ -11,24 +14,73 @@ except ImportError:
     git = None
 
 
-def get_repo_hash(repo_path: Path) -> Optional[str]:
+def get_repo_hash(repo_path: Path, timeout: float = 5.0) -> Optional[str]:
     """
     Get the current git commit hash.
 
     Args:
         repo_path: Path to repository root
+        timeout: Timeout in seconds for GitPython operations (default: 5.0)
 
     Returns:
         Commit hash or None if not a git repo
     """
+    # On macOS, skip GitPython to avoid hanging issues with git cat-file
+    # Also check for environment variable override
+    use_gitpython = os.environ.get("REPOGENOME_USE_GITPYTHON", "").lower() == "true"
+    if sys.platform == "darwin" and not use_gitpython:
+        return _get_repo_hash_subprocess(repo_path)
+
     if git is None:
         return _get_repo_hash_subprocess(repo_path)
 
+    # Try GitPython with timeout
     try:
-        repo = git.Repo(repo_path)
-        return repo.head.commit.hexsha[:12]
+        result = _get_repo_hash_gitpython_with_timeout(repo_path, timeout)
+        if result is not None:
+            return result
     except Exception:
-        return _get_repo_hash_subprocess(repo_path)
+        pass
+
+    # Fallback to subprocess
+    return _get_repo_hash_subprocess(repo_path)
+
+
+def _get_repo_hash_gitpython_with_timeout(
+    repo_path: Path, timeout: float
+) -> Optional[str]:
+    """
+    Get repo hash using GitPython with a timeout mechanism.
+
+    Args:
+        repo_path: Path to repository root
+        timeout: Timeout in seconds
+
+    Returns:
+        Commit hash or None if timeout/error occurs
+    """
+    result_container = {"value": None, "exception": None}
+
+    def gitpython_operation():
+        """Execute GitPython operation in a separate thread."""
+        try:
+            repo = git.Repo(repo_path)
+            result_container["value"] = repo.head.commit.hexsha[:12]
+        except Exception as e:
+            result_container["exception"] = e
+
+    thread = threading.Thread(target=gitpython_operation, daemon=True)
+    thread.start()
+    thread.join(timeout=timeout)
+
+    if thread.is_alive():
+        # Operation timed out
+        return None
+
+    if result_container["exception"]:
+        raise result_container["exception"]
+
+    return result_container["value"]
 
 
 def _get_repo_hash_subprocess(repo_path: Path) -> Optional[str]:

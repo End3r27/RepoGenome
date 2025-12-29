@@ -385,6 +385,63 @@ def query(genome: Path, query: str):
         raise click.Abort()
 
 
+@main.command()
+@click.option(
+    "--path",
+    "-p",
+    type=click.Path(exists=True, path_type=Path),
+    default=None,
+    help="Path to repogenome.json file or directory to search (default: current directory)",
+)
+@click.option(
+    "--min-connections",
+    "-m",
+    type=int,
+    default=0,
+    help="Minimum number of connections to show a node (default: 0)",
+)
+def ragnatela(path: Path, min_connections: int):
+    """Visualize codebase connections in an interactive 3D space.
+
+    Opens a 3D visualization window showing all connections in the codebase.
+    Main systems (highly connected nodes) appear as larger spheres.
+    Use mouse drag to rotate and mouse wheel to zoom.
+    """
+    try:
+        from repogenome.visualization.ragnatela import visualize_ragnatela
+
+        # Determine if path is a file or directory
+        genome_path = None
+        search_directory = None
+
+        if path:
+            if path.is_file():
+                genome_path = path
+            elif path.is_dir():
+                search_directory = path
+            else:
+                print_error(f"Path must be a file or directory: {path}")
+                raise click.Abort()
+        else:
+            # Default to current directory
+            search_directory = Path.cwd()
+
+        console.print("[bold]Loading RepoGenome...[/bold]")
+        visualize_ragnatela(
+            genome_path=genome_path,
+            search_directory=search_directory,
+            min_connections=min_connections,
+        )
+
+    except ImportError as e:
+        print_error(f"{e}")
+        console.print("Install vispy with: pip install vispy>=0.14.0")
+        raise click.Abort()
+    except Exception as e:
+        print_error(f"{e}")
+        raise click.Abort()
+
+
 if __name__ == "__main__":
     main()
 

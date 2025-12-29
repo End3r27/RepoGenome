@@ -1,0 +1,862 @@
+"""
+Ragnatela 3D visualization for RepoGenome.
+
+Displays an interactive 3D graph visualization of codebase connections
+with main systems (highly connected nodes) as larger spheres.
+"""
+
+from pathlib import Path
+from typing import Dict, List, Optional, Tuple
+import numpy as np
+
+try:
+    from vispy import app, scene
+    from vispy.scene import visuals
+    from vispy.scene.cameras import TurntableCamera
+except ImportError:
+    raise ImportError(
+        "vispy is required for ragnatela visualization. Install it with: pip install vispy>=0.14.0"
+    )
+
+from repogenome.core.schema import RepoGenome
+
+
+def find_latest_repogenome(directory: Path) -> Optional[Path]:
+    """
+    Find the latest repogenome.json file in the directory tree.
+
+    Args:
+        directory: Directory to search in
+
+    Returns:
+        Path to the latest repogenome.json file, or None if not found
+    """
+    repogenome_files = list(directory.rglob("repogenome.json"))
+
+    if not repogenome_files:
+        return None
+
+    # Sort by modification time, most recent first
+    repogenome_files.sort(key=lambda p: p.stat().st_mtime, reverse=True)
+
+    # Also check metadata.generated_at if available
+    latest_file = repogenome_files[0]
+    latest_time = latest_file.stat().st_mtime
+
+    for file_path in repogenome_files[1:]:
+        try:
+            genome = RepoGenome.load(str(file_path))
+            if genome.metadata.generated_at:
+                file_time = genome.metadata.generated_at.timestamp()
+                if file_time > latest_time:
+                    latest_file = file_path
+                    latest_time = file_time
+        except Exception:
+            # If we can't load it, fall back to mtime
+            pass
+
+    return latest_file
+
+
+def compute_degree_centrality(genome: RepoGenome) -> Dict[str, int]:
+    """
+    Compute degree centrality (connection count) for each node.
+
+    Args:
+        genome: The RepoGenome to analyze
+
+    Returns:
+        Dictionary mapping node IDs to their connection counts
+    """
+    degree = {node_id: 0 for node_id in genome.nodes.keys()}
+
+    for edge in genome.edges:
+        if edge.from_ in degree:
+            degree[edge.from_] += 1
+        if edge.to in degree:
+            degree[edge.to] += 1
+
+    return degree
+
+
+def compute_3d_layout(
+    genome: RepoGenome,
+    iterations: int = 50,
+    k: Optional[float] = None,
+    repulsion_strength: Optional[float] = None,
+) -> np.ndarray:
+    """
+    Compute 3D positions for nodes using force-directed layout.
+
+    Args:
+        genome: The RepoGenome to layout
+        iterations: Number of layout iterations
+        k: Optimal distance between nodes (auto-calculated if None)
+        repulsion_strength: Strength of repulsion forces (auto-calculated if None)
+
+    Returns:
+        Nx3 numpy array of node positions
+    """
+    node_ids = list(genome.nodes.keys())
+    node_to_index = {node_id: i for i, node_id in enumerate(node_ids)}
+    n_nodes = len(node_ids)
+
+    if n_nodes == 0:
+        return np.array([])
+
+    # Calculate optimal distance based on number of nodes
+    # Use a volume-based calculation: k = (volume / n_nodes)^(1/3)
+    if k is None:
+        # Estimate volume needed and calculate optimal spacing
+        # For 3D, we want nodes spread in a volume proportional to n_nodes
+        k = (n_nodes ** (1.0 / 3.0)) * 1.5
+        k = max(2.0, min(k, 8.0))  # Clamp between 2 and 8 for better spacing
+
+    # Calculate repulsion strength based on k - make it stronger
+    if repulsion_strength is None:
+        repulsion_strength = k * k * 100.0  # Increased from 50.0 to 100.0 for stronger repulsion
+
+    # Initialize positions using uniform spherical distribution
+    # This ensures nodes start spread out in 3D space
+    if n_nodes == 1:
+        positions = np.array([[0.0, 0.0, 0.0]])
+    else:
+        # Use better initial distribution - Fibonacci-like sphere (vectorized for speed)
+        radius = k * (n_nodes ** (1.0 / 3.0)) * 3.0  # Larger initial radius
+        # Generate points using spherical coordinates for better distribution (vectorized)
+        i_array = np.arange(n_nodes, dtype=float)
+        theta = np.pi * (3.0 - np.sqrt(5.0)) * i_array  # Golden angle
+        y = 1.0 - (2.0 * i_array) / max(n_nodes - 1, 1)  # y goes from 1 to -1
+        r = np.sqrt(np.maximum(1.0 - y * y, 0))  # Avoid negative sqrt
+        phi = theta
+        # Add some randomness
+        r_scale = np.random.uniform(0.5, 1.0, n_nodes)
+        positions = np.column_stack([
+            r_scale * radius * r * np.cos(phi),
+            r_scale * radius * y,
+            r_scale * radius * r * np.sin(phi),
+        ])
+
+    # Build adjacency list
+    adjacency = {i: [] for i in range(n_nodes)}
+    for edge in genome.edges:
+        if edge.from_ in node_to_index and edge.to in node_to_index:
+            from_idx = node_to_index[edge.from_]
+            to_idx = node_to_index[edge.to]
+            adjacency[from_idx].append(to_idx)
+            adjacency[to_idx].append(from_idx)
+
+    # Optimize: For large graphs, use approximate repulsion
+    use_approximate = n_nodes > 100  # Lower threshold for better performance
+    
+    # Force-directed layout (Fruchterman-Reingold in 3D)
+    # Track convergence for early exit
+    prev_positions = positions.copy()
+    convergence_threshold = k * 0.01  # Stop if movement is very small
+    
+    # Progress update interval
+    progress_interval = max(1, iterations // 10)  # Update ~10 times
+    
+    for iteration in range(iterations):
+        # Show progress for large graphs
+        if n_nodes > 200 and iteration % progress_interval == 0:
+            print(f"  Layout iteration {iteration}/{iterations}...")
+        forces = np.zeros((n_nodes, 3))
+
+        # Attraction forces along edges
+        for edge in genome.edges:
+            if edge.from_ in node_to_index and edge.to in node_to_index:
+                from_idx = node_to_index[edge.from_]
+                to_idx = node_to_index[edge.to]
+                delta = positions[to_idx] - positions[from_idx]
+                distance = np.linalg.norm(delta)
+                if distance > 0:
+                    # Spring force: F = (d - k) / k, but limit maximum force
+                    force = (distance - k) / max(k, 0.1)
+                    force = np.clip(force, -k, k)  # Limit force magnitude
+                    force_vec = (delta / distance) * force
+                    forces[from_idx] += force_vec
+                    forces[to_idx] -= force_vec
+
+        # Repulsion forces - optimized for large graphs
+        if use_approximate:
+            # For large graphs, use Barnes-Hut style approximation
+            # Check repulsion against a sample of nodes, but more intelligently
+            if n_nodes > 500:
+                # Very large: use center-based repulsion + sample
+                center = positions.mean(axis=0)
+                for i in range(n_nodes):
+                    # Repulsion from center
+                    delta_center = positions[i] - center
+                    dist_center = np.linalg.norm(delta_center)
+                    if dist_center > 0:
+                        force_center = repulsion_strength * 0.5 / max(dist_center, 0.1)
+                        forces[i] += (delta_center / dist_center) * force_center
+                    
+                    # Sample-based repulsion
+                    sample_size = min(20, n_nodes // 20)
+                    sample_indices = np.random.choice(n_nodes, sample_size, replace=False)
+                    for j in sample_indices:
+                        if i != j:
+                            delta = positions[j] - positions[i]
+                            distance = np.linalg.norm(delta)
+                            if distance > 0:
+                                force = repulsion_strength / (distance ** 2 + 0.1)
+                                force_vec = delta / distance * force
+                                forces[i] -= force_vec * (n_nodes / sample_size)
+            else:
+                # Medium graphs: use full repulsion but with distance cutoff for speed
+                cutoff_dist_sq = (k * 5) ** 2  # Use squared distance to avoid sqrt
+                for i in range(n_nodes):
+                    for j in range(i + 1, n_nodes):
+                        delta = positions[j] - positions[i]
+                        distance_sq = np.sum(delta ** 2)
+                        if distance_sq > 0 and distance_sq < cutoff_dist_sq:
+                            distance = np.sqrt(distance_sq)
+                            force = repulsion_strength / (distance_sq + 0.1)
+                            force_vec = delta / distance * force
+                            forces[i] -= force_vec
+                            forces[j] += force_vec
+        else:
+            # Full repulsion for smaller graphs
+            for i in range(n_nodes):
+                for j in range(i + 1, n_nodes):
+                    delta = positions[j] - positions[i]
+                    distance = np.linalg.norm(delta)
+                    if distance > 0:
+                        # Avoid division by zero and ensure repulsion
+                        force = repulsion_strength / (distance ** 2 + 0.1)
+                        force_vec = delta / distance * force
+                        forces[i] -= force_vec
+                        forces[j] += force_vec
+
+        # Update positions with cooling (gradually reduce movement)
+        cooling = 1.0 - (iteration / max(iterations, 1)) * 0.7
+        step_size = 0.5 * cooling  # Increased from 0.2 to 0.5 for faster convergence
+        # Limit maximum step to prevent instability
+        max_step = k * 0.5
+        force_magnitude = np.linalg.norm(forces, axis=1, keepdims=True)
+        force_magnitude = np.where(force_magnitude > max_step, max_step, force_magnitude)
+        forces_normalized = forces / (force_magnitude + 1e-10) * force_magnitude
+        positions += forces_normalized * step_size
+
+        # Center the graph periodically
+        if iteration % 5 == 0:  # Center more frequently
+            positions -= positions.mean(axis=0)
+        
+        # Check for convergence (early exit for faster loading)
+        if iteration > 5 and iteration % 5 == 0:  # Check every 5 iterations after initial warmup
+            max_movement = np.max(np.linalg.norm(positions - prev_positions, axis=1))
+            if max_movement < convergence_threshold:
+                print(f"Layout converged early at iteration {iteration}/{iterations}")
+                break
+            prev_positions = positions.copy()
+
+    # Final centering and scaling
+    positions -= positions.mean(axis=0)
+    # Scale to reasonable size - ensure 3D distribution
+    max_dist = np.max(np.linalg.norm(positions, axis=1))
+    if max_dist > 0:
+        # Scale to ensure good 3D spread
+        target_radius = k * (n_nodes ** (1.0 / 3.0)) * 2.0
+        positions = positions / max_dist * target_radius
+    else:
+        # If everything collapsed, reinitialize with better distribution
+        print("Warning: Layout collapsed, reinitializing...")
+        radius = k * (n_nodes ** (1.0 / 3.0)) * 2.0
+        for i in range(n_nodes):
+            theta = np.pi * (3.0 - np.sqrt(5.0)) * i
+            y = 1.0 - (2.0 * i) / (n_nodes - 1)
+            r = np.sqrt(1.0 - y * y)
+            phi = theta
+            positions[i] = np.array([
+                radius * r * np.cos(phi),
+                radius * y,
+                radius * r * np.sin(phi),
+            ])
+
+    return positions
+
+
+def compute_node_sizes(degree_centrality: Dict[str, int], base_radius: float = 5.0, scale_factor: float = 15.0) -> Dict[str, float]:
+    """
+    Compute sphere radii for nodes based on connection count.
+
+    Args:
+        degree_centrality: Dictionary mapping node IDs to connection counts
+        base_radius: Base radius for all nodes (in pixels/screen units)
+        scale_factor: Scaling factor for additional connections (in pixels/screen units)
+
+    Returns:
+        Dictionary mapping node IDs to sphere radii
+    """
+    if not degree_centrality:
+        return {}
+
+    max_connections = max(degree_centrality.values())
+    min_connections = min(degree_centrality.values())
+
+    node_sizes = {}
+    for node_id, connections in degree_centrality.items():
+        if max_connections > min_connections:
+            normalized = (connections - min_connections) / (max_connections - min_connections)
+            # Use exponential scaling for more dramatic size differences
+            # This makes highly connected nodes much more visible
+            radius = base_radius + (normalized ** 0.7) * scale_factor
+        else:
+            radius = base_radius
+        node_sizes[node_id] = radius
+
+    return node_sizes
+
+
+def get_node_color(node_type: str, criticality: float = 0.0) -> Tuple[float, float, float, float]:
+    """
+    Get color for a node based on its type and criticality.
+
+    Args:
+        node_type: Type of the node
+        criticality: Criticality score (0.0 to 1.0)
+
+    Returns:
+        RGBA color tuple
+    """
+    # Color scheme based on node type
+    type_colors = {
+        "file": (0.2, 0.6, 1.0, 1.0),  # Blue
+        "module": (0.4, 0.8, 1.0, 1.0),  # Light blue
+        "function": (0.8, 0.4, 0.2, 1.0),  # Orange
+        "class": (0.6, 0.2, 0.8, 1.0),  # Purple
+        "test": (0.2, 0.8, 0.4, 1.0),  # Green
+        "config": (0.8, 0.8, 0.2, 1.0),  # Yellow
+        "resource": (0.8, 0.2, 0.2, 1.0),  # Red
+        "concept": (1.0, 0.6, 0.2, 1.0),  # Orange-yellow
+    }
+
+    base_color = type_colors.get(node_type.lower(), (0.7, 0.7, 0.7, 1.0))
+
+    # Adjust brightness based on criticality
+    brightness = 0.5 + criticality * 0.5
+    color = tuple(c * brightness for c in base_color[:3]) + (base_color[3],)
+
+    return color
+
+
+class RagnatelaCanvas(scene.SceneCanvas):
+    """Interactive 3D visualization canvas for RepoGenome."""
+
+    def __init__(self, genome: RepoGenome, min_connections: int = 0):
+        # Unfreeze to allow custom attributes (must be before super().__init__)
+        # Actually, we'll do it after since SceneCanvas needs to be initialized first
+        super().__init__(keys="interactive", size=(1200, 800), show=False, title="Ragnatela - RepoGenome 3D Visualization")
+        
+        # Unfreeze to allow custom attributes
+        self.unfreeze()
+        
+        self.genome = genome
+        self.min_connections = min_connections
+
+        # Filter nodes by minimum connections
+        degree_centrality = compute_degree_centrality(genome)
+        filtered_nodes = {
+            node_id: node
+            for node_id, node in genome.nodes.items()
+            if degree_centrality.get(node_id, 0) >= min_connections
+        }
+
+        if not filtered_nodes:
+            raise ValueError(f"No nodes found with {min_connections} or more connections")
+
+        # Create filtered genome for visualization
+        self.filtered_node_ids = list(filtered_nodes.keys())
+        self.filtered_degree = {k: v for k, v in degree_centrality.items() if k in self.filtered_node_ids}
+
+        # Setup scene first so window can be shown
+        self.view = self.central_widget.add_view()
+        self.view.camera = TurntableCamera(fov=45, distance=10, elevation=30, azimuth=45)
+        
+        # Show window early with a loading message
+        self.show()
+        app.process_events()  # Process events to show window
+
+        # Compute layout (this may take time for large graphs)
+        n_nodes = len(genome.nodes)
+        print(f"Computing 3D layout for {n_nodes} nodes...")
+        
+        node_ids = list(genome.nodes.keys())
+        node_to_index = {node_id: i for i, node_id in enumerate(node_ids)}
+        
+        # Use fewer iterations for large graphs, but still use force-directed layout
+        # Reduced iterations for faster loading
+        if n_nodes > 1000:
+            print("Using fast approximate layout for large graph...")
+            layout_iterations = 10  # Reduced from 15
+        elif n_nodes > 500:
+            layout_iterations = 15  # Reduced from 25
+        elif n_nodes > 200:
+            layout_iterations = 25  # Reduced from 50
+        else:
+            layout_iterations = 30  # Reduced from 50
+        
+        self.positions = compute_3d_layout(genome, iterations=layout_iterations)
+        self.node_indices = {node_id: node_to_index[node_id] for node_id in self.filtered_node_ids}
+
+        # Compute node sizes
+        self.node_sizes = compute_node_sizes(self.filtered_degree)
+
+        # Create visual elements
+        print("Creating visualization...")
+        self._create_visuals()
+
+        # Setup mouse controls
+        self._setup_interaction()
+        
+        # Update the display
+        self.update()
+
+    def _create_visuals(self):
+        """Create 3D visual elements (spheres and edges)."""
+        # Filter positions and create node visuals
+        # First, collect all node data with their sizes
+        node_data = []
+        
+        for node_id in self.filtered_node_ids:
+            if node_id in self.node_indices:
+                idx = self.node_indices[node_id]
+                if idx < len(self.positions):
+                    node = self.genome.nodes[node_id]
+                    node_size = self.node_sizes.get(node_id, 0.1)
+                    node_data.append({
+                        'node_id': node_id,
+                        'position': self.positions[idx],
+                        'size': node_size,
+                        'color': get_node_color(node.type.value, node.criticality),
+                    })
+        
+        if not node_data:
+            return
+        
+        # Sort nodes by size (largest first) for optimized rendering
+        node_data.sort(key=lambda x: x['size'], reverse=True)
+        n_total = len(node_data)
+        print(f"Rendering {n_total} nodes (largest to smallest)...")
+        
+        # Progressive rendering: show larger nodes first, then add smaller ones
+        # For large graphs, render in batches for better perceived performance
+        if n_total > 100:
+            # Render largest nodes first, then progressively add smaller ones
+            batch_size = max(50, n_total // 10)
+            num_batches = (n_total + batch_size - 1) // batch_size
+            
+            # Render first batch (largest nodes) immediately
+            first_batch_size = min(batch_size, n_total)
+            first_batch = node_data[:first_batch_size]
+            
+            filtered_positions = [nd['position'] for nd in first_batch]
+            filtered_sizes = [nd['size'] for nd in first_batch]
+            filtered_colors = [nd['color'] for nd in first_batch]
+            self.position_to_node_id = [nd['node_id'] for nd in first_batch]
+            
+            # Create initial visual with first batch
+            node_positions = np.array(filtered_positions)
+            node_sizes = np.array(filtered_sizes)
+            node_colors = np.array(filtered_colors)
+            
+            self.node_visual = visuals.Markers()
+            self.node_visual.set_data(
+                pos=node_positions,
+                size=node_sizes,  # Sizes in screen pixels
+                face_color=node_colors,
+                edge_color="white",
+                edge_width=1,
+            )
+            # Enable perspective scaling (if supported)
+            try:
+                self.node_visual.symbol = 'o'  # Circle/sphere symbol
+            except:
+                pass
+            self.view.add(self.node_visual)
+            self.update()
+            app.process_events()
+            
+            # Store all node data for progressive rendering
+            self.all_node_data = node_data
+            self.rendered_count = first_batch_size
+            self.batch_size = batch_size
+            
+            # Setup timer for progressive rendering
+            self.progressive_timer = app.Timer(interval=0.05, connect=self._add_next_batch, start=True)
+        else:
+            # For smaller graphs, render all at once
+            filtered_positions = [nd['position'] for nd in node_data]
+            filtered_sizes = [nd['size'] for nd in node_data]
+            filtered_colors = [nd['color'] for nd in node_data]
+            self.position_to_node_id = [nd['node_id'] for nd in node_data]
+
+            node_positions = np.array(filtered_positions)
+            node_sizes = np.array(filtered_sizes)
+            node_colors = np.array(filtered_colors)
+
+            # Create sphere visuals for nodes (already sorted by size)
+            self.node_visual = visuals.Markers()
+            self.node_visual.set_data(
+                pos=node_positions,
+                size=node_sizes,  # Sizes in screen pixels
+                face_color=node_colors,
+                edge_color="white",
+                edge_width=1,
+            )
+            # Enable perspective scaling (if supported)
+            try:
+                self.node_visual.symbol = 'o'  # Circle/sphere symbol
+            except:
+                pass
+            self.view.add(self.node_visual)
+            self.progressive_timer = None
+        
+        # Store node positions for click detection (will be updated progressively)
+        self.node_positions_array = node_positions if n_total <= 100 else np.array([nd['position'] for nd in node_data])
+        self.node_sizes_array = node_sizes if n_total <= 100 else np.array([nd['size'] for nd in node_data])
+
+        # Create edge visuals (only between filtered nodes)
+        edge_positions = []
+        edge_colors = []
+
+        for edge in self.genome.edges:
+            if edge.from_ in self.filtered_node_ids and edge.to in self.filtered_node_ids:
+                from_idx = self.node_indices[edge.from_]
+                to_idx = self.node_indices[edge.to]
+                if from_idx < len(self.positions) and to_idx < len(self.positions):
+                    edge_positions.append(self.positions[from_idx])
+                    edge_positions.append(self.positions[to_idx])
+                    # Light gray edges
+                    edge_colors.append((0.5, 0.5, 0.5, 0.3))
+                    edge_colors.append((0.5, 0.5, 0.5, 0.3))
+
+        if edge_positions:
+            edge_array = np.array(edge_positions)
+            edge_color_array = np.array(edge_colors)
+            self.edge_visual = visuals.Line()
+            self.edge_visual.set_data(
+                pos=edge_array,
+                color=edge_color_array,
+                width=1,
+            )
+            self.view.add(self.edge_visual)
+
+        # Add grid
+        grid = visuals.GridLines(color=(0.3, 0.3, 0.3, 0.5))
+        self.view.add(grid)
+        
+        # Create tooltip visuals as 2D overlay
+        # Store tooltip data instead of creating visuals immediately
+        # We'll create them on-demand when needed
+        self.tooltip_text = None
+        self.tooltip_bg = None
+        self.tooltip_view = None
+
+    def _setup_interaction(self):
+        """Setup mouse interaction handlers."""
+        # Mouse wheel for zoom
+        @self.events.mouse_wheel.connect
+        def on_mouse_wheel(event):
+            if event.delta[1] > 0:
+                self.view.camera.distance *= 0.9
+            else:
+                self.view.camera.distance *= 1.1
+            self.update()
+
+        # Mouse click for tooltip
+        @self.events.mouse_press.connect
+        def on_mouse_press(event):
+            if event.button == 1:  # Left click
+                # Get mouse position in screen coordinates
+                screen_pos = event.pos
+                
+                # Convert to 3D world coordinates using camera
+                # We need to find which node is closest to the click ray
+                clicked_node_id = self._find_clicked_node(screen_pos)
+                
+                if clicked_node_id:
+                    self._show_tooltip(clicked_node_id, screen_pos)
+                else:
+                    self._hide_tooltip()
+                
+                self.update()
+        
+        # Mouse move for hover info (optional)
+        @self.events.mouse_move.connect
+        def on_mouse_move(event):
+            # Could add hover tooltip here
+            pass
+    
+    
+    def _find_clicked_node(self, screen_pos):
+        """Find which node was clicked based on screen position using simplified projection."""
+        if not hasattr(self, 'node_positions_array') or len(self.node_positions_array) == 0:
+            return None
+        
+        camera = self.view.camera
+        width, height = self.size
+        
+        # Convert screen coordinates to normalized device coordinates (-1 to 1)
+        x_ndc = (screen_pos[0] / width) * 2.0 - 1.0
+        y_ndc = 1.0 - (screen_pos[1] / height) * 2.0  # Flip Y axis
+        
+        # Get camera parameters for simplified projection
+        # TurntableCamera uses distance, elevation, azimuth
+        camera_distance = camera.distance
+        camera_elevation = camera.elevation
+        camera_azimuth = camera.azimuth
+        
+        # Find closest node in screen space using simplified projection
+        min_dist_sq = float('inf')
+        clicked_index = None
+        
+        # Calculate camera position and orientation (simplified)
+        # For TurntableCamera, the view is centered at origin, camera rotates around
+        elevation_rad = np.radians(camera_elevation)
+        azimuth_rad = np.radians(camera_azimuth)
+        
+        # Camera position in world space (simplified turntable model)
+        camera_x = camera_distance * np.cos(elevation_rad) * np.sin(azimuth_rad)
+        camera_y = camera_distance * np.sin(elevation_rad)
+        camera_z = camera_distance * np.cos(elevation_rad) * np.cos(azimuth_rad)
+        camera_pos = np.array([camera_x, camera_y, camera_z])
+        
+        # Approximate view direction (towards origin)
+        view_dir = -camera_pos / np.linalg.norm(camera_pos)
+        
+        for i, node_pos_3d in enumerate(self.node_positions_array):
+            # Calculate vector from camera to node
+            to_node = node_pos_3d - camera_pos
+            dist_to_node = np.linalg.norm(to_node)
+            
+            if dist_to_node == 0:
+                continue
+            
+            # Project to view plane (simplified - assumes orthographic-like projection)
+            # Use the node's position relative to camera
+            # For perspective, we need to project onto the view plane
+            # Simplified: use distance from click ray
+            
+            # Calculate screen position approximation
+            # Project node onto view plane (perpendicular to view direction)
+            node_to_cam = camera_pos - node_pos_3d
+            proj_dist = np.dot(node_to_cam, view_dir)
+            
+            if proj_dist <= 0:  # Behind camera
+                continue
+            
+            # Calculate perpendicular distance from view ray
+            # This gives us an approximation of screen position
+            perp_vec = node_to_cam - proj_dist * view_dir
+            perp_dist = np.linalg.norm(perp_vec)
+            
+            # Approximate screen coordinates (very simplified)
+            # Use FOV to scale
+            fov_rad = np.radians(camera.fov)
+            screen_x_approx = (perp_vec[0] / proj_dist) / np.tan(fov_rad / 2)
+            screen_y_approx = (perp_vec[1] / proj_dist) / np.tan(fov_rad / 2)
+            
+            # Calculate distance in screen space
+            dist_sq = (screen_x_approx - x_ndc)**2 + (screen_y_approx - y_ndc)**2
+            
+            # Get node size in screen space (approximate)
+            node_radius = self.node_sizes_array[i] * 20 if i < len(self.node_sizes_array) else 10
+            # Approximate screen radius based on distance
+            screen_radius = (node_radius / proj_dist) * 0.15  # Approximate scaling factor
+            
+            threshold = screen_radius * screen_radius
+            
+            if dist_sq < threshold and dist_sq < min_dist_sq:
+                min_dist_sq = dist_sq
+                clicked_index = i
+        
+        if clicked_index is not None and clicked_index < len(self.position_to_node_id):
+            return self.position_to_node_id[clicked_index]
+        
+        return None
+    
+    def _show_tooltip(self, node_id, screen_pos):
+        """Show tooltip with node information."""
+        if node_id not in self.genome.nodes:
+            return
+        
+        node = self.genome.nodes[node_id]
+        connections = self.filtered_degree.get(node_id, 0)
+        
+        # Build tooltip text
+        lines = [
+            f"Node: {node_id[:50]}",
+            f"Type: {node.type.value}",
+            f"Connections: {connections}",
+        ]
+        
+        if node.file:
+            lines.append(f"File: {node.file[:40]}")
+        
+        if node.summary:
+            lines.append(f"Summary: {node.summary[:40]}")
+        
+        tooltip_text = "\n".join(lines)
+        
+        # Position tooltip near click or in corner
+        width, height = self.size
+        tooltip_x = min(screen_pos[0] + 10, width - 220)
+        tooltip_y = height - max(screen_pos[1] + 10, 20)  # Flip Y coordinate for view space (Y=0 at bottom)
+        
+        # Create tooltip visuals if they don't exist
+        if self.tooltip_view is None:
+            # Create a 2D overlay view for tooltips
+            self.tooltip_view = self.central_widget.add_view(camera='panzoom')
+            self.tooltip_view.camera.set_range(x=(0, width), y=(0, height))
+            
+            # Create tooltip background
+            rect_vertices = np.array([
+                [tooltip_x - 5, tooltip_y - 5],
+                [tooltip_x + 205, tooltip_y - 5],
+                [tooltip_x + 205, tooltip_y + 105],
+                [tooltip_x - 5, tooltip_y + 105],
+            ])
+            self.tooltip_bg = visuals.Polygon(
+                pos=rect_vertices,
+                color=(0.1, 0.1, 0.1, 0.9),
+                parent=self.tooltip_view.scene,
+            )
+            
+            # Create tooltip text
+            self.tooltip_text = visuals.Text(
+                text="",
+                pos=(tooltip_x, tooltip_y),
+                color="white",
+                font_size=12,
+                parent=self.tooltip_view.scene,
+            )
+        
+        # Update tooltip
+        self.tooltip_text.text = tooltip_text
+        self.tooltip_text.pos = (tooltip_x, tooltip_y)
+        self.tooltip_text.visible = True
+        
+        # Update background rectangle
+        num_lines = len(lines)
+        bg_height = num_lines * 18 + 10
+        bg_width = 210
+        # Update rectangle vertices
+        rect_vertices = np.array([
+            [tooltip_x - 5, tooltip_y - 5],
+            [tooltip_x - 5 + bg_width, tooltip_y - 5],
+            [tooltip_x - 5 + bg_width, tooltip_y - 5 + bg_height],
+            [tooltip_x - 5, tooltip_y - 5 + bg_height],
+        ])
+        self.tooltip_bg.set_data(pos=rect_vertices)
+        self.tooltip_bg.visible = True
+    
+    def _hide_tooltip(self):
+        """Hide tooltip."""
+        if self.tooltip_text is not None:
+            self.tooltip_text.visible = False
+        if self.tooltip_bg is not None:
+            self.tooltip_bg.visible = False
+    
+    def _add_next_batch(self, event=None):
+        """Add next batch of nodes for progressive rendering."""
+        if not hasattr(self, 'all_node_data') or self.rendered_count >= len(self.all_node_data):
+            # All nodes rendered, stop timer
+            if hasattr(self, 'progressive_timer') and self.progressive_timer:
+                self.progressive_timer.stop()
+            return
+        
+        # Get next batch
+        end_count = min(self.rendered_count + self.batch_size, len(self.all_node_data))
+        nodes_to_render = self.all_node_data[:end_count]
+        
+        if not nodes_to_render or end_count == self.rendered_count:
+            if hasattr(self, 'progressive_timer') and self.progressive_timer:
+                self.progressive_timer.stop()
+            return
+        
+        # Rebuild visual with all nodes rendered so far
+        filtered_positions = [nd['position'] for nd in nodes_to_render]
+        filtered_sizes = [nd['size'] for nd in nodes_to_render]
+        filtered_colors = [nd['color'] for nd in nodes_to_render]
+        
+        node_positions = np.array(filtered_positions)
+        node_sizes = np.array(filtered_sizes)
+        node_colors = np.array(filtered_colors)
+        
+        # Update visual with all nodes rendered so far
+        self.node_visual.set_data(
+            pos=node_positions,
+            size=node_sizes,  # Sizes in screen pixels
+            face_color=node_colors,
+            edge_color="white",
+            edge_width=1,
+        )
+        
+        # Update position arrays for click detection
+        self.position_to_node_id = [nd['node_id'] for nd in nodes_to_render]
+        self.node_positions_array = node_positions
+        self.node_sizes_array = node_sizes
+        
+        self.rendered_count = end_count
+        
+        # Update display
+        self.update()
+        app.process_events()
+        
+        # Stop timer if all nodes are rendered
+        if self.rendered_count >= len(self.all_node_data):
+            if hasattr(self, 'progressive_timer') and self.progressive_timer:
+                self.progressive_timer.stop()
+            print(f"Finished rendering all {len(self.all_node_data)} nodes.")
+
+    def run(self):
+        """Run the visualization."""
+        app.run()
+
+
+def visualize_ragnatela(
+    genome_path: Optional[Path] = None,
+    search_directory: Optional[Path] = None,
+    min_connections: int = 0,
+) -> None:
+    """
+    Visualize a RepoGenome file in 3D.
+
+    Args:
+        genome_path: Direct path to repogenome.json file
+        search_directory: Directory to search for latest repogenome.json
+        min_connections: Minimum number of connections to show a node
+    """
+    # Determine which file to load
+    if genome_path:
+        if not genome_path.exists():
+            raise FileNotFoundError(f"Genome file not found: {genome_path}")
+        file_path = genome_path
+    elif search_directory:
+        file_path = find_latest_repogenome(search_directory)
+        if not file_path:
+            raise FileNotFoundError(
+                f"No repogenome.json file found in {search_directory} or subdirectories"
+            )
+    else:
+        # Default to current directory
+        current_dir = Path.cwd()
+        file_path = find_latest_repogenome(current_dir)
+        if not file_path:
+            raise FileNotFoundError(
+                f"No repogenome.json file found in {current_dir} or subdirectories"
+            )
+
+    # Load genome
+    genome = RepoGenome.load(str(file_path))
+
+    if not genome.nodes:
+        raise ValueError("Genome file contains no nodes")
+
+    # Create and run visualization
+    canvas = RagnatelaCanvas(genome, min_connections=min_connections)
+    canvas.run()
+

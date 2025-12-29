@@ -1,6 +1,7 @@
 """CLI interface for RepoGenome."""
 
 import json
+import logging
 from pathlib import Path
 
 import click
@@ -52,8 +53,17 @@ def main():
     is_flag=True,
     help="Perform incremental update if genome exists",
 )
-def generate(path: Path, output: Path, subsystems, exclude_subsystems, incremental):
+@click.option(
+    "--log",
+    type=click.Choice(["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"], case_sensitive=False),
+    default=None,
+    help="Set logging level",
+)
+def generate(path: Path, output: Path, subsystems, exclude_subsystems, incremental, log):
     """Generate a new RepoGenome for the repository."""
+    if log:
+        logging.basicConfig(level=log.upper(), format='%(asctime)s - %(levelname)s - %(message)s')
+
     console.print(f"[bold]Generating RepoGenome for:[/bold] {path}")
 
     # Determine output path
@@ -85,7 +95,8 @@ def generate(path: Path, output: Path, subsystems, exclude_subsystems, increment
 
     # Generate genome
     try:
-        generator = RepoGenomeGenerator(path, enabled_subsystems=enabled_subsystems)
+        logger = logging.getLogger(__name__) if log else None
+        generator = RepoGenomeGenerator(path, enabled_subsystems=enabled_subsystems, logger=logger)
 
         if incremental and existing_genome:
             genome = generator.generate(incremental=True, existing_genome_path=existing_genome)

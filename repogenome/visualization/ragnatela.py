@@ -58,6 +58,50 @@ def find_latest_repogenome(directory: Path) -> Optional[Path]:
     return latest_file
 
 
+def compute_node_clusters(genome: RepoGenome, node_ids: List[str]) -> Dict[str, int]:
+    """
+    Compute clusters/communities for nodes using a simple connected component approach.
+    
+    Args:
+        genome: The RepoGenome
+        node_ids: List of node IDs to cluster
+        
+    Returns:
+        Dictionary mapping node IDs to cluster IDs
+    """
+    node_set = set(node_ids)
+    clusters = {}
+    cluster_id = 0
+    
+    # Build adjacency list
+    adjacency = {node_id: [] for node_id in node_ids}
+    for edge in genome.edges:
+        if edge.from_ in node_set and edge.to in node_set:
+            adjacency[edge.from_].append(edge.to)
+            adjacency[edge.to].append(edge.from_)
+    
+    # Find connected components (simple clustering)
+    visited = set()
+    for node_id in node_ids:
+        if node_id not in visited:
+            # BFS to find all connected nodes
+            queue = [node_id]
+            visited.add(node_id)
+            clusters[node_id] = cluster_id
+            
+            while queue:
+                current = queue.pop(0)
+                for neighbor in adjacency.get(current, []):
+                    if neighbor not in visited:
+                        visited.add(neighbor)
+                        clusters[neighbor] = cluster_id
+                        queue.append(neighbor)
+            
+            cluster_id += 1
+    
+    return clusters
+
+
 def compute_degree_centrality(genome: RepoGenome) -> Dict[str, int]:
     """
     Compute degree centrality (connection count) for each node.
@@ -370,6 +414,20 @@ class RagnatelaCanvas(scene.SceneCanvas):
         # Create filtered genome for visualization
         self.filtered_node_ids = list(filtered_nodes.keys())
         self.filtered_degree = {k: v for k, v in degree_centrality.items() if k in self.filtered_node_ids}
+        
+        # Compute clusters
+        self.node_clusters = compute_node_clusters(genome, self.filtered_node_ids)
+        # Generate colors for clusters
+        num_clusters = len(set(self.node_clusters.values())) if self.node_clusters else 0
+        if num_clusters > 0:
+            import colorsys
+            self.cluster_colors = {}
+            for i in range(num_clusters):
+                hue = i / num_clusters
+                rgb = colorsys.hsv_to_rgb(hue, 0.7, 0.9)
+                self.cluster_colors[i] = tuple(rgb) + (1.0,)
+        else:
+            self.cluster_colors = {}
 
         # Setup scene first so window can be shown
         self.view = self.central_widget.add_view()
@@ -403,6 +461,27 @@ class RagnatelaCanvas(scene.SceneCanvas):
 
         # Compute node sizes
         self.node_sizes = compute_node_sizes(self.filtered_degree)
+        
+        # Initialize enhancement attributes
+        self.clusters_enabled = False
+        self.show_labels = False
+        self.node_labels = []
+        self.search_query = ""
+        self.filtered_node_set = None
+        self.search_view = None
+        self.search_text_input = None
+        self.search_bg = None
+        self.search_active = False
+        self.selected_node_id = None
+        self.minimap_view = None
+        self.minimap_nodes = None
+        self.minimap_visible = False
+        self.animation_timer = None
+        self.animation_start_time = None
+        self.animation_duration = 0.5
+        self.animation_start_camera = None
+        self.animation_target_camera = None
+        self.edge_data = []
 
         # Create visual elements
         print("Creating visualization...")
@@ -426,11 +505,18 @@ class RagnatelaCanvas(scene.SceneCanvas):
                 if idx < len(self.positions):
                     node = self.genome.nodes[node_id]
                     node_size = self.node_sizes.get(node_id, 0.1)
+                    # Use cluster color if clustering enabled, otherwise use node type color
+                    if self.clusters_enabled and self.node_clusters and node_id in self.node_clusters:
+                        cluster_id = self.node_clusters[node_id]
+                        node_color = self.cluster_colors.get(cluster_id, get_node_color(node.type.value, node.criticality))
+                    else:
+                        node_color = get_node_color(node.type.value, node.criticality)
+                    
                     node_data.append({
                         'node_id': node_id,
                         'position': self.positions[idx],
                         'size': node_size,
-                        'color': get_node_color(node.type.value, node.criticality),
+                        'color': node_color,
                     })
         
         if not node_data:
@@ -513,25 +599,36 @@ class RagnatelaCanvas(scene.SceneCanvas):
                 pass
             self.view.add(self.node_visual)
             self.progressive_timer = None
+            
+            # Create node labels if enabled
+            self._create_node_labels(node_data)
         
         # Store node positions for click detection (will be updated progressively)
         self.node_positions_array = node_positions if n_total <= 100 else np.array([nd['position'] for nd in node_data])
         self.node_sizes_array = node_sizes if n_total <= 100 else np.array([nd['size'] for nd in node_data])
+        
+        # Store base sizes (before distance scaling) for distance-based updates
+        self.base_node_sizes = self.node_sizes_array.copy() if n_total <= 100 else np.array([nd['size'] for nd in node_data])
 
         # Create edge visuals (only between filtered nodes)
+        # Store edge data for highlighting
+        self.edge_data = []  # List of (from_idx, to_idx, edge) tuples
         edge_positions = []
         edge_colors = []
 
         for edge in self.genome.edges:
             if edge.from_ in self.filtered_node_ids and edge.to in self.filtered_node_ids:
-                from_idx = self.node_indices[edge.from_]
-                to_idx = self.node_indices[edge.to]
-                if from_idx < len(self.positions) and to_idx < len(self.positions):
-                    edge_positions.append(self.positions[from_idx])
-                    edge_positions.append(self.positions[to_idx])
-                    # Light gray edges
-                    edge_colors.append((0.5, 0.5, 0.5, 0.3))
-                    edge_colors.append((0.5, 0.5, 0.5, 0.3))
+                if edge.from_ in self.node_indices and edge.to in self.node_indices:
+                    from_idx = self.node_indices[edge.from_]
+                    to_idx = self.node_indices[edge.to]
+                    if from_idx < len(self.positions) and to_idx < len(self.positions):
+                        edge_positions.append(self.positions[from_idx])
+                        edge_positions.append(self.positions[to_idx])
+                        # Light gray edges
+                        edge_colors.append((0.5, 0.5, 0.5, 0.3))
+                        edge_colors.append((0.5, 0.5, 0.5, 0.3))
+                        # Store edge data for highlighting
+                        self.edge_data.append((edge.from_, edge.to, edge))
 
         if edge_positions:
             edge_array = np.array(edge_positions)
@@ -543,6 +640,13 @@ class RagnatelaCanvas(scene.SceneCanvas):
                 width=1,
             )
             self.view.add(self.edge_visual)
+            # Store original edge data for highlighting
+            self.original_edge_positions = edge_array.copy()
+            self.original_edge_colors = edge_color_array.copy()
+        else:
+            self.edge_visual = None
+            self.original_edge_positions = None
+            self.original_edge_colors = None
 
         # Add grid
         grid = visuals.GridLines(color=(0.3, 0.3, 0.3, 0.5))
@@ -564,7 +668,13 @@ class RagnatelaCanvas(scene.SceneCanvas):
                 self.view.camera.distance *= 0.9
             else:
                 self.view.camera.distance *= 1.1
+            self._update_node_sizes_for_distance()
             self.update()
+        
+        # Update sizes when camera changes
+        @self.view.camera.events.update.connect
+        def on_camera_update(event):
+            self._update_node_sizes_for_distance()
 
         # Mouse click for tooltip
         @self.events.mouse_press.connect
@@ -578,9 +688,13 @@ class RagnatelaCanvas(scene.SceneCanvas):
                 clicked_node_id = self._find_clicked_node(screen_pos)
                 
                 if clicked_node_id:
+                    self.selected_node_id = clicked_node_id
                     self._show_tooltip(clicked_node_id, screen_pos)
+                    self._highlight_paths(clicked_node_id)
                 else:
+                    self.selected_node_id = None
                     self._hide_tooltip()
+                    self._clear_path_highlighting()
                 
                 self.update()
         
@@ -588,6 +702,45 @@ class RagnatelaCanvas(scene.SceneCanvas):
         @self.events.mouse_move.connect
         def on_mouse_move(event):
             # Could add hover tooltip here
+            pass
+    
+    def _update_node_sizes_for_distance(self):
+        """Update node sizes based on camera distance for perspective scaling."""
+        if not hasattr(self, 'node_visual') or not hasattr(self, 'base_node_sizes'):
+            return
+        
+        try:
+            camera = self.view.camera
+            camera_distance = camera.distance
+            
+            # Calculate scale factor based on distance
+            # Reference distance where scale = 1.0
+            reference_distance = 10.0
+            scale_factor = reference_distance / max(camera_distance, 0.1)
+            # Clamp scale to reasonable range
+            scale_factor = max(0.3, min(3.0, scale_factor))
+            
+            # Apply distance scaling to base sizes
+            scaled_sizes = self.base_node_sizes * scale_factor
+            
+            # Get current visual data
+            current_data = self.node_visual._data
+            if current_data is None:
+                return
+            
+            # Update sizes
+            self.node_visual.set_data(
+                pos=current_data['a_position'],
+                size=scaled_sizes,
+                face_color=current_data['a_fg_color'],
+                edge_color="white",
+                edge_width=1,
+            )
+            
+            # Update stored sizes array
+            self.node_sizes_array = scaled_sizes
+        except Exception:
+            # Silently fail if update can't be performed
             pass
     
     
@@ -711,6 +864,8 @@ class RagnatelaCanvas(scene.SceneCanvas):
             # Create a 2D overlay view for tooltips
             self.tooltip_view = self.central_widget.add_view(camera='panzoom')
             self.tooltip_view.camera.set_range(x=(0, width), y=(0, height))
+            # Make tooltip view not capture mouse events so it doesn't block interactions
+            self.tooltip_view.interactive = False
             
             # Create tooltip background
             rect_vertices = np.array([
@@ -743,14 +898,27 @@ class RagnatelaCanvas(scene.SceneCanvas):
         num_lines = len(lines)
         bg_height = num_lines * 18 + 10
         bg_width = 210
-        # Update rectangle vertices
+        # Create or update rectangle vertices
         rect_vertices = np.array([
             [tooltip_x - 5, tooltip_y - 5],
             [tooltip_x - 5 + bg_width, tooltip_y - 5],
             [tooltip_x - 5 + bg_width, tooltip_y - 5 + bg_height],
             [tooltip_x - 5, tooltip_y - 5 + bg_height],
         ])
-        self.tooltip_bg.set_data(pos=rect_vertices)
+        
+        # Remove old background if it exists
+        if self.tooltip_bg is not None:
+            try:
+                self.tooltip_bg.parent = None
+            except:
+                pass
+        
+        # Create new polygon with updated vertices (Polygon doesn't support set_data)
+        self.tooltip_bg = visuals.Polygon(
+            pos=rect_vertices,
+            color=(0.1, 0.1, 0.1, 0.9),
+            parent=self.tooltip_view.scene,
+        )
         self.tooltip_bg.visible = True
     
     def _hide_tooltip(self):
@@ -759,6 +927,506 @@ class RagnatelaCanvas(scene.SceneCanvas):
             self.tooltip_text.visible = False
         if self.tooltip_bg is not None:
             self.tooltip_bg.visible = False
+    
+    def _create_node_labels(self, node_data):
+        """Create text labels for nodes."""
+        # Clear existing labels
+        for label in self.node_labels:
+            try:
+                label.parent = None
+            except:
+                pass
+        self.node_labels = []
+        
+        if not self.show_labels:
+            return
+        
+        # Create labels for each node
+        for nd in node_data:
+            node_id = nd['node_id']
+            position = nd['position']
+            
+            # Truncate long node IDs
+            label_text = node_id[:30] + "..." if len(node_id) > 30 else node_id
+            
+            # Create text visual positioned near the node
+            label = visuals.Text(
+                text=label_text,
+                pos=position,
+                color="white",
+                font_size=10,
+                parent=self.view.scene,
+            )
+            # Offset label slightly above node
+            label.pos = (position[0], position[1] + 0.3, position[2])
+            self.node_labels.append(label)
+    
+    def _toggle_labels(self):
+        """Toggle node labels on/off."""
+        self.show_labels = not self.show_labels
+        if hasattr(self, 'all_node_data'):
+            # Recreate labels with current data
+            current_data = self.all_node_data[:self.rendered_count] if hasattr(self, 'rendered_count') else self.all_node_data
+            self._create_node_labels(current_data)
+        elif hasattr(self, 'node_positions_array'):
+            # Recreate from stored data
+            node_data = []
+            for i, node_id in enumerate(self.position_to_node_id):
+                if i < len(self.node_positions_array):
+                    node_data.append({
+                        'node_id': node_id,
+                        'position': self.node_positions_array[i],
+                    })
+            self._create_node_labels(node_data)
+        self.update()
+    
+    def _toggle_search(self):
+        """Toggle search bar visibility."""
+        self.search_active = not self.search_active
+        if self.search_active:
+            self._create_search_ui()
+        else:
+            self._remove_search_ui()
+        self.update()
+    
+    def _create_search_ui(self):
+        """Create search bar UI overlay."""
+        if self.search_view is not None:
+            return
+        
+        width, height = self.size
+        # Create 2D overlay view for search
+        self.search_view = self.central_widget.add_view(camera='panzoom')
+        self.search_view.camera.set_range(x=(0, width), y=(0, height))
+        # Make search view not capture mouse events except in search area
+        self.search_view.interactive = False
+        
+        # Search background
+        self.search_bg = visuals.Rectangle(
+            pos=(10, height - 50),
+            size=(400, 40),
+            color=(0.1, 0.1, 0.1, 0.9),
+            parent=self.search_view.scene,
+        )
+        
+        # Search text
+        self.search_text_input = visuals.Text(
+            text="Search: " + self.search_query + "_",
+            pos=(15, height - 35),
+            color="white",
+            font_size=14,
+            parent=self.search_view.scene,
+        )
+    
+    def _update_search_display(self):
+        """Update search bar text display."""
+        if self.search_text_input is not None:
+            width, height = self.size
+            self.search_text_input.text = "Search: " + self.search_query + "_"
+            self.search_text_input.pos = (15, height - 35)
+    
+    def _remove_search_ui(self):
+        """Remove search bar UI."""
+        if self.search_view is not None:
+            try:
+                self.search_view.parent = None
+            except:
+                pass
+            self.search_view = None
+            self.search_text_input = None
+            self.search_bg = None
+    
+    def _apply_filters(self):
+        """Apply search/filter to node visualization."""
+        if not self.search_query and self.filtered_node_set is None:
+            # No filters, show all
+            if hasattr(self, 'all_node_data'):
+                self._rebuild_visuals_from_data(self.all_node_data[:self.rendered_count] if hasattr(self, 'rendered_count') else self.all_node_data)
+            return
+        
+        # Determine which nodes to show
+        visible_node_ids = set()
+        
+        if self.search_query:
+            # Filter by search query
+            query_lower = self.search_query.lower()
+            for node_id in self.filtered_node_ids:
+                node = self.genome.nodes.get(node_id)
+                if node:
+                    # Search in node ID, file path, type, summary
+                    matches = (
+                        query_lower in node_id.lower() or
+                        (node.file and query_lower in node.file.lower()) or
+                        (node.type and query_lower in node.type.value.lower()) or
+                        (node.summary and query_lower in node.summary.lower())
+                    )
+                    if matches:
+                        visible_node_ids.add(node_id)
+        else:
+            # No search, show all filtered nodes
+            visible_node_ids = set(self.filtered_node_ids)
+        
+        # Apply additional filters
+        if self.filtered_node_set is not None:
+            visible_node_ids = visible_node_ids.intersection(self.filtered_node_set)
+        
+        # Rebuild visuals with filtered nodes
+        filtered_data = []
+        if hasattr(self, 'all_node_data'):
+            for nd in self.all_node_data:
+                if nd['node_id'] in visible_node_ids:
+                    filtered_data.append(nd)
+        else:
+            # Rebuild from current visualization
+            for i, node_id in enumerate(self.position_to_node_id):
+                if node_id in visible_node_ids and i < len(self.node_positions_array):
+                    node = self.genome.nodes.get(node_id)
+                    if node:
+                        filtered_data.append({
+                            'node_id': node_id,
+                            'position': self.node_positions_array[i],
+                            'size': self.base_node_sizes[i] if i < len(self.base_node_sizes) else self.node_sizes_array[i],
+                            'color': get_node_color(node.type.value, node.criticality),
+                        })
+        
+        if filtered_data:
+            self._rebuild_visuals_from_data(filtered_data)
+        else:
+            # Hide all nodes if no matches
+            if hasattr(self, 'node_visual'):
+                self.node_visual.visible = False
+    
+    def _rebuild_visuals_from_data(self, node_data):
+        """Rebuild node visuals from node data with fade animation."""
+        if not node_data:
+            # Fade out
+            if hasattr(self, 'node_visual'):
+                self.node_visual.visible = False
+            self.update()
+            return
+        
+        filtered_positions = [nd['position'] for nd in node_data]
+        filtered_sizes = [nd['size'] for nd in node_data]
+        filtered_colors = [nd['color'] for nd in node_data]
+        
+        node_positions = np.array(filtered_positions)
+        node_sizes = np.array(filtered_sizes)
+        node_colors = np.array(filtered_colors)
+        
+        # Apply distance scaling
+        camera = self.view.camera
+        camera_distance = camera.distance
+        reference_distance = 10.0
+        scale_factor = reference_distance / max(camera_distance, 0.1)
+        scale_factor = max(0.3, min(3.0, scale_factor))
+        scaled_sizes = node_sizes * scale_factor
+        
+        # Fade in new nodes (start with low opacity)
+        fade_colors = []
+        for color in node_colors:
+            fade_color = list(color[:3]) + [0.3]  # Start with low alpha
+            fade_colors.append(fade_color)
+        fade_colors = np.array(fade_colors)
+        
+        # Update visual
+        self.node_visual.set_data(
+            pos=node_positions,
+            size=scaled_sizes,
+            face_color=fade_colors,
+            edge_color="white",
+            edge_width=1,
+        )
+        self.node_visual.visible = True
+        
+        # Animate fade in
+        import time
+        fade_start = time.time()
+        fade_duration = 0.3
+        
+        def fade_in(event=None):
+            elapsed = time.time() - fade_start
+            progress = min(elapsed / fade_duration, 1.0)
+            
+            # Fade from 0.3 to full opacity
+            alpha = 0.3 + (1.0 - 0.3) * progress
+            
+            fade_colors = []
+            for color in node_colors:
+                fade_color = list(color[:3]) + [alpha]
+                fade_colors.append(fade_color)
+            fade_colors = np.array(fade_colors)
+            
+            self.node_visual.set_data(
+                pos=node_positions,
+                size=scaled_sizes,
+                face_color=fade_colors,
+                edge_color="white",
+                edge_width=1,
+            )
+            self.update()
+            
+            if progress >= 1.0:
+                # Restore full opacity colors
+                self.node_visual.set_data(
+                    pos=node_positions,
+                    size=scaled_sizes,
+                    face_color=node_colors,
+                    edge_color="white",
+                    edge_width=1,
+                )
+                return False  # Stop timer
+        
+        fade_timer = app.Timer(interval=0.016, connect=fade_in, start=True, iterations=1)
+        
+        # Update stored arrays
+        self.node_positions_array = node_positions
+        self.node_sizes_array = scaled_sizes
+        self.position_to_node_id = [nd['node_id'] for nd in node_data]
+        
+        # Update labels if enabled
+        if self.show_labels:
+            self._create_node_labels(node_data)
+        
+        self.update()
+    
+    def _highlight_paths(self, node_id):
+        """Highlight all edges connected to the selected node."""
+        if not hasattr(self, 'edge_visual') or self.edge_visual is None:
+            return
+        
+        if not hasattr(self, 'edge_data') or not self.edge_data:
+            return
+        
+        # Get node index
+        if node_id not in self.node_indices:
+            return
+        
+        node_idx = self.node_indices[node_id]
+        
+        # Create new edge colors array
+        new_edge_colors = []
+        edge_positions = []
+        highlighted = False
+        
+        for edge_from, edge_to, edge in self.edge_data:
+            from_idx = self.node_indices.get(edge_from)
+            to_idx = self.node_indices.get(edge_to)
+            
+            if from_idx is None or to_idx is None:
+                continue
+            
+            if from_idx >= len(self.positions) or to_idx >= len(self.positions):
+                continue
+            
+            edge_positions.append(self.positions[from_idx])
+            edge_positions.append(self.positions[to_idx])
+            
+            # Highlight if connected to selected node
+            if edge_from == node_id or edge_to == node_id:
+                # Bright yellow for highlighted edges
+                new_edge_colors.append((1.0, 1.0, 0.0, 0.9))
+                new_edge_colors.append((1.0, 1.0, 0.0, 0.9))
+                highlighted = True
+            else:
+                # Keep original colors but slightly dimmed for non-highlighted edges
+                edge_idx = len(new_edge_colors) // 2
+                if (hasattr(self, 'original_edge_colors') and 
+                    self.original_edge_colors is not None and 
+                    edge_idx * 2 < len(self.original_edge_colors)):
+                    # Use original color but slightly dimmed
+                    orig_color = self.original_edge_colors[edge_idx * 2]
+                    dimmed_color = tuple(c * 0.5 if i < 3 else c * 0.5 for i, c in enumerate(orig_color))
+                    new_edge_colors.append(dimmed_color)
+                    new_edge_colors.append(dimmed_color)
+                else:
+                    # Fallback to slightly dimmed gray
+                    new_edge_colors.append((0.25, 0.25, 0.25, 0.15))
+                    new_edge_colors.append((0.25, 0.25, 0.25, 0.15))
+        
+        if edge_positions:
+            edge_array = np.array(edge_positions)
+            edge_color_array = np.array(new_edge_colors)
+            self.edge_visual.set_data(
+                pos=edge_array,
+                color=edge_color_array,
+                width=2 if highlighted else 1,
+            )
+    
+    def _clear_path_highlighting(self):
+        """Clear path highlighting and restore original edge colors."""
+        if not hasattr(self, 'edge_visual') or self.edge_visual is None:
+            return
+        
+        if (hasattr(self, 'original_edge_colors') and self.original_edge_colors is not None and
+            hasattr(self, 'original_edge_positions') and self.original_edge_positions is not None):
+            # Restore original colors and positions
+            self.edge_visual.set_data(
+                pos=self.original_edge_positions,
+                color=self.original_edge_colors,
+                width=1,
+            )
+    
+    def _focus_on_node(self, node_id):
+        """Focus camera on a specific node with animation."""
+        if node_id not in self.position_to_node_id:
+            return
+        
+        idx = self.position_to_node_id.index(node_id)
+        if idx < len(self.node_positions_array):
+            node_pos = self.node_positions_array[idx]
+            
+            # Store animation start state
+            camera = self.view.camera
+            self.animation_start_camera = {
+                'center': np.array(camera.center),
+                'distance': camera.distance,
+                'elevation': camera.elevation,
+                'azimuth': camera.azimuth,
+            }
+            
+            # Set target state
+            self.animation_target_camera = {
+                'center': node_pos,
+                'distance': 5.0,
+                'elevation': 30.0,
+                'azimuth': 45.0,
+            }
+            
+            # Start animation
+            import time
+            self.animation_start_time = time.time()
+            
+            if self.animation_timer is None:
+                self.animation_timer = app.Timer(interval=0.016, connect=self._animate_camera, start=True)
+            else:
+                self.animation_timer.start()
+    
+    def _animate_camera(self, event=None):
+        """Animate camera movement smoothly."""
+        if self.animation_start_camera is None or self.animation_target_camera is None:
+            if self.animation_timer:
+                self.animation_timer.stop()
+            return
+        
+        import time
+        elapsed = time.time() - self.animation_start_time
+        progress = min(elapsed / self.animation_duration, 1.0)
+        
+        # Easing function (ease-in-out)
+        if progress < 0.5:
+            t = 2 * progress * progress
+        else:
+            t = 1 - pow(-2 * progress + 2, 2) / 2
+        
+        # Interpolate camera parameters
+        camera = self.view.camera
+        start = self.animation_start_camera
+        target = self.animation_target_camera
+        
+        camera.center = start['center'] + (target['center'] - start['center']) * t
+        camera.distance = start['distance'] + (target['distance'] - start['distance']) * t
+        camera.elevation = start['elevation'] + (target['elevation'] - start['elevation']) * t
+        camera.azimuth = start['azimuth'] + (target['azimuth'] - start['azimuth']) * t
+        
+        self._update_node_sizes_for_distance()
+        if self.minimap_visible:
+            self._update_minimap()
+        self.update()
+        
+        if progress >= 1.0:
+            # Animation complete
+            self.animation_timer.stop()
+            self.animation_start_camera = None
+            self.animation_target_camera = None
+    
+    def _toggle_minimap(self):
+        """Toggle minimap visibility."""
+        self.minimap_visible = not self.minimap_visible
+        if self.minimap_visible:
+            self._create_minimap()
+        else:
+            self._remove_minimap()
+        self.update()
+    
+    def _create_minimap(self):
+        """Create minimap showing 2D projection of graph."""
+        if self.minimap_view is not None:
+            return
+        
+        width, height = self.size
+        minimap_size = 200
+        minimap_x = width - minimap_size - 10
+        minimap_y = 10
+        
+        # Create 2D overlay view for minimap
+        self.minimap_view = self.central_widget.add_view(camera='panzoom')
+        self.minimap_view.camera.set_range(x=(0, width), y=(0, height))
+        # Make minimap view not capture mouse events so it doesn't block interactions
+        self.minimap_view.interactive = False
+        
+        # Minimap background
+        minimap_bg = visuals.Rectangle(
+            pos=(minimap_x, minimap_y),
+            size=(minimap_size, minimap_size),
+            color=(0.1, 0.1, 0.1, 0.8),
+            parent=self.minimap_view.scene,
+        )
+        
+        # Project 3D positions to 2D for minimap
+        # Use top-down view (X-Z plane)
+        if hasattr(self, 'node_positions_array') and len(self.node_positions_array) > 0:
+            # Get bounds
+            positions_2d = self.node_positions_array[:, [0, 2]]  # X and Z coordinates
+            min_x, min_z = positions_2d.min(axis=0)
+            max_x, max_z = positions_2d.max(axis=0)
+            
+            # Normalize to minimap coordinates
+            range_x = max_x - min_x if max_x != min_x else 1.0
+            range_z = max_z - min_z if max_z != min_z else 1.0
+            
+            # Scale to fit minimap
+            scale = min((minimap_size - 20) / range_x, (minimap_size - 20) / range_z)
+            
+            minimap_positions = []
+            for pos_3d in self.node_positions_array:
+                x_norm = (pos_3d[0] - min_x) * scale + 10
+                z_norm = (pos_3d[2] - min_z) * scale + 10
+                minimap_positions.append([minimap_x + x_norm, minimap_y + z_norm])
+            
+            # Create minimap nodes
+            minimap_pos_array = np.array(minimap_positions)
+            self.minimap_nodes = visuals.Markers()
+            self.minimap_nodes.set_data(
+                pos=minimap_pos_array,
+                size=3,
+                face_color="white",
+                edge_color="gray",
+                edge_width=0.5,
+                parent=self.minimap_view.scene,
+            )
+    
+    def _update_minimap(self):
+        """Update minimap viewport indicator."""
+        # Could add viewport rectangle showing current camera view
+        pass
+    
+    def _remove_minimap(self):
+        """Remove minimap."""
+        if self.minimap_view is not None:
+            try:
+                self.minimap_view.parent = None
+            except:
+                pass
+            self.minimap_view = None
+            self.minimap_nodes = None
+    
+    def _toggle_clustering(self):
+        """Toggle node clustering visualization."""
+        self.clusters_enabled = not self.clusters_enabled
+        # Rebuild visuals with new color scheme
+        if hasattr(self, 'all_node_data'):
+            self._create_visuals()
+        self.update()
     
     def _add_next_batch(self, event=None):
         """Add next batch of nodes for progressive rendering."""
@@ -787,9 +1455,17 @@ class RagnatelaCanvas(scene.SceneCanvas):
         node_colors = np.array(filtered_colors)
         
         # Update visual with all nodes rendered so far
+        # Apply distance scaling
+        camera = self.view.camera
+        camera_distance = camera.distance
+        reference_distance = 10.0
+        scale_factor = reference_distance / max(camera_distance, 0.1)
+        scale_factor = max(0.3, min(3.0, scale_factor))
+        scaled_sizes = node_sizes * scale_factor
+        
         self.node_visual.set_data(
             pos=node_positions,
-            size=node_sizes,  # Sizes in screen pixels
+            size=scaled_sizes,
             face_color=node_colors,
             edge_color="white",
             edge_width=1,
@@ -798,7 +1474,17 @@ class RagnatelaCanvas(scene.SceneCanvas):
         # Update position arrays for click detection
         self.position_to_node_id = [nd['node_id'] for nd in nodes_to_render]
         self.node_positions_array = node_positions
-        self.node_sizes_array = node_sizes
+        self.node_sizes_array = scaled_sizes
+        # Update base sizes
+        if not hasattr(self, 'base_node_sizes'):
+            self.base_node_sizes = node_sizes.copy()
+        else:
+            # Extend base sizes array
+            self.base_node_sizes = np.array([nd['size'] for nd in self.all_node_data[:end_count]])
+        
+        # Update labels if enabled
+        if self.show_labels:
+            self._create_node_labels(nodes_to_render)
         
         self.rendered_count = end_count
         

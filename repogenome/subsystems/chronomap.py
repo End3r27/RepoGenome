@@ -25,7 +25,7 @@ class ChronoMap(Subsystem):
         self.is_required = False  # Optional if git is not available
 
     def analyze(
-        self, repo_path: Path, existing_genome: Optional[Dict[str, Any]] = None
+        self, repo_path: Path, existing_genome: Optional[Dict[str, Any]] = None, progress: Optional[Any] = None
     ) -> Dict[str, Any]:
         """
         Analyze temporal evolution.

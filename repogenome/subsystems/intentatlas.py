@@ -21,7 +21,7 @@ class IntentAtlas(Subsystem):
         self.depends_on_subsystems = ["repospider"]
 
     def analyze(
-        self, repo_path: Path, existing_genome: Optional[Dict[str, Any]] = None
+        self, repo_path: Path, existing_genome: Optional[Dict[str, Any]] = None, progress: Optional[Any] = None
     ) -> Dict[str, Any]:
         """
         Extract domain concepts.

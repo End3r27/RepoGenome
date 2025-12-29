@@ -29,7 +29,10 @@ class Subsystem(ABC):
 
     @abstractmethod
     def analyze(
-        self, repo_path: Path, existing_genome: Optional[Dict[str, Any]] = None
+        self, 
+        repo_path: Path, 
+        existing_genome: Optional[Dict[str, Any]] = None,
+        progress: Optional[Any] = None
     ) -> Dict[str, Any]:
         """
         Analyze the repository and return subsystem-specific data.
@@ -37,6 +40,7 @@ class Subsystem(ABC):
         Args:
             repo_path: Path to the repository root
             existing_genome: Optional existing genome for incremental updates
+            progress: Optional progress bar for tracking
 
         Returns:
             Dictionary containing subsystem data to merge into genome

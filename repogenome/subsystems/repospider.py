@@ -40,7 +40,10 @@ class RepoSpider(Subsystem):
         self.dependency_resolver = DependencyResolver()
 
     def analyze(
-        self, repo_path: Path, existing_genome: Optional[Dict[str, Any]] = None
+        self, 
+        repo_path: Path, 
+        existing_genome: Optional[Dict[str, Any]] = None,
+        progress: Optional[Any] = None
     ) -> Dict[str, Any]:
         """
         Analyze repository structure.
@@ -48,6 +51,7 @@ class RepoSpider(Subsystem):
         Args:
             repo_path: Path to repository root
             existing_genome: Optional existing genome
+            progress: Optional progress bar for tracking
 
         Returns:
             Dictionary with nodes and edges
@@ -92,8 +96,15 @@ class RepoSpider(Subsystem):
                     continue
                 all_files.append(f)
 
+        # Create progress task for file analysis
+        file_task = None
+        if progress:
+            file_task = progress.add_task("Analyzing files", total=len(all_files))
+
         # Analyze each file
         for file_path in all_files:
+            if progress and file_task is not None:
+                progress.update(file_task, advance=1, description=f"Analyzing {file_path.name}")
             rel_path = str(file_path.relative_to(repo_path))
             language = self._detect_language(file_path)
 

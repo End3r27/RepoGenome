@@ -1,6 +1,6 @@
 <div align="center">
 
-[![Version](https://img.shields.io/badge/version-0.6.0-blue.svg?style=for-the-badge&logo=github)](https://github.com/End3r27/RepoGenome/releases)
+[![Version](https://img.shields.io/badge/version-0.7.0-blue.svg?style=for-the-badge&logo=github)](https://github.com/End3r27/RepoGenome/releases)
 [![License](https://img.shields.io/badge/license-MIT-green.svg?style=for-the-badge)](LICENSE)
 [![Python](https://img.shields.io/badge/python-3.8+-blue.svg?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/downloads/)
 [![Stars](https://img.shields.io/github/stars/End3r27/RepoGenome?style=for-the-badge&logo=github&color=yellow)](https://github.com/End3r27/RepoGenome/stargazers)
@@ -45,6 +45,11 @@ RepoGenome generates a comprehensive JSON artifact (`repogenome.json`) that comb
 - **Platform Compatibility** - Works on Windows, macOS, and Linux with platform-specific optimizations
 - **Extensible Architecture** - Easy to add support for new languages and file types
 - **MCP Server Integration** - Expose repository knowledge to AI agents via Model Context Protocol
+- **Context Optimization** - Compact modes, compression, and streaming for LLM-friendly output (new in v0.7.0)
+- **Advanced Query Language** - SQL-like and GraphQL-style queries for complex genome queries (new in v0.7.0)
+- **Graph Database Backend** - Optional SQLite backend for large repositories (new in v0.7.0)
+- **Watch Mode** - Auto-regenerate genome on file changes (new in v0.7.0)
+- **Progress Tracking** - Real-time progress bars for long-running operations (new in v0.7.0)
 
 ## 📥 Installation
 
@@ -86,6 +91,12 @@ This creates a `repogenome.json` file in the repository root.
 # Generate with debug logging
 repogenome generate /path/to/repository --log debug
 
+# Generate with compression options (reduce file size)
+repogenome generate /path/to/repository --compact --minify --compress
+
+# Generate ultra-compact lite version (essential data only)
+repogenome generate /path/to/repository --lite
+
 # Update an existing genome incrementally
 repogenome update /path/to/repository
 
@@ -94,6 +105,12 @@ repogenome validate repogenome.json
 
 # Compare two genomes
 repogenome diff old_genome.json new_genome.json
+
+# Watch repository and auto-regenerate on changes
+repogenome watch /path/to/repository --debounce 2.0
+
+# Start MCP server for AI agent integration
+repogenome mcp-server /path/to/repository
 ```
 
 > **Note for macOS users**: RepoGenome automatically uses subprocess-based git operations on macOS to avoid hanging issues. To force GitPython usage, set `REPOGENOME_USE_GITPYTHON=true`.
@@ -142,6 +159,96 @@ updated_genome = generator.generate(
 updated_genome.save("repogenome.json")
 ```
 
+### Advanced Features (v0.7.0+)
+
+#### Context Optimization
+
+RepoGenome now supports multiple compression modes to reduce file size for LLM context windows:
+
+```python
+# Compact mode: Use short field names
+genome.save("genome.json", compact=True)
+
+# Minified: Remove indentation
+genome.save("genome.json", minify=True)
+
+# Lite mode: Only essential fields
+genome.save("genome.json", lite=True)
+
+# Gzip compression
+genome.save("genome.json", compress=True)
+
+# Combine options for maximum compression
+genome.save("genome.json", compact=True, minify=True, compress=True, exclude_defaults=True)
+```
+
+#### Advanced Query Language
+
+Query genomes using SQL-like or GraphQL-style syntax:
+
+```python
+from repogenome.core.advanced_query import AdvancedQuery
+
+query = AdvancedQuery(genome)
+
+# SQL-like queries
+results = query.execute("SELECT * FROM nodes WHERE type='function' AND criticality>0.8")
+
+# GraphQL-style queries
+results = query.execute("{ nodes(type: function, criticality_gt: 0.8) { id, file, summary } }")
+
+# Natural language queries
+results = query.execute("find all authentication functions")
+```
+
+#### Graph Database Backend
+
+For large repositories, use SQLite backend for efficient storage and querying:
+
+```python
+from repogenome.core.db_backend import SQLiteBackend
+
+# Save to database
+backend = SQLiteBackend("genome.db")
+backend.save_genome(genome)
+
+# Load from database
+genome = backend.load_genome()
+
+# Query nodes
+results = backend.query_nodes({"type": "function", "criticality__gt": 0.8})
+
+# Query edges
+edges = backend.query_edges(from_node="auth.login_user", edge_type="calls")
+```
+
+#### Security Analysis
+
+The security subsystem detects vulnerabilities, secrets, and permission issues:
+
+```python
+from repogenome.core.generator import RepoGenomeGenerator
+
+generator = RepoGenomeGenerator(repo_path="./myproject")
+genome = generator.generate()
+
+# Security findings are in the security section (if enabled)
+if "security" in genome.__dict__:
+    for file_id, findings in genome.security.items():
+        print(f"{file_id}: {findings['severity']} - {len(findings['findings'])} issues")
+```
+
+#### Watch Mode
+
+Automatically regenerate genome when files change:
+
+```bash
+# Watch repository and auto-regenerate
+repogenome watch /path/to/repository --debounce 2.0
+```
+
+The watch mode monitors file changes and automatically regenerates the genome after a debounce period.
+
 ## 📚 Documentation
 
 ### RepoGenome Schema
@@ -158,7 +265,7 @@ The `repogenome.json` file contains the following sections:
     "repo_hash": "a8f3c1...",
     "languages": ["Python", "TypeScript", "Java", "Go", "Rust"],
     "frameworks": ["FastAPI", "React"],
-    "repogenome_version": "0.6.0"
+    "repogenome_version": "0.7.0"
   }
 }
 ```
@@ -630,13 +737,13 @@ To add support for a new programming language:
 
 Future enhancements and planned features:
 
+- [x] Real-time genome updates via file watchers (✅ v0.7.0)
+- [x] Advanced query language for genome exploration (✅ v0.7.0)
+- [x] Performance optimizations for very large repositories (✅ v0.7.0)
 - [ ] Enhanced visualization tools for genome exploration
 - [ ] Support for additional programming languages
-- [ ] Real-time genome updates via file watchers
-- [ ] Integration with popular IDEs and editors
+- [ ] Integration with popular IDEs and editors (VS Code extension)
 - [ ] Cloud-based genome storage and sharing
-- [ ] Advanced query language for genome exploration
-- [ ] Performance optimizations for very large repositories
 - [ ] Machine learning models for code understanding
 
 ## 📄 License

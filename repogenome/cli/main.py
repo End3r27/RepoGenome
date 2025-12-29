@@ -23,7 +23,7 @@ console = Console()
 
 
 @click.group()
-@click.version_option(version="0.6.0")
+@click.version_option(version="0.7.0")
 def main():
     """RepoGenome - Unified Repository Intelligence Artifact Generator."""
     pass
@@ -142,10 +142,14 @@ def generate(
         logger = logging.getLogger(__name__) if log else None
         generator = RepoGenomeGenerator(path, enabled_subsystems=enabled_subsystems, logger=logger)
 
-        if incremental and existing_genome:
-            genome = generator.generate(incremental=True, existing_genome_path=existing_genome)
-        else:
-            genome = generator.generate(incremental=False)
+        # Use progress bar for generation
+        from repogenome.cli.output import create_progress_bar
+        
+        with create_progress_bar() as progress:
+            if incremental and existing_genome:
+                genome = generator.generate(incremental=True, existing_genome_path=existing_genome, progress=progress)
+            else:
+                genome = generator.generate(incremental=False, progress=progress)
 
         # Load config for compression options (CLI flags override config)
         config = RepoGenomeConfig.load()
@@ -554,6 +558,92 @@ def mcp_server(path: Path, repo_path: Path):
         if "--verbose" in sys.argv or "-v" in sys.argv:
             import traceback
             console.print(traceback.format_exc())
+        raise click.Abort()
+
+
+@main.command()
+@click.argument("path", type=click.Path(exists=True, file_okay=False, path_type=Path))
+@click.option(
+    "--output",
+    "-o",
+    type=click.Path(path_type=Path),
+    default=None,
+    help="Output genome file path (default: repogenome.json in repository)",
+)
+@click.option(
+    "--debounce",
+    type=float,
+    default=2.0,
+    help="Seconds to wait before regenerating after changes (default: 2.0)",
+)
+@click.option(
+    "--subsystems",
+    multiple=True,
+    help="Subsystems to enable (can be specified multiple times)",
+)
+@click.option(
+    "--exclude-subsystems",
+    multiple=True,
+    help="Subsystems to exclude (can be specified multiple times)",
+)
+def watch(
+    path: Path,
+    output: Path,
+    debounce: float,
+    subsystems,
+    exclude_subsystems,
+):
+    """Watch repository and auto-regenerate genome on file changes."""
+    from repogenome.core.watch import watch_and_regenerate
+    from repogenome.core.generator import RepoGenomeGenerator
+
+    # Determine output path
+    if output is None:
+        output = path / "repogenome.json"
+    else:
+        output = Path(output)
+
+    # Determine enabled subsystems
+    enabled_subsystems = None
+    if subsystems:
+        enabled_subsystems = list(subsystems)
+    elif exclude_subsystems:
+        all_subsystems = [
+            "repospider",
+            "flowweaver",
+            "intentatlas",
+            "chronomap",
+            "testgalaxy",
+            "contractlens",
+            "security",
+        ]
+        enabled_subsystems = [s for s in all_subsystems if s not in exclude_subsystems]
+
+    def generator_factory():
+        return RepoGenomeGenerator(path, enabled_subsystems=enabled_subsystems)
+
+    # Generate initial genome
+    console.print(f"[bold]Generating initial genome for:[/bold] {path}")
+    try:
+        generator = generator_factory()
+        genome = generator.generate(incremental=False)
+        genome.save(str(output))
+        console.print(f"[green]OK[/green] Initial genome generated: {output}")
+    except Exception as e:
+        console.print(f"[red]Error:[/red] {e}")
+        raise click.Abort()
+
+    # Start watching
+    try:
+        watch_and_regenerate(
+            path,
+            output,
+            generator_factory,
+            debounce_seconds=debounce,
+        )
+    except ImportError as e:
+        console.print(f"[red]Error:[/red] {e}")
+        console.print("Install watchdog with: pip install watchdog")
         raise click.Abort()
 
 

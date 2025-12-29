@@ -14,6 +14,7 @@ from repogenome.subsystems.flowweaver import FlowWeaver
 from repogenome.subsystems.intentatlas import IntentAtlas
 from repogenome.subsystems.repospider import RepoSpider
 from repogenome.subsystems.testgalaxy import TestGalaxy
+from repogenome.subsystems.security import SecurityAnalyzer
 
 
 class RepoGenomeGenerator:
@@ -50,6 +51,7 @@ class RepoGenomeGenerator:
             "chronomap": ChronoMap(),
             "testgalaxy": TestGalaxy(),
             "contractlens": ContractLens(),
+            "security": SecurityAnalyzer(),
         }
 
         # Enable requested subsystems (or all if None)
@@ -89,18 +91,27 @@ class RepoGenomeGenerator:
     def _generate_full(self, progress: Optional[Any] = None) -> RepoGenome:
         """Generate complete genome from scratch."""
         self.logger.info("Extracting metadata")
+        
         # Extract metadata
+        if progress:
+            task = progress.add_task("Extracting metadata", total=None)
         metadata = extract_metadata(self.repo_path)
+        if progress:
+            progress.update(task, completed=True)
 
         # Run subsystems in dependency order
         accumulated_data: Dict[str, Any] = {}
 
         # 1. RepoSpider (no dependencies)
         if "repospider" in self.subsystems:
+            if progress:
+                task = progress.add_task("Analyzing repository structure (RepoSpider)", total=None)
             repospider_result = self.subsystems["repospider"].analyze(
-                self.repo_path, None
+                self.repo_path, None, progress=progress
             )
             accumulated_data.update(repospider_result)
+            if progress:
+                progress.update(task, completed=True)
 
         # 2. Other subsystems (may depend on RepoSpider)
         subsystem_order = [
@@ -109,15 +120,21 @@ class RepoGenomeGenerator:
             "contractlens",
             "testgalaxy",
             "chronomap",
+            "security",
         ]
 
         for subsystem_name in subsystem_order:
             if subsystem_name in self.subsystems:
                 subsystem = self.subsystems[subsystem_name]
+                subsystem_display = subsystem_name.replace("_", " ").title()
+                if progress:
+                    task = progress.add_task(f"Running {subsystem_display}", total=None)
                 subsystem_result = subsystem.analyze(
-                    self.repo_path, accumulated_data
+                    self.repo_path, accumulated_data, progress=progress
                 )
                 accumulated_data.update(subsystem_result)
+                if progress:
+                    progress.update(task, completed=True)
 
         # Build summary
         summary = self._build_summary(accumulated_data)

@@ -174,7 +174,7 @@ class Metadata(BaseModel):
     repo_hash: Optional[str] = None
     languages: List[str] = Field(default_factory=list)
     frameworks: List[str] = Field(default_factory=list)
-    repogenome_version: str = Field(default="0.6.0")
+    repogenome_version: str = Field(default="0.7.0")
 
 
 class Summary(BaseModel):
@@ -513,6 +513,7 @@ class RepoGenome(BaseModel):
         exclude_defaults: bool = False,
         max_summary_length: Optional[int] = None,
         compress: bool = False,
+        streaming: bool = False,
     ) -> None:
         """
         Save genome to JSON file with optional compression.
@@ -525,7 +526,23 @@ class RepoGenome(BaseModel):
             exclude_defaults: Exclude default values
             max_summary_length: Truncate summaries
             compress: Use gzip compression
+            streaming: Use streaming writer (memory-efficient for large genomes)
         """
+        # Use streaming writer for large genomes or when explicitly requested
+        if streaming or (len(self.nodes) > 10000 or len(self.edges) > 50000):
+            from repogenome.core.streaming import save_streaming
+            save_streaming(
+                self,
+                path,
+                compact=compact,
+                minify=minify,
+                exclude_defaults=exclude_defaults,
+                max_summary_length=max_summary_length,
+                compress=compress,
+            )
+            return
+        
+        # Standard save for smaller genomes
         import json
         import gzip
 

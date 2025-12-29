@@ -1,9 +1,9 @@
 """Query language for RepoGenome data."""
 
 import re
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Union
 
-from repogenome.core.schema import RepoGenome
+from repogenome.core.schema import Node, RepoGenome
 
 
 class GenomeQuery:
@@ -99,16 +99,30 @@ class GenomeQuery:
 
         return list(neighbors)
 
-    def _match_filters(self, node_data: Dict[str, Any], filters: Optional[Dict[str, Any]]) -> bool:
+    def _match_filters(self, node_data: Any, filters: Optional[Dict[str, Any]]) -> bool:
         """Check if node matches filters."""
         if not filters:
             return True
+
+        # Convert Pydantic model to dict if needed
+        if hasattr(node_data, 'model_dump'):
+            node_dict = node_data.model_dump()
+        elif hasattr(node_data, 'dict'):
+            node_dict = node_data.dict()
+        elif isinstance(node_data, dict):
+            node_dict = node_data
+        else:
+            # Fallback: try to access as attributes
+            node_dict = {}
+            for key in ['type', 'file', 'language', 'visibility', 'summary', 'criticality']:
+                if hasattr(node_data, key):
+                    node_dict[key] = getattr(node_data, key)
 
         for key, value in filters.items():
             # Handle special operators (e.g., criticality__gt)
             if "__" in key:
                 field, op = key.split("__", 1)
-                node_value = node_data.get(field)
+                node_value = node_dict.get(field)
 
                 if op == "gt" and not (node_value is not None and node_value > value):
                     return False
@@ -121,8 +135,15 @@ class GenomeQuery:
                 elif op == "in" and node_value not in value:
                     return False
             else:
-                # Simple equality
-                if node_data.get(key) != value:
+                # Simple equality - handle enum comparison
+                node_value = node_dict.get(key)
+                # Convert enum to string if needed
+                if hasattr(node_value, 'value'):
+                    node_value = node_value.value
+                if hasattr(node_value, 'name'):
+                    node_value = node_value.name
+                
+                if str(node_value) != str(value):
                     return False
 
         return True

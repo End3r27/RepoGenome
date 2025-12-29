@@ -1,0 +1,87 @@
+{
+  "metadata": {
+    "generated_at": "2025-01-12T18:42:00Z",
+    "repo_hash": "a8f3c1d2e4f5",
+    "languages": ["Python"],
+    "frameworks": ["FastAPI"],
+    "repogenome_version": "0.1.0"
+  },
+  "summary": {
+    "entry_points": ["main.py"],
+    "architectural_style": ["API-First"],
+    "core_domains": ["authentication", "api"],
+    "hotspots": ["auth.py"],
+    "do_not_touch": []
+  },
+  "nodes": {
+    "main.py": {
+      "type": "file",
+      "file": "main.py",
+      "language": "Python",
+      "visibility": "public",
+      "criticality": 0.0
+    },
+    "auth.py": {
+      "type": "file",
+      "file": "auth.py",
+      "language": "Python",
+      "visibility": "public",
+      "criticality": 0.5
+    },
+    "auth.login_user": {
+      "type": "function",
+      "file": "auth.py",
+      "language": "Python",
+      "visibility": "public",
+      "summary": "Authenticates a user and issues a session token",
+      "criticality": 0.8
+    }
+  },
+  "edges": [
+    {
+      "from": "main.py",
+      "to": "auth.py",
+      "type": "imports"
+    },
+    {
+      "from": "main.py",
+      "to": "auth.login_user",
+      "type": "calls"
+    }
+  ],
+  "flows": [
+    {
+      "entry": "main.py",
+      "path": ["main.py", "auth.login_user"],
+      "side_effects": ["db.read"],
+      "confidence": 0.8
+    }
+  ],
+  "concepts": {
+    "authentication": {
+      "nodes": ["auth.py", "auth.login_user"],
+      "description": "User identity and session management"
+    }
+  },
+  "history": {
+    "auth.py": {
+      "churn_score": 0.6,
+      "last_major_change": "2024-11-02",
+      "notes": null
+    }
+  },
+  "risk": {
+    "auth.login_user": {
+      "risk_score": 0.7,
+      "reasons": ["High fan-in", "Public API"]
+    }
+  },
+  "contracts": {
+    "auth.login_user": {
+      "depends_on": [],
+      "breaking_change_risk": 0.8
+    }
+  },
+  "tests": null
+}
+

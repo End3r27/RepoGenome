@@ -275,64 +275,122 @@ class RepoGenomeResources:
         final_mode = summary_mode or uri_mode
         final_minify = minify or (uri_minify and uri_minify.lower() in ("true", "1", "yes"))
         
-        # Normalize URI path: strip whitespace and convert to lowercase for comparison
-        normalized_path = parsed.path.strip().lower()
+        # Normalize URI: handle repogenome:// scheme where netloc contains the resource name
+        # For repogenome://current, urlparse puts "current" in netloc, not path
+        normalized_uri = uri_str.strip().lower()
         
-        # Handle variants (brief, standard, detailed)
-        variant = None
-        if normalized_path.endswith("/brief") or normalized_path.endswith("/lite"):
-            variant = "brief"
-            normalized_path = normalized_path.rsplit("/", 1)[0]
-        elif normalized_path.endswith("/detailed"):
-            variant = "detailed"
-            normalized_path = normalized_path.rsplit("/", 1)[0]
-        elif normalized_path.endswith("/standard"):
-            variant = "standard"
-            normalized_path = normalized_path.rsplit("/", 1)[0]
-        
-        # Explicit URI matching (case-insensitive)
-        if normalized_path == "repogenome://current" or normalized_path == "/current":
-            data, error = self.get_current(fields=final_fields, summary_mode=final_mode, variant=variant)
-        elif normalized_path == "repogenome://summary" or normalized_path == "/summary":
-            data, error = self.get_summary(fields=final_fields, summary_mode=final_mode)
-        elif normalized_path == "repogenome://diff" or normalized_path == "/diff":
-            data, error = self.get_diff()
-        elif normalized_path == "repogenome://stats" or normalized_path == "/stats":
-            data, error = self.get_stats(fields=final_fields)
-        elif normalized_path.startswith("repogenome://nodes/") or normalized_path.startswith("/nodes/"):
-            # Extract node_id from URI
-            node_id = parsed.path.replace("repogenome://nodes/", "").replace("/nodes/", "").strip()
-            if node_id:
-                data, error = self.get_node_resource(node_id, fields=final_fields)
+        # Check if this is a repogenome:// URI
+        if parsed.scheme == "repogenome":
+            # For repogenome:// URIs, the resource name is in netloc
+            resource_name = parsed.netloc.strip().lower()
+            # Handle path if present (for variants like repogenome://current/brief)
+            path_part = parsed.path.strip().lower()
+            
+            # Handle variants (brief, standard, detailed)
+            variant = None
+            if path_part == "/brief" or path_part == "/lite":
+                variant = "brief"
+            elif path_part == "/detailed":
+                variant = "detailed"
+            elif path_part == "/standard":
+                variant = "standard"
+            
+            # Match resource names
+            if resource_name == "current":
+                data, error = self.get_current(fields=final_fields, summary_mode=final_mode, variant=variant)
+            elif resource_name == "summary":
+                data, error = self.get_summary(fields=final_fields, summary_mode=final_mode)
+            elif resource_name == "diff":
+                data, error = self.get_diff()
+            elif resource_name == "stats":
+                data, error = self.get_stats(fields=final_fields)
+            elif resource_name == "nodes":
+                # Extract node_id from path (e.g., repogenome://nodes/main.py)
+                # path_part will be like "/main.py" or empty
+                node_id = path_part.lstrip("/").strip() if path_part else None
+                if not node_id:
+                    # Try to get from the original URI path if path_part is empty
+                    # This handles cases where the node_id might be in a different format
+                    full_path = parsed.path.strip()
+                    if full_path:
+                        node_id = full_path.lstrip("/").strip()
+                
+                if node_id:
+                    data, error = self.get_node_resource(node_id, fields=final_fields)
+                else:
+                    error = {
+                        "error": "Invalid node resource URI",
+                        "reason": "Node ID is missing from URI",
+                        "action": "Use format: repogenome://nodes/{node_id}",
+                    }
+                    return None, error
             else:
+                # Unknown repogenome:// resource
                 error = {
-                    "error": "Invalid node resource URI",
-                    "reason": "Node ID is missing from URI",
-                    "action": "Use format: repogenome://nodes/{node_id}",
+                    "error": "Unknown resource URI",
+                    "reason": f"Resource name '{resource_name}' not recognized",
+                    "action": "Use one of: repogenome://current, repogenome://summary, repogenome://diff, repogenome://stats, repogenome://nodes/{node_id}",
                 }
                 return None, error
         else:
-            # Provide detailed error information for debugging
-            error = {
-                "error": "Unknown resource URI",
-                "reason": f"URI not recognized: {uri_str!r}",
-                "uri_details": {
-                    "original": repr(uri),
-                    "normalized": repr(normalized_uri),
-                    "length": len(uri_str),
-                    "normalized_length": len(normalized_uri),
-                    "bytes": list(uri_str.encode('utf-8'))[:50],  # First 50 bytes for debugging
-                },
-                "action": "Use one of: repogenome://current, repogenome://summary, repogenome://diff, repogenome://stats, repogenome://nodes/{node_id}",
-                "available_uris": [
-                    "repogenome://current",
-                    "repogenome://summary",
-                    "repogenome://diff",
-                    "repogenome://stats",
-                    "repogenome://nodes/{node_id}",
-                ],
-            }
-            return None, error
+            # Fallback: try to match as path-based URIs (for compatibility)
+            normalized_path = parsed.path.strip().lower()
+            
+            # Handle variants (brief, standard, detailed)
+            variant = None
+            if normalized_path.endswith("/brief") or normalized_path.endswith("/lite"):
+                variant = "brief"
+                normalized_path = normalized_path.rsplit("/", 1)[0]
+            elif normalized_path.endswith("/detailed"):
+                variant = "detailed"
+                normalized_path = normalized_path.rsplit("/", 1)[0]
+            elif normalized_path.endswith("/standard"):
+                variant = "standard"
+                normalized_path = normalized_path.rsplit("/", 1)[0]
+            
+            # Explicit URI matching (case-insensitive) for path-based URIs
+            if normalized_path == "/current" or normalized_path == "current":
+                data, error = self.get_current(fields=final_fields, summary_mode=final_mode, variant=variant)
+            elif normalized_path == "/summary" or normalized_path == "summary":
+                data, error = self.get_summary(fields=final_fields, summary_mode=final_mode)
+            elif normalized_path == "/diff" or normalized_path == "diff":
+                data, error = self.get_diff()
+            elif normalized_path == "/stats" or normalized_path == "stats":
+                data, error = self.get_stats(fields=final_fields)
+            elif normalized_path.startswith("/nodes/") or normalized_path.startswith("nodes/"):
+                # Extract node_id from URI
+                node_id = normalized_path.replace("/nodes/", "").replace("nodes/", "").strip()
+                if node_id:
+                    data, error = self.get_node_resource(node_id, fields=final_fields)
+                else:
+                    error = {
+                        "error": "Invalid node resource URI",
+                        "reason": "Node ID is missing from URI",
+                        "action": "Use format: repogenome://nodes/{node_id}",
+                    }
+                    return None, error
+            else:
+                # Unknown path-based URI
+                error = {
+                    "error": "Unknown resource URI",
+                    "reason": f"URI not recognized: {uri_str!r}",
+                    "uri_details": {
+                        "original": repr(uri),
+                        "normalized": repr(normalized_uri),
+                        "length": len(uri_str),
+                        "normalized_length": len(normalized_uri),
+                        "bytes": list(uri_str.encode('utf-8'))[:50],  # First 50 bytes for debugging
+                    },
+                    "action": "Use one of: repogenome://current, repogenome://summary, repogenome://diff, repogenome://stats, repogenome://nodes/{node_id}",
+                    "available_uris": [
+                        "repogenome://current",
+                        "repogenome://summary",
+                        "repogenome://diff",
+                        "repogenome://stats",
+                        "repogenome://nodes/{node_id}",
+                    ],
+                }
+                return None, error
 
         if error is not None:
             return None, error

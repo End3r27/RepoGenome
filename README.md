@@ -1011,6 +1011,6 @@ If you find RepoGenome useful, please consider giving it a star! It helps others
 
 **Made with ❤️ by End3r27**
 
-[Report Bug](https://github.com/End3r27/RepoGenome/issues) • [Request Feature](https://github.com/End3r27/RepoGenome/issues) • [Documentation](#-documentation)
+[Report Bug](https://github.com/End3r27/RepoGenome/issues) • [Request Feature](https://github.com/End3r27/RepoGenome/issues) • [Documentation](#-documentation)• [Buy Me A Coffee](https://buymeacoffee.com/end3r_27)
 
 </div>

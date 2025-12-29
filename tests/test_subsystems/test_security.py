@@ -14,7 +14,7 @@ def temp_repo():
     with tempfile.TemporaryDirectory() as tmpdir:
         repo_path = Path(tmpdir)
         
-        # Create a file with a secret (for testing)
+        # Create a file with a secret (for testing - using fake test pattern)
         secret_file = repo_path / "config.py"
         secret_file.write_text('api_key = "sk_test_FAKE_TEST_KEY_NOT_REAL_12345678901234567890"\n')
         

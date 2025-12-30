@@ -1,0 +1,2 @@
+"""Swift file analyzer."""
+

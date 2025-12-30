@@ -23,13 +23,15 @@ class GenomeStorage:
         """
         self.repo_path = Path(repo_path).resolve()
         self.genome_path = self.repo_path / "repogenome.json"
+        self.genome_dir = self.repo_path / "repogenome"
         self._cached_genome: Optional[RepoGenome] = None
         self._cached_hash: Optional[str] = None
         self._load_error: Optional[str] = None
+        self._genome_format: Optional[str] = None  # "single" or "sliced"
 
     def load_genome(self, force_reload: bool = False) -> Optional[RepoGenome]:
         """
-        Load genome from file.
+        Load genome from file (auto-detects single-file or sliced format).
 
         Args:
             force_reload: Force reload even if cached
@@ -40,13 +42,21 @@ class GenomeStorage:
         if not force_reload and self._cached_genome is not None:
             return self._cached_genome
 
-        if not self.genome_path.exists():
-            self._load_error = f"Genome file not found: {self.genome_path}"
+        # Auto-detect format
+        genome_format = self._detect_genome_format()
+        if genome_format is None:
+            self._load_error = f"Genome not found: neither {self.genome_path} nor {self.genome_dir} exists"
             logger.warning(self._load_error)
             return None
 
+        self._genome_format = genome_format
+
         try:
-            genome = RepoGenome.load(str(self.genome_path))
+            if genome_format == "sliced":
+                genome = RepoGenome.load_sliced(str(self.genome_dir))
+            else:
+                genome = RepoGenome.load(str(self.genome_path))
+            
             self._cached_genome = genome
             self._cached_hash = genome.metadata.repo_hash
             self._load_error = None
@@ -60,20 +70,43 @@ class GenomeStorage:
             logger.error(self._load_error, exc_info=True)
             return None
 
-    def save_genome(self, genome: RepoGenome) -> bool:
+    def _detect_genome_format(self) -> Optional[str]:
+        """
+        Detect genome format (single-file or sliced).
+
+        Returns:
+            "single", "sliced", or None if neither exists
+        """
+        # Check for sliced format first (newer format)
+        if self.genome_dir.exists() and (self.genome_dir / "meta.json").exists():
+            return "sliced"
+        
+        # Check for single-file format (legacy)
+        if self.genome_path.exists():
+            return "single"
+        
+        return None
+
+    def save_genome(self, genome: RepoGenome, format: str = "single") -> bool:
         """
         Save genome to file.
 
         Args:
             genome: RepoGenome instance to save
+            format: "single" or "sliced" format (default: "single" for backward compatibility)
 
         Returns:
             True if successful
         """
         try:
-            genome.save(str(self.genome_path))
+            if format == "sliced":
+                genome.save_sliced(str(self.genome_dir))
+            else:
+                genome.save(str(self.genome_path))
+            
             self._cached_genome = genome
             self._cached_hash = genome.metadata.repo_hash
+            self._genome_format = format
             return True
         except Exception:
             return False
@@ -97,9 +130,9 @@ class GenomeStorage:
         Check if genome file exists (regardless of validity).
 
         Returns:
-            True if genome file exists
+            True if genome file or directory exists
         """
-        return self.genome_path.exists()
+        return self.genome_path.exists() or (self.genome_dir.exists() and (self.genome_dir / "meta.json").exists())
 
     def get_load_error(self) -> Optional[str]:
         """

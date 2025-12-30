@@ -1,6 +1,6 @@
 <div align="center">
 
-[![Version](https://img.shields.io/badge/version-0.8.0-blue.svg?style=for-the-badge&logo=github)](https://github.com/End3r27/RepoGenome/releases)
+[![Version](https://img.shields.io/badge/version-0.9.0-blue.svg?style=for-the-badge&logo=github)](https://github.com/End3r27/RepoGenome/releases)
 [![License](https://img.shields.io/badge/license-MIT-green.svg?style=for-the-badge)](LICENSE)
 [![Python](https://img.shields.io/badge/python-3.8+-blue.svg?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/downloads/)
 [![Stars](https://img.shields.io/github/stars/End3r27/RepoGenome?style=for-the-badge&logo=github&color=yellow)](https://github.com/End3r27/RepoGenome/stargazers)
@@ -30,8 +30,25 @@
 
 RepoGenome generates a comprehensive JSON artifact (`repogenome.json`) that combines multiple analysis perspectives:
 
-### 🆕 Recent Enhancements (v0.8.0+)
+### 🆕 Recent Enhancements
 
+**v0.10.0:**
+- **VS Code Extension** - Native IDE integration with sidebar panel, inline annotations, and real-time updates
+
+**v0.9.0:**
+- **Context Assembler** - Goal-driven context selection with intelligent optimization
+  - `build_context` - Build context from RepoGenome based on goals and constraints
+  - `explain_context` - Explain context selection decisions for debugging
+  - `get_context_skeleton` - Get staged context skeleton for fast first response
+  - `get_context_feedback` - Get feedback data to improve future context assembly
+- **Advanced Context Optimization** - Semantic folding, redundancy elimination, relevance scoring, and adaptive token budgeting
+- **Advanced Filtering** - Complex filter expressions with AND/OR/NOT logic, range queries, and regex patterns
+- **Node Comparison** - Compare two nodes or node with previous version
+- **Path Finding** - Find paths between nodes in the dependency graph
+- **Context Versioning** - Version and diff context for debuggable AI behavior
+- **Session Memory** - Cross-call memory management for context sessions
+
+**v0.8.0+:**
 - **Context Reduction Features** - Field selection, summary modes, and IDs-only queries to minimize agent context usage
 - **Enhanced MCP Tools** - 5 new tools: `get_node`, `search`, `dependencies`, `stats`, and `export`
 - **New MCP Resources** - `repogenome://stats` and `repogenome://nodes/{node_id}` for detailed access
@@ -57,6 +74,7 @@ RepoGenome generates a comprehensive JSON artifact (`repogenome.json`) that comb
 - **Platform Compatibility** - Works on Windows, macOS, and Linux with platform-specific optimizations
 - **Extensible Architecture** - Easy to add support for new languages and file types
 - **MCP Server Integration** - Expose repository knowledge to AI agents via Model Context Protocol
+- **VS Code Extension** - Native IDE integration with sidebar panel, inline code annotations, and real-time genome updates
 - **Context Optimization** - Compact modes, compression, and streaming for LLM-friendly output
 - **Advanced Query Language** - SQL-like and GraphQL-style queries for complex genome queries
 - **Graph Database Backend** - Optional SQLite backend for large repositories
@@ -135,34 +153,6 @@ Add to `~/.config/claude-desktop/mcp.json`:
 }
 ```
 
-#### 3. Configure Agent Initialization Prompt
-
-To ensure AI agents always use RepoGenome for codebase analysis, add the initialization prompt to your agent's system instructions.
-
-**Option A: Use the Provided Prompt File**
-
-Copy the contents of [`LLM_INIT_PROMPT.md`](LLM_INIT_PROMPT.md) into your agent's system prompt or initialization file.
-
-**Option B: Add to Agent Configuration**
-
-In your agent configuration (Cursor, Claude Desktop, etc.), add this to the system prompt:
-
-```
-Always use RepoGenome for codebase analysis:
-- Load repogenome://summary at session start
-- Use repogenome.scan() for full codebase scans
-- Use repogenome.query() for file/function searches
-- Call repogenome.impact() before code changes
-- Call repogenome.update() after code changes
-```
-
-**Key Benefits:**
-- ✅ Agents automatically understand your codebase structure
-- ✅ Faster file and function searches via genome queries
-- ✅ Impact analysis before making changes
-- ✅ Automatic genome updates after modifications
-- ✅ No manual file scanning needed
-
 **Available MCP Resources:**
 - `repogenome://current` - Full repository genome
 - `repogenome://current/brief` - Lite version (essential fields only)
@@ -192,8 +182,14 @@ Always use RepoGenome for codebase analysis:
 - `repogenome.impact` - Check change impact before modifying
 - `repogenome.update` - Update genome after code changes
 - `repogenome.validate` - Validate genome consistency
-
-For detailed agent instructions, see [`LLM_INIT_PROMPT.md`](LLM_INIT_PROMPT.md).
+- `repogenome.build_context` - Build goal-driven context from RepoGenome
+- `repogenome.explain_context` - Explain context selection for debugging
+- `repogenome.get_context_skeleton` - Get staged context skeleton (Stage 1) for fast first response
+- `repogenome.get_context_feedback` - Get feedback data for a context to improve future assembly
+- `repogenome.set_context_session` - Create or update a context session for cross-call memory
+- `repogenome.filter` - Advanced filtering with complex expressions (AND/OR/NOT, ranges, regex)
+- `repogenome.compare` - Compare two nodes or node with previous version
+- `repogenome.find_path` - Find paths between two nodes
 
 ## 📥 Installation
 
@@ -258,6 +254,30 @@ repogenome mcp-server /path/to/repository
 ```
 
 > **Note for macOS users**: RepoGenome automatically uses subprocess-based git operations on macOS to avoid hanging issues. To force GitPython usage, set `REPOGENOME_USE_GITPYTHON=true`.
+
+### VS Code Extension
+
+RepoGenome includes a VS Code extension for native IDE integration:
+
+**Installation:**
+1. Install the extension from the VS Code marketplace (or build from source in `extensions/vscode/`)
+2. Ensure RepoGenome CLI is installed and in your PATH
+3. Generate a genome for your workspace: `repogenome generate .`
+
+**Features:**
+- **Sidebar Panel** - Explore your codebase genome with statistics and search
+- **Inline Annotations** - See dependencies and criticality directly in your code
+- **Quick Access** - Search and navigate to nodes in your genome
+- **Real-time Updates** - Automatically refresh genome when files change
+
+**Commands:**
+- `repogenome.generate` - Generate a new RepoGenome
+- `repogenome.refresh` - Refresh the current genome
+- `repogenome.showNode` - Show details for a specific node
+- `repogenome.search` - Search the genome
+- `repogenome.toggleAnnotations` - Toggle inline annotations
+
+For more details, see [`extensions/vscode/README.md`](extensions/vscode/README.md).
 
 ### Library Usage
 
@@ -558,7 +578,7 @@ The `repogenome.json` file contains the following sections:
     "repo_hash": "a8f3c1...",
     "languages": ["Python", "TypeScript", "Java", "Go", "Rust"],
     "frameworks": ["FastAPI", "React"],
-    "repogenome_version": "0.8.0"
+    "repogenome_version": "0.9.0"
   }
 }
 ```
@@ -1074,10 +1094,12 @@ Future enhancements and planned features:
 - [x] Intelligent caching with statistics (✅ v0.8.0)
 - [x] Query pagination and advanced filtering (✅ v0.8.0)
 - [x] Enhanced error handling with recovery suggestions (✅ v0.8.0)
-- [ ] Enhanced visualization tools for genome exploration
+- [x] Context Assembler and goal-driven context selection (✅ v0.9.0)
+- [x] Advanced context optimization features (✅ v0.9.0)
+- [x] Advanced filtering and node comparison (✅ v0.9.0)
+- [x] Path finding between nodes (✅ v0.9.0)
+- [x] Context versioning and session memory (✅ v0.9.0)
 - [ ] Support for additional programming languages
-- [ ] Integration with popular IDEs and editors (VS Code extension)
-- [ ] Cloud-based genome storage and sharing
 - [ ] Machine learning models for code understanding
 
 ## 📄 License

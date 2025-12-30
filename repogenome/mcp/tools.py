@@ -7,7 +7,46 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 from repogenome.core.generator import RepoGenomeGenerator
 from repogenome.core.query import GenomeQuery, parse_simple_query
 from repogenome.core.schema import RepoGenome
+from repogenome.mcp.context_assembler import ContextAssembler
+from repogenome.mcp.context_cache import ContextCache
 from repogenome.mcp.storage import GenomeStorage
+
+
+def _format_repairable_error(
+    error: str,
+    reason: str,
+    action: Optional[str] = None,
+    suggested_fix: Optional[str] = None,
+    details: Optional[Dict[str, Any]] = None,
+) -> Dict[str, Any]:
+    """
+    Helper to format repairable errors consistently.
+    
+    Args:
+        error: Error message
+        reason: Error reason
+        action: Suggested action
+        suggested_fix: Specific fix
+        details: Additional details
+        
+    Returns:
+        Repairable error dictionary
+    """
+    from repogenome.core.errors import format_repairable_error
+    
+    # Determine if this is a genome-related error
+    is_genome_error = "genome" in error.lower() or "genome" in reason.lower()
+    
+    return format_repairable_error(
+        error=error,
+        reason=reason,
+        action=action,
+        suggested_fix=suggested_fix or action,
+        details=details,
+        next_action_constraint="repogenome_mcp" if is_genome_error else None,
+        required_tool="repogenome.scan" if is_genome_error else None,
+        blocked_tools=["read_file", "grep", "codebase_search"] if is_genome_error else None,
+    )
 
 
 def _validate_node_id(node_id: str, genome: RepoGenome) -> Tuple[bool, Optional[Dict[str, Any]]]:
@@ -213,6 +252,11 @@ class RepoGenomeTools:
             "evictions": 0,
             "size": 0,
         }
+        # Initialize context cache
+        from repogenome.core.config import RepoGenomeConfig
+        config = RepoGenomeConfig.load()
+        cache_dir = Path(repo_path) / config.context_cache_dir
+        self.context_cache = ContextCache(cache_dir) if config.enable_context_cache else None
 
     def scan(
         self, scope: str = "full", incremental: bool = True
@@ -324,9 +368,15 @@ class RepoGenomeTools:
         
         genome = self.storage.load_genome()
         if genome is None:
-            return format_error(
-                "No genome found",
-                "Run repogenome.scan first",
+            from repogenome.core.errors import format_repairable_error
+            return format_repairable_error(
+                error="No genome found",
+                reason="genome_not_loaded",
+                action="Run repogenome.scan first",
+                suggested_fix="repogenome.scan",
+                next_action_constraint="repogenome_mcp",
+                required_tool="repogenome.scan",
+                blocked_tools=["read_file", "grep", "codebase_search"],
             )
 
         # Validate pagination parameters
@@ -637,9 +687,15 @@ class RepoGenomeTools:
         
         genome = self.storage.load_genome()
         if genome is None:
-            return format_error(
-                "No genome found",
-                "Run repogenome.scan first",
+            from repogenome.core.errors import format_repairable_error
+            return format_repairable_error(
+                error="No genome found",
+                reason="genome_not_loaded",
+                action="Run repogenome.scan first",
+                suggested_fix="repogenome.scan",
+                next_action_constraint="repogenome_mcp",
+                required_tool="repogenome.scan",
+                blocked_tools=["read_file", "grep", "codebase_search"],
             )
 
         # Validate operation
@@ -868,9 +924,15 @@ class RepoGenomeTools:
         
         genome = self.storage.load_genome()
         if genome is None:
-            return format_error(
-                "No genome found",
-                "Run repogenome.scan first",
+            from repogenome.core.errors import format_repairable_error
+            return format_repairable_error(
+                error="No genome found",
+                reason="genome_not_loaded",
+                action="Run repogenome.scan first",
+                suggested_fix="repogenome.scan",
+                next_action_constraint="repogenome_mcp",
+                required_tool="repogenome.scan",
+                blocked_tools=["read_file", "grep", "codebase_search"],
             )
 
         # Validate node_id
@@ -985,9 +1047,15 @@ class RepoGenomeTools:
         
         genome = self.storage.load_genome()
         if genome is None:
-            return format_error(
-                "No genome found",
-                "Run repogenome.scan first",
+            from repogenome.core.errors import format_repairable_error
+            return format_repairable_error(
+                error="No genome found",
+                reason="genome_not_loaded",
+                action="Run repogenome.scan first",
+                suggested_fix="repogenome.scan",
+                next_action_constraint="repogenome_mcp",
+                required_tool="repogenome.scan",
+                blocked_tools=["read_file", "grep", "codebase_search"],
             )
 
         # Validate limit
@@ -1140,9 +1208,15 @@ class RepoGenomeTools:
         
         genome = self.storage.load_genome()
         if genome is None:
-            return format_error(
-                "No genome found",
-                "Run repogenome.scan first",
+            from repogenome.core.errors import format_repairable_error
+            return format_repairable_error(
+                error="No genome found",
+                reason="genome_not_loaded",
+                action="Run repogenome.scan first",
+                suggested_fix="repogenome.scan",
+                next_action_constraint="repogenome_mcp",
+                required_tool="repogenome.scan",
+                blocked_tools=["read_file", "grep", "codebase_search"],
             )
 
         # Validate node_id
@@ -1224,9 +1298,15 @@ class RepoGenomeTools:
         
         genome = self.storage.load_genome()
         if genome is None:
-            return format_error(
-                "No genome found",
-                "Run repogenome.scan first",
+            from repogenome.core.errors import format_repairable_error
+            return format_repairable_error(
+                error="No genome found",
+                reason="genome_not_loaded",
+                action="Run repogenome.scan first",
+                suggested_fix="repogenome.scan",
+                next_action_constraint="repogenome_mcp",
+                required_tool="repogenome.scan",
+                blocked_tools=["read_file", "grep", "codebase_search"],
             )
 
         try:
@@ -1299,6 +1379,88 @@ class RepoGenomeTools:
                 exception=e,
             )
 
+    def get_current(
+        self,
+        fields: Optional[Union[str, List[str]]] = None,
+        variant: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        """
+        Get current genome data (similar to repogenome://current resource).
+
+        Args:
+            fields: Field selection (None = all fields)
+            variant: Resource variant ("brief", "standard", "detailed", "lite")
+
+        Returns:
+            Current genome dict or filtered version
+        """
+        from repogenome.mcp.resources import RepoGenomeResources
+        from repogenome.core.errors import format_error
+        
+        resources = RepoGenomeResources(self.storage)
+        data, error = resources.get_current(fields=fields, variant=variant)
+        
+        if error is not None:
+            return format_error(
+                error.get("error", "Failed to get current genome"),
+                error.get("action", "Run repogenome.scan to generate genome"),
+                details=error.get("reason"),
+            )
+        
+        return data
+
+    def get_summary(
+        self,
+        fields: Optional[Union[str, List[str]]] = None,
+        mode: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        """
+        Get summary data (similar to repogenome://summary resource).
+
+        Args:
+            fields: Field selection (None = all fields)
+            mode: Summary mode ("brief", "standard", "detailed")
+
+        Returns:
+            Summary dict
+        """
+        from repogenome.mcp.resources import RepoGenomeResources
+        from repogenome.core.errors import format_error
+        
+        resources = RepoGenomeResources(self.storage)
+        data, error = resources.get_summary(fields=fields, summary_mode=mode)
+        
+        if error is not None:
+            return format_error(
+                error.get("error", "Failed to get summary"),
+                error.get("action", "Run repogenome.scan to generate genome"),
+                details=error.get("reason"),
+            )
+        
+        return data
+
+    def get_diff(self) -> Dict[str, Any]:
+        """
+        Get diff data (similar to repogenome://diff resource).
+
+        Returns:
+            Diff dict
+        """
+        from repogenome.mcp.resources import RepoGenomeResources
+        from repogenome.core.errors import format_error
+        
+        resources = RepoGenomeResources(self.storage)
+        data, error = resources.get_diff()
+        
+        if error is not None:
+            return format_error(
+                error.get("error", "Failed to get diff"),
+                error.get("action", "Run repogenome.scan to generate genome"),
+                details=error.get("reason"),
+            )
+        
+        return data
+
     def export(self, format: str = "json", output_path: Optional[str] = None) -> Dict[str, Any]:
         """
         Export genome to different formats via MCP.
@@ -1323,9 +1485,15 @@ class RepoGenomeTools:
         
         genome = self.storage.load_genome()
         if genome is None:
-            return format_error(
-                "No genome found",
-                "Run repogenome.scan first",
+            from repogenome.core.errors import format_repairable_error
+            return format_repairable_error(
+                error="No genome found",
+                reason="genome_not_loaded",
+                action="Run repogenome.scan first",
+                suggested_fix="repogenome.scan",
+                next_action_constraint="repogenome_mcp",
+                required_tool="repogenome.scan",
+                blocked_tools=["read_file", "grep", "codebase_search"],
             )
 
         try:
@@ -1431,9 +1599,15 @@ class RepoGenomeTools:
         
         genome = self.storage.load_genome()
         if genome is None:
-            return format_error(
-                "No genome found",
-                "Run repogenome.scan first",
+            from repogenome.core.errors import format_repairable_error
+            return format_repairable_error(
+                error="No genome found",
+                reason="genome_not_loaded",
+                action="Run repogenome.scan first",
+                suggested_fix="repogenome.scan",
+                next_action_constraint="repogenome_mcp",
+                required_tool="repogenome.scan",
+                blocked_tools=["read_file", "grep", "codebase_search"],
             )
         
         # Validate input
@@ -1559,9 +1733,15 @@ class RepoGenomeTools:
         
         genome = self.storage.load_genome()
         if genome is None:
-            return format_error(
-                "No genome found",
-                "Run repogenome.scan first",
+            from repogenome.core.errors import format_repairable_error
+            return format_repairable_error(
+                error="No genome found",
+                reason="genome_not_loaded",
+                action="Run repogenome.scan first",
+                suggested_fix="repogenome.scan",
+                next_action_constraint="repogenome_mcp",
+                required_tool="repogenome.scan",
+                blocked_tools=["read_file", "grep", "codebase_search"],
             )
         
         # Validate input
@@ -1652,9 +1832,15 @@ class RepoGenomeTools:
         
         genome = self.storage.load_genome()
         if genome is None:
-            return format_error(
-                "No genome found",
-                "Run repogenome.scan first",
+            from repogenome.core.errors import format_repairable_error
+            return format_repairable_error(
+                error="No genome found",
+                reason="genome_not_loaded",
+                action="Run repogenome.scan first",
+                suggested_fix="repogenome.scan",
+                next_action_constraint="repogenome_mcp",
+                required_tool="repogenome.scan",
+                blocked_tools=["read_file", "grep", "codebase_search"],
             )
         
         try:
@@ -1782,9 +1968,15 @@ class RepoGenomeTools:
         
         genome = self.storage.load_genome()
         if genome is None:
-            return format_error(
-                "No genome found",
-                "Run repogenome.scan first",
+            from repogenome.core.errors import format_repairable_error
+            return format_repairable_error(
+                error="No genome found",
+                reason="genome_not_loaded",
+                action="Run repogenome.scan first",
+                suggested_fix="repogenome.scan",
+                next_action_constraint="repogenome_mcp",
+                required_tool="repogenome.scan",
+                blocked_tools=["read_file", "grep", "codebase_search"],
             )
         
         # Validate limit
@@ -1921,9 +2113,15 @@ class RepoGenomeTools:
         
         genome = self.storage.load_genome()
         if genome is None:
-            return format_error(
-                "No genome found",
-                "Run repogenome.scan first",
+            from repogenome.core.errors import format_repairable_error
+            return format_repairable_error(
+                error="No genome found",
+                reason="genome_not_loaded",
+                action="Run repogenome.scan first",
+                suggested_fix="repogenome.scan",
+                next_action_constraint="repogenome_mcp",
+                required_tool="repogenome.scan",
+                blocked_tools=["read_file", "grep", "codebase_search"],
             )
         
         # Validate node IDs
@@ -2019,6 +2217,74 @@ class RepoGenomeTools:
                 exception=e,
             )
 
+    def build_context(
+        self,
+        goal: str,
+        scope: Optional[List[str]] = None,
+        constraints: Optional[Dict[str, Any]] = None,
+    ) -> Dict[str, Any]:
+        """
+        Build goal-driven context from RepoGenome.
+
+        Args:
+            goal: Task goal/intent
+            scope: Optional explicit scope list
+            constraints: Optional constraints (maxTokens, preferRecent, etc.)
+
+        Returns:
+            Context dictionary with tiered structure
+        """
+        from repogenome.core.errors import format_error
+
+        genome = self.storage.load_genome()
+        if genome is None:
+            from repogenome.core.errors import format_repairable_error
+            return format_repairable_error(
+                error="No genome found",
+                reason="genome_not_loaded",
+                action="Run repogenome.scan first",
+                suggested_fix="repogenome.scan",
+                next_action_constraint="repogenome_mcp",
+                required_tool="repogenome.scan",
+                blocked_tools=["read_file", "grep", "codebase_search"],
+            )
+
+        # Prepare constraints
+        if constraints is None:
+            constraints = {}
+        
+        # Add explicit scope if provided
+        if scope:
+            constraints["scope"] = scope
+
+        # Check cache first
+        if self.context_cache:
+            cached = self.context_cache.load_cached(goal, constraints)
+            if cached and self.context_cache.is_valid(cached, genome):
+                return cached["context"]
+
+        # Build context
+        try:
+            from pathlib import Path
+            from repogenome.core.config import RepoGenomeConfig
+            config = RepoGenomeConfig.load()
+            cache_dir = Path(self.repo_path) / (config.context_cache_dir if config.context_cache_dir else Path(".cache/context"))
+            assembler = ContextAssembler(genome, enable_optimizations=True, cache_dir=cache_dir)
+            context = assembler.build(goal, constraints)
+
+            # Save to cache
+            if self.context_cache:
+                self.context_cache.save_cached(context, goal, constraints, genome)
+
+            return context
+        except Exception as e:
+            from repogenome.core.errors import format_error
+            return format_error(
+                f"Failed to build context: {str(e)}",
+                "Check goal and constraints and try again",
+                exception=e,
+            )
+
     def _export_csv(self, genome: "RepoGenome", output_path: Path) -> None:
         """Export genome to CSV format."""
         import csv
@@ -2059,4 +2325,208 @@ class RepoGenomeTools:
                     edge.to,
                     edge.type if hasattr(edge, 'type') else '',
                 ])
+
+    def explain_context(
+        self,
+        goal: str,
+        context: Optional[Dict[str, Any]] = None,
+    ) -> Dict[str, Any]:
+        """
+        Explain context selection for debugging.
+        
+        Args:
+            goal: Task goal
+            context: Optional context dictionary (if None, builds new context)
+            
+        Returns:
+            Explanation dictionary
+        """
+        from repogenome.core.errors import format_error
+        from repogenome.mcp.context_optimizer import ContextExplainer
+        
+        genome = self.storage.load_genome()
+        if genome is None:
+            from repogenome.core.errors import format_repairable_error
+            return format_repairable_error(
+                error="No genome found",
+                reason="genome_not_loaded",
+                action="Run repogenome.scan first",
+                suggested_fix="repogenome.scan",
+                next_action_constraint="repogenome_mcp",
+                required_tool="repogenome.scan",
+                blocked_tools=["read_file", "grep", "codebase_search"],
+            )
+        
+        try:
+            explainer = ContextExplainer()
+            
+            # Build context if not provided
+            if context is None:
+                context = self.build_context(goal)
+            
+            # Get included/excluded nodes
+            included_nodes = []
+            excluded_nodes = []
+            
+            if "tier_2" in context and "nodes" in context["tier_2"]:
+                included_nodes = list(context["tier_2"]["nodes"].keys())
+            
+            # Get all nodes for comparison
+            all_node_ids = list(genome.nodes.keys())
+            excluded_nodes = [nid for nid in all_node_ids if nid not in included_nodes]
+            
+            explanation = explainer.explain(context, goal, included_nodes, excluded_nodes)
+            formatted = explainer.format_explanation(explanation)
+            
+            return {
+                "explanation": explanation,
+                "formatted": formatted,
+            }
+        except Exception as e:
+            return format_error(
+                f"Explain context failed: {str(e)}",
+                "Check goal and try again",
+                exception=e,
+            )
+
+    def get_context_skeleton(
+        self,
+        goal: str,
+    ) -> Dict[str, Any]:
+        """
+        Get staged context skeleton (Stage 1).
+        
+        Args:
+            goal: Task goal
+            
+        Returns:
+            Context skeleton dictionary
+        """
+        from repogenome.core.errors import format_error
+        from repogenome.mcp.context_optimizer import ContextSkeleton
+        
+        genome = self.storage.load_genome()
+        if genome is None:
+            from repogenome.core.errors import format_repairable_error
+            return format_repairable_error(
+                error="No genome found",
+                reason="genome_not_loaded",
+                action="Run repogenome.scan first",
+                suggested_fix="repogenome.scan",
+                next_action_constraint="repogenome_mcp",
+                required_tool="repogenome.scan",
+                blocked_tools=["read_file", "grep", "codebase_search"],
+            )
+        
+        try:
+            skeleton_gen = ContextSkeleton()
+            
+            # Get repo intent from summary
+            repo_intent = ", ".join(genome.summary.core_domains) if genome.summary.core_domains else "Repository"
+            
+            # Get core flow (first flow)
+            core_flow = []
+            if genome.flows:
+                core_flow = genome.flows[0].path[:5]  # First 5 nodes
+            
+            # Get key symbols (entry points)
+            key_symbols = genome.summary.entry_points[:10]
+            
+            skeleton = skeleton_gen.build_skeleton(goal, repo_intent, core_flow, key_symbols)
+            
+            return skeleton
+        except Exception as e:
+            return format_error(
+                f"Get context skeleton failed: {str(e)}",
+                "Check goal and try again",
+                exception=e,
+            )
+
+    def set_context_session(
+        self,
+        session_id: str,
+        goal: str,
+        context: Optional[Dict[str, Any]] = None,
+    ) -> Dict[str, Any]:
+        """
+        Create or update a context session.
+        
+        Args:
+            session_id: Session identifier
+            goal: Task goal
+            context: Optional context dictionary (if None, builds new context)
+            
+        Returns:
+            Session information
+        """
+        from repogenome.core.errors import format_error
+        from pathlib import Path
+        from repogenome.core.config import RepoGenomeConfig
+        from repogenome.mcp.context_optimizer import SessionMemory
+        
+        try:
+            config = RepoGenomeConfig.load()
+            cache_dir = Path(self.repo_path) / (config.context_cache_dir if config.context_cache_dir else Path(".cache/context"))
+            session_memory = SessionMemory(cache_dir / "sessions")
+            
+            # Build context if not provided
+            if context is None:
+                context = self.build_context(goal)
+            
+            session_id = session_memory.create_session(session_id, goal, context)
+            
+            return {
+                "success": True,
+                "session_id": session_id,
+                "message": "Session created/updated",
+            }
+        except Exception as e:
+            return format_error(
+                f"Set context session failed: {str(e)}",
+                "Check parameters and try again",
+                exception=e,
+            )
+
+    def get_context_feedback(
+        self,
+        context_id: str,
+    ) -> Dict[str, Any]:
+        """
+        Get feedback data for a context.
+        
+        Args:
+            context_id: Context identifier
+            
+        Returns:
+            Feedback data
+        """
+        from repogenome.core.errors import format_error
+        from pathlib import Path
+        from repogenome.core.config import RepoGenomeConfig
+        from repogenome.mcp.context_optimizer import ContextFeedbackLoop
+        
+        try:
+            config = RepoGenomeConfig.load()
+            cache_dir = Path(self.repo_path) / (config.context_cache_dir if config.context_cache_dir else Path(".cache/context"))
+            feedback_loop = ContextFeedbackLoop(cache_dir / "feedback")
+            
+            feedback = feedback_loop.get_feedback(context_id)
+            
+            if feedback is None:
+                return {
+                    "context_id": context_id,
+                    "feedback": None,
+                    "message": "No feedback found for this context",
+                }
+            
+            return {
+                "context_id": context_id,
+                "feedback": feedback,
+            }
+        except Exception as e:
+            return format_error(
+                f"Get context feedback failed: {str(e)}",
+                "Check context_id and try again",
+                exception=e,
+            )
 

@@ -40,13 +40,19 @@ class RepoGenomeResources:
         
         genome, is_stale, error = self.storage.get_genome_status()
         if genome is None:
-            error_info = {
-                "error": "Genome not available",
-                "reason": error or "Genome file not found",
-                "action": "Run repogenome.scan to generate genome",
-            }
+            from repogenome.core.errors import format_repairable_error
+            error_info = format_repairable_error(
+                error="Genome not available",
+                reason="genome_not_loaded",
+                action="Run repogenome.scan to generate genome",
+                suggested_fix="repogenome.scan",
+                repair_strategies=["auto_scan_if_missing"],
+                next_action_constraint="repogenome_mcp",
+                required_tool="repogenome.scan",
+                blocked_tools=["read_file", "grep", "codebase_search"],
+            )
             if self.storage.is_genome_file_present():
-                error_info["reason"] = error or "Failed to load genome file"
+                error_info["reason"] = "genome_load_failed"
                 error_info["action"] = "Check genome file validity or run repogenome.scan to regenerate"
             return None, error_info
 
@@ -104,13 +110,18 @@ class RepoGenomeResources:
         
         genome = self.storage.load_genome()
         if genome is None:
-            error_info = {
-                "error": "Summary not available",
-                "reason": self.storage.get_load_error() or "Genome file not found",
-                "action": "Run repogenome.scan to generate genome",
-            }
+            from repogenome.core.errors import format_repairable_error
+            error_info = format_repairable_error(
+                error="Summary not available",
+                reason="genome_not_loaded",
+                action="Run repogenome.scan to generate genome",
+                suggested_fix="repogenome.scan",
+                repair_strategies=["auto_scan_if_missing"],
+                next_action_constraint="repogenome_mcp",
+                required_tool="repogenome.scan",
+            )
             if self.storage.is_genome_file_present():
-                error_info["reason"] = self.storage.get_load_error() or "Failed to load genome file"
+                error_info["reason"] = "genome_load_failed"
                 error_info["action"] = "Check genome file validity or run repogenome.scan to regenerate"
             return None, error_info
 
@@ -146,22 +157,28 @@ class RepoGenomeResources:
         """
         diff = self.storage.get_diff()
         if diff is None:
+            from repogenome.core.errors import format_repairable_error
             genome, is_stale, error = self.storage.get_genome_status()
             if genome is None:
-                error_info = {
-                    "error": "Diff not available",
-                    "reason": error or "Genome file not found",
-                    "action": "Run repogenome.scan to generate genome",
-                }
+                error_info = format_repairable_error(
+                    error="Diff not available",
+                    reason="genome_not_loaded",
+                    action="Run repogenome.scan to generate genome",
+                    suggested_fix="repogenome.scan",
+                    next_action_constraint="repogenome_mcp",
+                    required_tool="repogenome.scan",
+                )
                 if self.storage.is_genome_file_present():
-                    error_info["reason"] = error or "Failed to load genome file"
+                    error_info["reason"] = "genome_load_failed"
                     error_info["action"] = "Check genome file validity or run repogenome.scan to regenerate"
             else:
-                error_info = {
-                    "error": "Diff not available",
-                    "reason": "No diff data available in genome",
-                    "action": "Diff is only available after genome updates",
-                }
+                error_info = format_repairable_error(
+                    error="Diff not available",
+                    reason="no_diff_data",
+                    action="Diff is only available after genome updates",
+                    suggested_fix="repogenome.update",
+                    retry_allowed=False,
+                )
             return None, error_info
 
         return diff, None
@@ -187,11 +204,15 @@ class RepoGenomeResources:
         stats_result = tools.stats()
         
         if "error" in stats_result:
-            return None, {
-                "error": "Stats not available",
-                "reason": stats_result.get("error", "Unknown error"),
-                "action": "Run repogenome.scan to generate genome",
-            }
+            from repogenome.core.errors import format_repairable_error
+            return None, format_repairable_error(
+                error="Stats not available",
+                reason="genome_not_loaded",
+                action="Run repogenome.scan to generate genome",
+                suggested_fix="repogenome.scan",
+                next_action_constraint="repogenome_mcp",
+                required_tool="repogenome.scan",
+            )
         
         # Apply field filtering if specified
         if fields:
@@ -222,11 +243,14 @@ class RepoGenomeResources:
         node_result = tools.get_node(node_id)
         
         if "error" in node_result:
-            return None, {
-                "error": "Node not available",
-                "reason": node_result.get("error", "Unknown error"),
-                "action": "Check node ID or run repogenome.scan to generate genome",
-            }
+            from repogenome.core.errors import format_repairable_error
+            return None, format_repairable_error(
+                error="Node not available",
+                reason="node_not_found",
+                action="Check node ID or run repogenome.scan to generate genome",
+                suggested_fix="repogenome.query" if "not found" in str(node_result.get("error", "")).lower() else "repogenome.scan",
+                next_action_constraint="repogenome_mcp",
+            )
         
         # Apply field filtering if specified
         if fields:

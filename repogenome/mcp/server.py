@@ -53,7 +53,13 @@ class RepoGenomeMCPServer:
         self.storage = GenomeStorage(self.repo_path)
         self.resources = RepoGenomeResources(self.storage)
         self.tools = RepoGenomeTools(self.storage, str(self.repo_path))
-        self.contract = AgentContract()
+        self.contract = AgentContract(
+            enable_repair_loops=self.config.enable_repair_loops,
+            max_repair_attempts=self.config.max_repair_attempts,
+            contract_score_threshold=self.config.contract_score_threshold,
+            enable_context_lock=self.config.enable_context_lock,
+            auto_repair_simple_cases=self.config.auto_repair_simple_cases,
+        )
 
         # Set up logging if debug mode is enabled
         if self.debug:
@@ -110,12 +116,16 @@ class RepoGenomeMCPServer:
             # Parse query parameters from URI if present
             content, error = self.resources.read_resource(uri_str)
             if error is not None:
-                # Use concise error format
-                from repogenome.core.errors import format_error
-                error_formatted = format_error(
-                    error.get('error', 'Unknown error'),
-                    error.get('action', 'No action specified'),
+                # Convert to repairable error format
+                from repogenome.core.errors import format_repairable_error
+                error_formatted = format_repairable_error(
+                    error=error.get('error', 'Unknown error'),
+                    reason=error.get('reason', 'resource_error'),
+                    action=error.get('action', 'No action specified'),
+                    suggested_fix=error.get('action'),  # Use action as suggested fix
                     details=error.get('details'),
+                    next_action_constraint="repogenome_mcp",
+                    required_tool="repogenome.scan" if "genome" in error.get('error', '').lower() else None,
                 )
                 error_message = json.dumps(error_formatted, indent=2)
                 raise ValueError(error_message)
@@ -352,6 +362,49 @@ class RepoGenomeMCPServer:
                     inputSchema={"type": "object", "properties": {}},
                 ),
                 Tool(
+                    name="repogenome.current",
+                    description="Get current genome data (full repository genome)",
+                    inputSchema={
+                        "type": "object",
+                        "properties": {
+                            "fields": {
+                                "type": ["array", "string"],
+                                "items": {"type": "string"},
+                                "description": "Field selection (None = all fields). Supports aliases: t=type, f=file, s=summary",
+                            },
+                            "variant": {
+                                "type": "string",
+                                "enum": ["brief", "standard", "detailed", "lite"],
+                                "description": "Resource variant (brief = minimal, standard = default, detailed = enhanced)",
+                            },
+                        },
+                    },
+                ),
+                Tool(
+                    name="repogenome.summary",
+                    description="Get summary data (fast boot context)",
+                    inputSchema={
+                        "type": "object",
+                        "properties": {
+                            "fields": {
+                                "type": ["array", "string"],
+                                "items": {"type": "string"},
+                                "description": "Field selection (None = all fields). Supports aliases: t=type, f=file, s=summary",
+                            },
+                            "mode": {
+                                "type": "string",
+                                "enum": ["brief", "standard", "detailed"],
+                                "description": "Summary mode (brief = minimal, standard = default, detailed = enhanced)",
+                            },
+                        },
+                    },
+                ),
+                Tool(
+                    name="repogenome.diff",
+                    description="Get diff data (changes since last update)",
+                    inputSchema={"type": "object", "properties": {}},
+                ),
+                Tool(
                     name="repogenome.export",
                     description="Export genome to different formats via MCP",
                     inputSchema={
@@ -486,6 +539,107 @@ class RepoGenomeMCPServer:
                         "required": ["from_node", "to_node"],
                     },
                 ),
+                Tool(
+                    name="repogenome.build_context",
+                    description="Build goal-driven context from RepoGenome",
+                    inputSchema={
+                        "type": "object",
+                        "properties": {
+                            "goal": {
+                                "type": "string",
+                                "description": "Task goal/intent",
+                            },
+                            "scope": {
+                                "type": "array",
+                                "items": {"type": "string"},
+                                "description": "Optional explicit scope list",
+                            },
+                            "constraints": {
+                                "type": "object",
+                                "properties": {
+                                    "maxTokens": {
+                                        "type": "integer",
+                                        "description": "Maximum token budget",
+                                    },
+                                    "preferRecent": {
+                                        "type": "boolean",
+                                        "description": "Prefer recently changed files",
+                                    },
+                                },
+                                "description": "Optional constraints",
+                            },
+                        },
+                        "required": ["goal"],
+                    },
+                ),
+                Tool(
+                    name="repogenome.explain_context",
+                    description="Explain context selection for debugging agent behavior",
+                    inputSchema={
+                        "type": "object",
+                        "properties": {
+                            "goal": {
+                                "type": "string",
+                                "description": "Task goal",
+                            },
+                            "context": {
+                                "type": "object",
+                                "description": "Optional context dictionary (if None, builds new context)",
+                            },
+                        },
+                        "required": ["goal"],
+                    },
+                ),
+                Tool(
+                    name="repogenome.get_context_skeleton",
+                    description="Get staged context skeleton (Stage 1) for fast first response",
+                    inputSchema={
+                        "type": "object",
+                        "properties": {
+                            "goal": {
+                                "type": "string",
+                                "description": "Task goal",
+                            },
+                        },
+                        "required": ["goal"],
+                    },
+                ),
+                Tool(
+                    name="repogenome.set_context_session",
+                    description="Create or update a context session for cross-call memory",
+                    inputSchema={
+                        "type": "object",
+                        "properties": {
+                            "session_id": {
+                                "type": "string",
+                                "description": "Session identifier",
+                            },
+                            "goal": {
+                                "type": "string",
+                                "description": "Task goal",
+                            },
+                            "context": {
+                                "type": "object",
+                                "description": "Optional context dictionary (if None, builds new context)",
+                            },
+                        },
+                        "required": ["session_id", "goal"],
+                    },
+                ),
+                Tool(
+                    name="repogenome.get_context_feedback",
+                    description="Get feedback data for a context to improve future assembly",
+                    inputSchema={
+                        "type": "object",
+                        "properties": {
+                            "context_id": {
+                                "type": "string",
+                                "description": "Context identifier",
+                            },
+                        },
+                        "required": ["context_id"],
+                    },
+                ),
             ]
         # Store for diagnostics
         self._registered_tools = tool_list
@@ -503,15 +657,34 @@ class RepoGenomeMCPServer:
         @self.server.call_tool()
         async def call_tool(name: str, arguments: Dict[str, Any]) -> list[TextContent]:
             """Handle tool calls."""
-            # Enforce contract
+            # Enforce contract with repair support
             contract_check = self.contract.enforce_contract_middleware(name, arguments)
             if contract_check:
-                return [
-                    TextContent(
-                        type="text",
-                        text=json.dumps({"error": contract_check}, indent=2),
+                # Check if it's a repairable error
+                if contract_check.get("status") == "repairable_error":
+                    # Return repairable error with repair guidance
+                    return [
+                        TextContent(
+                            type="text",
+                            text=json.dumps(contract_check, indent=2),
+                        )
+                    ]
+                else:
+                    # Legacy error format - convert to repairable
+                    from repogenome.core.errors import format_repairable_error
+                    repairable = format_repairable_error(
+                        error=contract_check.get("error", "Contract violation"),
+                        reason=contract_check.get("reason", "contract_violation"),
+                        action=contract_check.get("action"),
+                        next_action_constraint="repogenome_mcp",
+                        required_tool=name,
                     )
-                ]
+                    return [
+                        TextContent(
+                            type="text",
+                            text=json.dumps(repairable, indent=2),
+                        )
+                    ]
 
             # Route to appropriate tool handler
             try:
@@ -584,6 +757,21 @@ class RepoGenomeMCPServer:
                 elif name == "repogenome.stats":
                     result = self.tools.stats()
 
+                elif name == "repogenome.current":
+                    result = self.tools.get_current(
+                        fields=arguments.get("fields"),
+                        variant=arguments.get("variant"),
+                    )
+
+                elif name == "repogenome.summary":
+                    result = self.tools.get_summary(
+                        fields=arguments.get("fields"),
+                        mode=arguments.get("mode"),
+                    )
+
+                elif name == "repogenome.diff":
+                    result = self.tools.get_diff()
+
                 elif name == "repogenome.export":
                     result = self.tools.export(
                         format=arguments.get("format", "json"),
@@ -629,6 +817,36 @@ class RepoGenomeMCPServer:
                         to_node=arguments.get("to_node", ""),
                         max_depth=arguments.get("max_depth", 10),
                         edge_types=arguments.get("edge_types"),
+                    )
+
+                elif name == "repogenome.build_context":
+                    result = self.tools.build_context(
+                        goal=arguments.get("goal", ""),
+                        scope=arguments.get("scope"),
+                        constraints=arguments.get("constraints"),
+                    )
+
+                elif name == "repogenome.explain_context":
+                    result = self.tools.explain_context(
+                        goal=arguments.get("goal", ""),
+                        context=arguments.get("context"),
+                    )
+
+                elif name == "repogenome.get_context_skeleton":
+                    result = self.tools.get_context_skeleton(
+                        goal=arguments.get("goal", ""),
+                    )
+
+                elif name == "repogenome.set_context_session":
+                    result = self.tools.set_context_session(
+                        session_id=arguments.get("session_id", ""),
+                        goal=arguments.get("goal", ""),
+                        context=arguments.get("context"),
+                    )
+
+                elif name == "repogenome.get_context_feedback":
+                    result = self.tools.get_context_feedback(
+                        context_id=arguments.get("context_id", ""),
                     )
 
                 else:

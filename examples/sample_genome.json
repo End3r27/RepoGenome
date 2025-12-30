@@ -4,7 +4,7 @@
     "repo_hash": "a8f3c1d2e4f5",
     "languages": ["Python"],
     "frameworks": ["FastAPI"],
-    "repogenome_version": "0.1.0"
+    "repogenome_version": "0.9.0"
   },
   "summary": {
     "entry_points": ["main.py"],

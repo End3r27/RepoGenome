@@ -33,6 +33,16 @@ class RepoGenomeConfig:
         default_summary_mode: str = "standard",
         default_query_fields: Optional[List[str]] = None,
         error_verbosity: str = "standard",
+        default_token_budget: int = 2000,
+        enable_context_cache: bool = True,
+        context_cache_dir: Optional[Path] = None,
+        enable_self_healing: bool = False,
+        genome_format: str = "single",
+        enable_repair_loops: bool = True,
+        max_repair_attempts: int = 2,
+        contract_score_threshold: float = 0.6,
+        enable_context_lock: bool = True,
+        auto_repair_simple_cases: bool = True,
     ):
         """
         Initialize configuration.
@@ -80,6 +90,16 @@ class RepoGenomeConfig:
         self.default_summary_mode = default_summary_mode
         self.default_query_fields = default_query_fields
         self.error_verbosity = error_verbosity
+        self.default_token_budget = default_token_budget
+        self.enable_context_cache = enable_context_cache
+        self.context_cache_dir = context_cache_dir or Path(".cache/context")
+        self.enable_self_healing = enable_self_healing
+        self.genome_format = genome_format
+        self.enable_repair_loops = enable_repair_loops
+        self.max_repair_attempts = max_repair_attempts
+        self.contract_score_threshold = contract_score_threshold
+        self.enable_context_lock = enable_context_lock
+        self.auto_repair_simple_cases = auto_repair_simple_cases
 
     @classmethod
     def load(cls, config_path: Optional[Path] = None) -> "RepoGenomeConfig":
@@ -135,6 +155,16 @@ class RepoGenomeConfig:
             default_summary_mode=config_data.get("default_summary_mode", "standard"),
             default_query_fields=config_data.get("default_query_fields"),
             error_verbosity=config_data.get("error_verbosity", "standard"),
+            default_token_budget=config_data.get("default_token_budget", 2000),
+            enable_context_cache=config_data.get("enable_context_cache", True),
+            context_cache_dir=Path(config_data["context_cache_dir"]) if config_data.get("context_cache_dir") else None,
+            enable_self_healing=config_data.get("enable_self_healing", False),
+            genome_format=config_data.get("genome_format", "single"),
+            enable_repair_loops=config_data.get("enable_repair_loops", True),
+            max_repair_attempts=config_data.get("max_repair_attempts", 2),
+            contract_score_threshold=config_data.get("contract_score_threshold", 0.6),
+            enable_context_lock=config_data.get("enable_context_lock", True),
+            auto_repair_simple_cases=config_data.get("auto_repair_simple_cases", True),
         )
 
     def should_analyze_file(self, file_path: Path) -> bool:
@@ -194,6 +224,14 @@ class RepoGenomeConfig:
             "max_summary_length": self.max_summary_length,
             "exclude_defaults": self.exclude_defaults,
             "enable_compression": self.enable_compression,
+            "default_token_budget": self.default_token_budget,
+            "enable_context_cache": self.enable_context_cache,
+            "genome_format": self.genome_format,
+            "enable_repair_loops": self.enable_repair_loops,
+            "max_repair_attempts": self.max_repair_attempts,
+            "contract_score_threshold": self.contract_score_threshold,
+            "enable_context_lock": self.enable_context_lock,
+            "auto_repair_simple_cases": self.auto_repair_simple_cases,
         }
 
 

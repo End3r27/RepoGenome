@@ -183,7 +183,7 @@ class Metadata(BaseModel):
     repo_hash: Optional[str] = None
     languages: List[str] = Field(default_factory=list)
     frameworks: List[str] = Field(default_factory=list)
-    repogenome_version: str = Field(default="0.8.0")
+    repogenome_version: str = Field(default="0.9.0")
 
 
 class Summary(BaseModel):
@@ -297,6 +297,38 @@ class Contract(BaseModel):
 
     depends_on: List[str] = Field(default_factory=list)
     breaking_change_risk: float = Field(default=0.0, ge=0.0, le=1.0)
+
+
+class SemanticSummary(BaseModel):
+    """Semantic summary for code compression."""
+
+    preconditions: List[str] = Field(default_factory=list)
+    postconditions: List[str] = Field(default_factory=list)
+    failure_modes: List[str] = Field(default_factory=list)
+
+
+class ContextScore(BaseModel):
+    """Context relevance scoring."""
+
+    relevance: float = Field(ge=0.0, le=1.0)
+    freshness: float = Field(ge=0.0, le=1.0)
+    risk: float = Field(ge=0.0, le=1.0)
+
+
+class ContextContract(BaseModel):
+    """Context contract for enforcing requirements."""
+
+    must_include: List[str] = Field(default_factory=list)
+    optional: List[str] = Field(default_factory=list)
+    forbidden: List[str] = Field(default_factory=list)
+
+
+class ContextFeedback(BaseModel):
+    """Context usage feedback."""
+
+    used: List[str] = Field(default_factory=list)
+    ignored: List[str] = Field(default_factory=list)
+    missing: List[str] = Field(default_factory=list)
 
 
 class Tests(BaseModel):
@@ -657,6 +689,235 @@ class RepoGenome(BaseModel):
             with open(path, "r", encoding="utf-8") as f:
                 data = json.load(f)
         return cls.from_dict(data)
+
+    def save_sliced(self, base_path: str) -> None:
+        """
+        Save genome in sliced format (separate JSON files).
+        
+        Args:
+            base_path: Base directory path for sliced genome (e.g., "repogenome/")
+        """
+        from pathlib import Path
+        import json
+
+        base = Path(base_path)
+        base.mkdir(parents=True, exist_ok=True)
+        
+        # Save metadata
+        meta_path = base / "meta.json"
+        with open(meta_path, "w", encoding="utf-8") as f:
+            json.dump(self.metadata.model_dump(mode="json"), f, indent=2, ensure_ascii=False)
+        
+        # Save summary
+        summary_path = base / "summary.json"
+        with open(summary_path, "w", encoding="utf-8") as f:
+            json.dump(self.summary.model_dump(mode="json"), f, indent=2, ensure_ascii=False)
+        
+        # Save nodes - split into files and symbols
+        nodes_base = base / "nodes"
+        nodes_base.mkdir(exist_ok=True)
+        
+        file_nodes: Dict[str, Any] = {}
+        symbol_nodes: Dict[str, Any] = {}
+        
+        for node_id, node in self.nodes.items():
+            node_dict = node.model_dump(mode="json")
+            node_type = node.type.value if hasattr(node.type, 'value') else str(node.type)
+            if node_type == "file":
+                file_nodes[node_id] = node_dict
+            else:
+                symbol_nodes[node_id] = node_dict
+        
+        with open(nodes_base / "files.json", "w", encoding="utf-8") as f:
+            json.dump(file_nodes, f, indent=2, ensure_ascii=False)
+        
+        with open(nodes_base / "symbols.json", "w", encoding="utf-8") as f:
+            json.dump(symbol_nodes, f, indent=2, ensure_ascii=False)
+        
+        # Save edges
+        edges_path = base / "edges.json"
+        edges_data = [edge.model_dump(mode="json", by_alias=True) for edge in self.edges]
+        with open(edges_path, "w", encoding="utf-8") as f:
+            json.dump(edges_data, f, indent=2, ensure_ascii=False)
+        
+        # Save flows
+        flows_path = base / "flows.json"
+        flows_data = [flow.model_dump(mode="json") for flow in self.flows]
+        with open(flows_path, "w", encoding="utf-8") as f:
+            json.dump(flows_data, f, indent=2, ensure_ascii=False)
+        
+        # Save intents (concepts)
+        intents_path = base / "intents.json"
+        intents_data = {k: v.model_dump(mode="json") for k, v in self.concepts.items()}
+        with open(intents_path, "w", encoding="utf-8") as f:
+            json.dump(intents_data, f, indent=2, ensure_ascii=False)
+        
+        # Save history
+        history_path = base / "history.json"
+        history_data = {k: v.model_dump(mode="json") for k, v in self.history.items()}
+        with open(history_path, "w", encoding="utf-8") as f:
+            json.dump(history_data, f, indent=2, ensure_ascii=False)
+        
+        # Save risk
+        risk_path = base / "risk.json"
+        risk_data = {k: v.model_dump(mode="json") for k, v in self.risk.items()}
+        with open(risk_path, "w", encoding="utf-8") as f:
+            json.dump(risk_data, f, indent=2, ensure_ascii=False)
+        
+        # Save contracts
+        contracts_path = base / "contracts.json"
+        contracts_data = {k: v.model_dump(mode="json") for k, v in self.contracts.items()}
+        with open(contracts_path, "w", encoding="utf-8") as f:
+            json.dump(contracts_data, f, indent=2, ensure_ascii=False)
+        
+        # Build and save indexes
+        indexes_base = base / "indexes"
+        indexes_base.mkdir(exist_ok=True)
+        
+        # Index by symbol
+        by_symbol: Dict[str, List[str]] = {}
+        for node_id, node in self.nodes.items():
+            if node.file:
+                if node.file not in by_symbol:
+                    by_symbol[node.file] = []
+                by_symbol[node.file].append(node_id)
+        
+        with open(indexes_base / "by_symbol.json", "w", encoding="utf-8") as f:
+            json.dump(by_symbol, f, indent=2, ensure_ascii=False)
+        
+        # Index by intent
+        by_intent: Dict[str, List[str]] = {}
+        for intent_id, concept in self.concepts.items():
+            by_intent[intent_id] = concept.nodes
+        
+        with open(indexes_base / "by_intent.json", "w", encoding="utf-8") as f:
+            json.dump(by_intent, f, indent=2, ensure_ascii=False)
+        
+        # Index by recent changes (based on history churn)
+        by_change: Dict[str, List[str]] = {"recent": []}
+        for node_id, hist in self.history.items():
+            if hist.churn_score > 0.5:  # High churn = recent changes
+                by_change["recent"].append(node_id)
+        
+        with open(indexes_base / "by_change.json", "w", encoding="utf-8") as f:
+            json.dump(by_change, f, indent=2, ensure_ascii=False)
+
+    @classmethod
+    def load_sliced(cls, base_path: str) -> "RepoGenome":
+        """
+        Load genome from sliced format (separate JSON files).
+        
+        Args:
+            base_path: Base directory path for sliced genome (e.g., "repogenome/")
+            
+        Returns:
+            RepoGenome instance
+        """
+        from pathlib import Path
+        import json
+
+        base = Path(base_path)
+        
+        # Load metadata
+        meta_path = base / "meta.json"
+        with open(meta_path, "r", encoding="utf-8") as f:
+            metadata_dict = json.load(f)
+        metadata = Metadata(**metadata_dict)
+        
+        # Load nodes
+        nodes_base = base / "nodes"
+        file_nodes_path = nodes_base / "files.json"
+        symbol_nodes_path = nodes_base / "symbols.json"
+        
+        nodes: Dict[str, Node] = {}
+        
+        if file_nodes_path.exists():
+            with open(file_nodes_path, "r", encoding="utf-8") as f:
+                file_nodes_dict = json.load(f)
+                for node_id, node_data in file_nodes_dict.items():
+                    nodes[node_id] = Node(**node_data)
+        
+        if symbol_nodes_path.exists():
+            with open(symbol_nodes_path, "r", encoding="utf-8") as f:
+                symbol_nodes_dict = json.load(f)
+                for node_id, node_data in symbol_nodes_dict.items():
+                    nodes[node_id] = Node(**node_data)
+        
+        # Load edges
+        edges_path = base / "edges.json"
+        edges: List[Edge] = []
+        if edges_path.exists():
+            with open(edges_path, "r", encoding="utf-8") as f:
+                edges_data = json.load(f)
+                for edge_data in edges_data:
+                    # Handle "from" field alias
+                    if "from" in edge_data:
+                        edge_data["from_"] = edge_data.pop("from")
+                    edges.append(Edge(**edge_data))
+        
+        # Load flows
+        flows_path = base / "flows.json"
+        flows: List[Flow] = []
+        if flows_path.exists():
+            with open(flows_path, "r", encoding="utf-8") as f:
+                flows_data = json.load(f)
+                flows = [Flow(**flow_data) for flow_data in flows_data]
+        
+        # Load intents (concepts)
+        intents_path = base / "intents.json"
+        concepts: Dict[str, Concept] = {}
+        if intents_path.exists():
+            with open(intents_path, "r", encoding="utf-8") as f:
+                intents_data = json.load(f)
+                concepts = {k: Concept(**v) for k, v in intents_data.items()}
+        
+        # Load history
+        history_path = base / "history.json"
+        history: Dict[str, History] = {}
+        if history_path.exists():
+            with open(history_path, "r", encoding="utf-8") as f:
+                history_data = json.load(f)
+                history = {k: History(**v) for k, v in history_data.items()}
+        
+        # Load risk
+        risk_path = base / "risk.json"
+        risk: Dict[str, Risk] = {}
+        if risk_path.exists():
+            with open(risk_path, "r", encoding="utf-8") as f:
+                risk_data = json.load(f)
+                risk = {k: Risk(**v) for k, v in risk_data.items()}
+        
+        # Load contracts
+        contracts_path = base / "contracts.json"
+        contracts: Dict[str, Contract] = {}
+        if contracts_path.exists():
+            with open(contracts_path, "r", encoding="utf-8") as f:
+                contracts_data = json.load(f)
+                contracts = {k: Contract(**v) for k, v in contracts_data.items()}
+        
+        # Load tests
+        tests: Optional[Tests] = None
+        
+        # Load summary
+        summary_path = base / "summary.json"
+        summary = Summary()
+        if summary_path.exists():
+            with open(summary_path, "r", encoding="utf-8") as f:
+                summary_data = json.load(f)
+                summary = Summary(**summary_data)
+        
+        return cls(
+            metadata=metadata,
+            summary=summary,
+            nodes=nodes,
+            edges=edges,
+            flows=flows,
+            concepts=concepts,
+            history=history,
+            risk=risk,
+            contracts=contracts,
+            tests=tests,
+        )
 
 
 def _is_compact_format(data: Dict[str, Any]) -> bool:

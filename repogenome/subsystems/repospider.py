@@ -26,6 +26,12 @@ from repogenome.analyzers.html.html_analyzer import analyze_html_file
 from repogenome.analyzers.css.css_analyzer import analyze_css_file
 from repogenome.analyzers.shell.shell_analyzer import analyze_shell_file
 from repogenome.analyzers.sql.sql_analyzer import analyze_sql_file
+from repogenome.analyzers.swift.swift_analyzer import analyze_swift_file
+from repogenome.analyzers.kotlin.kotlin_analyzer import analyze_kotlin_file
+from repogenome.analyzers.scala.scala_analyzer import analyze_scala_file
+from repogenome.analyzers.r.r_analyzer import analyze_r_file
+from repogenome.analyzers.matlab.matlab_analyzer import analyze_matlab_file
+from repogenome.analyzers.julia.julia_analyzer import analyze_julia_file
 from repogenome.core.schema import Edge, EdgeType, Node, NodeType
 from repogenome.subsystems.base import Subsystem
 
@@ -70,6 +76,12 @@ class RepoSpider(Subsystem):
         csharp_extensions = {".cs"}
         ruby_extensions = {".rb"}
         php_extensions = {".php", ".phtml"}
+        swift_extensions = {".swift"}
+        kotlin_extensions = {".kt", ".kts"}
+        scala_extensions = {".scala", ".sc"}
+        r_extensions = {".r", ".R"}
+        matlab_extensions = {".m"}
+        julia_extensions = {".jl"}
 
         # Ignored directories
         ignored_parts = [
@@ -446,6 +458,186 @@ class RepoSpider(Subsystem):
                         )
 
                     # Add class nodes
+                    for cls in file_data.get("classes", []):
+                        cls_node_id = self._make_node_id(rel_path, cls["name"])
+                        nodes[cls_node_id] = Node(
+                            type=NodeType.CLASS,
+                            file=rel_path,
+                            language=language,
+                            visibility="public",
+                        )
+                        edges.append(
+                            Edge(from_=file_node_id, to=cls_node_id, type=EdgeType.DEFINES)
+                        )
+
+                elif file_path.suffix in swift_extensions:
+                    file_data = analyze_swift_file(file_path)
+                    entry_points.extend(file_data.get("entry_points", []))
+
+                    # Add function nodes
+                    for func in file_data.get("functions", []):
+                        func_node_id = self._make_node_id(rel_path, func["name"])
+                        nodes[func_node_id] = Node(
+                            type=NodeType.FUNCTION,
+                            file=rel_path,
+                            language=language,
+                            visibility=func.get("visibility", "public"),
+                        )
+                        edges.append(
+                            Edge(from_=file_node_id, to=func_node_id, type=EdgeType.DEFINES)
+                        )
+
+                    # Add class/struct/enum nodes
+                    for cls in file_data.get("classes", []):
+                        cls_node_id = self._make_node_id(rel_path, cls["name"])
+                        nodes[cls_node_id] = Node(
+                            type=NodeType.CLASS,
+                            file=rel_path,
+                            language=language,
+                            visibility=cls.get("visibility", "public"),
+                        )
+                        edges.append(
+                            Edge(from_=file_node_id, to=cls_node_id, type=EdgeType.DEFINES)
+                        )
+
+                elif file_path.suffix in kotlin_extensions:
+                    file_data = analyze_kotlin_file(file_path)
+                    entry_points.extend(file_data.get("entry_points", []))
+
+                    # Add function nodes
+                    for func in file_data.get("functions", []):
+                        func_node_id = self._make_node_id(rel_path, func["name"])
+                        nodes[func_node_id] = Node(
+                            type=NodeType.FUNCTION,
+                            file=rel_path,
+                            language=language,
+                            visibility=func.get("visibility", "public"),
+                        )
+                        edges.append(
+                            Edge(from_=file_node_id, to=func_node_id, type=EdgeType.DEFINES)
+                        )
+
+                    # Add class/object/interface nodes
+                    for cls in file_data.get("classes", []):
+                        cls_node_id = self._make_node_id(rel_path, cls["name"])
+                        nodes[cls_node_id] = Node(
+                            type=NodeType.CLASS,
+                            file=rel_path,
+                            language=language,
+                            visibility=cls.get("visibility", "public"),
+                        )
+                        edges.append(
+                            Edge(from_=file_node_id, to=cls_node_id, type=EdgeType.DEFINES)
+                        )
+
+                elif file_path.suffix in scala_extensions:
+                    file_data = analyze_scala_file(file_path)
+                    entry_points.extend(file_data.get("entry_points", []))
+
+                    # Add function nodes
+                    for func in file_data.get("functions", []):
+                        func_node_id = self._make_node_id(rel_path, func["name"])
+                        nodes[func_node_id] = Node(
+                            type=NodeType.FUNCTION,
+                            file=rel_path,
+                            language=language,
+                            visibility=func.get("visibility", "public"),
+                        )
+                        edges.append(
+                            Edge(from_=file_node_id, to=func_node_id, type=EdgeType.DEFINES)
+                        )
+
+                    # Add class/object/trait nodes
+                    for cls in file_data.get("classes", []):
+                        cls_node_id = self._make_node_id(rel_path, cls["name"])
+                        nodes[cls_node_id] = Node(
+                            type=NodeType.CLASS,
+                            file=rel_path,
+                            language=language,
+                            visibility="public",
+                        )
+                        edges.append(
+                            Edge(from_=file_node_id, to=cls_node_id, type=EdgeType.DEFINES)
+                        )
+
+                elif file_path.suffix in r_extensions:
+                    file_data = analyze_r_file(file_path)
+                    entry_points.extend(file_data.get("entry_points", []))
+
+                    # Add function nodes
+                    for func in file_data.get("functions", []):
+                        func_node_id = self._make_node_id(rel_path, func["name"])
+                        nodes[func_node_id] = Node(
+                            type=NodeType.FUNCTION,
+                            file=rel_path,
+                            language=language,
+                            visibility="public",
+                        )
+                        edges.append(
+                            Edge(from_=file_node_id, to=func_node_id, type=EdgeType.DEFINES)
+                        )
+
+                    # Add S3 class nodes
+                    for cls in file_data.get("classes", []):
+                        cls_node_id = self._make_node_id(rel_path, cls["name"])
+                        nodes[cls_node_id] = Node(
+                            type=NodeType.CLASS,
+                            file=rel_path,
+                            language=language,
+                            visibility="public",
+                        )
+                        edges.append(
+                            Edge(from_=file_node_id, to=cls_node_id, type=EdgeType.DEFINES)
+                        )
+
+                elif file_path.suffix in matlab_extensions:
+                    file_data = analyze_matlab_file(file_path)
+                    entry_points.extend(file_data.get("entry_points", []))
+
+                    # Add function nodes
+                    for func in file_data.get("functions", []):
+                        func_node_id = self._make_node_id(rel_path, func["name"])
+                        nodes[func_node_id] = Node(
+                            type=NodeType.FUNCTION,
+                            file=rel_path,
+                            language=language,
+                            visibility="public",
+                        )
+                        edges.append(
+                            Edge(from_=file_node_id, to=func_node_id, type=EdgeType.DEFINES)
+                        )
+
+                    # Add class nodes
+                    for cls in file_data.get("classes", []):
+                        cls_node_id = self._make_node_id(rel_path, cls["name"])
+                        nodes[cls_node_id] = Node(
+                            type=NodeType.CLASS,
+                            file=rel_path,
+                            language=language,
+                            visibility="public",
+                        )
+                        edges.append(
+                            Edge(from_=file_node_id, to=cls_node_id, type=EdgeType.DEFINES)
+                        )
+
+                elif file_path.suffix in julia_extensions:
+                    file_data = analyze_julia_file(file_path)
+                    entry_points.extend(file_data.get("entry_points", []))
+
+                    # Add function nodes
+                    for func in file_data.get("functions", []):
+                        func_node_id = self._make_node_id(rel_path, func["name"])
+                        nodes[func_node_id] = Node(
+                            type=NodeType.FUNCTION,
+                            file=rel_path,
+                            language=language,
+                            visibility="public",
+                        )
+                        edges.append(
+                            Edge(from_=file_node_id, to=func_node_id, type=EdgeType.DEFINES)
+                        )
+
+                    # Add module/struct/type nodes
                     for cls in file_data.get("classes", []):
                         cls_node_id = self._make_node_id(rel_path, cls["name"])
                         nodes[cls_node_id] = Node(

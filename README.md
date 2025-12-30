@@ -32,9 +32,6 @@ RepoGenome generates a comprehensive JSON artifact (`repogenome.json`) that comb
 
 ### 🆕 Recent Enhancements
 
-**v0.10.0:**
-- **VS Code Extension** - Native IDE integration with sidebar panel, inline annotations, and real-time updates
-
 **v0.9.0:**
 - **Context Assembler** - Goal-driven context selection with intelligent optimization
   - `build_context` - Build context from RepoGenome based on goals and constraints
